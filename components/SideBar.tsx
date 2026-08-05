@@ -136,7 +136,7 @@ const links: NavItem[] = [
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [collapsed, setCollapsed] = useState(false);
   const [openMenus, setOpenMenus] = useState<string[]>(() =>
     // auto-open a parent if the current route is inside it
@@ -173,6 +173,7 @@ export default function Sidebar() {
 
           // Leaf item (no children) — plain link
           if (!item.children) {
+            const pathname = usePathname() ?? "";
             const active = pathname === item.href;
             return (
               <Link
@@ -191,6 +192,7 @@ export default function Sidebar() {
 
           // Parent item with dropdown children
           const isOpen = openMenus.includes(item.label);
+          const pathname = usePathname() ?? "";
           const childActive = item.children.some((c) => pathname.startsWith(c.href));
 
           return (
