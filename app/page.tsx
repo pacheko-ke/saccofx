@@ -4,7 +4,7 @@ import Main from "@/components/Main";
 
 export default function Home() {
   return (
-    <div className="flex h-screen">
+    <div className="flex bg-white">
     <Sidebar></Sidebar>
     <Main></Main>
     </div>
