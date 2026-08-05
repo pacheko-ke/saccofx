@@ -7,8 +7,8 @@ export default function Home() {
   return (
     <div className="flex bg-white">
     <Sidebar></Sidebar>
-    {/* <Main></Main> */}
-    <Login></Login>
+    <Main></Main>
+
     </div>
   );
 }
