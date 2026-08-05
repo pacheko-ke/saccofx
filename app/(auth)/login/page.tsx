@@ -2,10 +2,12 @@
 export default function Login() {
 
     return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="gap-y-10 flex items-center justify-center h-screen bg-gray-100">
+        
+
             <div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6">
-                <span className="text-2xl right font-semibold text-gray-900">saccofx <span className="text-orange-400">pro.</span></span>
-                <h2 className="text-2xl font-bold text-left  text-gray-800 mb-6">
+               <div> <span className="text-lg right font-semibold text-gray-900">saccofx <span className="text-orange-400">pro.</span></span></div>
+                <h2 className="pt-10 text-2xl font-bold text-left  text-gray-800 mb-6">
                     Login
                 </h2>
                 <form className="space-y-4">
