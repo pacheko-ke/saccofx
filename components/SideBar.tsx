@@ -11,8 +11,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  UserPlus,
-  UserCog,
+  ArrowDownRight,
+  LineChart,
+  Coins ,
+  Banknote,
+  Fingerprint,
+  CreditCard ,
   Bell,
   Shield,
 } from "lucide-react";
@@ -26,15 +30,7 @@ type NavItem = {
 
 const links: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  // {
-  //   label: "Users",
-  //   icon: Users,
-  //   children: [
-  //     { href: "/dashboard/users", label: "All users", icon: Users },
-  //     { href: "/dashboard/users/invite", label: "Invite user", icon: UserPlus },
-  //     { href: "/dashboard/users/roles", label: "Roles", icon: UserCog },
-  //   ],
-  // },
+ 
   { href: "/dashboard/docs", label: "Documents", icon: FileText },
 
   {
@@ -58,7 +54,7 @@ const links: NavItem[] = [
 
   {
     label: "Payments & Collections",
-    icon: Users,
+    icon: Coins ,
     children: [
       { href: "/dashboard/members", label: "Teller Deposits", icon: Users },
       { href: "/dashboard/members/add", label: "Mobile Money", icon: Shield },
@@ -69,7 +65,7 @@ const links: NavItem[] = [
 
     {
     label: "Lending",
-    icon: Users,
+    icon: CreditCard ,
     children: [
       { href: "/dashboard/members", label: "Active Loans", icon: Users },
       { href: "/dashboard/members/add", label: "Pending Approvals", icon: Shield },
@@ -82,7 +78,7 @@ const links: NavItem[] = [
 
   {
     label: "Member Finances",
-    icon: Users,
+    icon: ArrowDownRight,
     children: [
       { href: "/dashboard/members", label: "Savings Accounts", icon: Users },
       { href: "/dashboard/members/add", label: "Share Holdings", icon: Shield },
@@ -93,7 +89,7 @@ const links: NavItem[] = [
 
   {
     label: "Accounting",
-    icon: Users,
+    icon: Banknote,
     children: [
       { href: "/dashboard/members", label: "Expenditures", icon: Users },
       { href: "/dashboard/members/add", label: "Budget", icon: Shield },
@@ -106,7 +102,7 @@ const links: NavItem[] = [
 
   {
     label: "Reporting",
-    icon: Users,
+    icon: LineChart,
     children: [
       { href: "/dashboard/members", label: "Document Generation", icon: Users },
       { href: "/dashboard/financial-reports", label: "Financial Reports", icon: Shield },
@@ -124,7 +120,7 @@ const links: NavItem[] = [
 
   {
     label: "Security and Admin",
-    icon: Users,
+    icon: Fingerprint,
     children: [
       { href: "/dashboard/members", label: "Users & Roles", icon: Users },
       { href: "/dashboard/members/add", label: "Security & Audit", icon: Shield },
