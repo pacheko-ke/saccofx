@@ -2,8 +2,9 @@
 export default function Login() {
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex items-center justify-center h-screen bg-gray-100">
             <div className="w-full max-w-sm bg-white rounded-lg shadow-md p-6">
+                <span className="text-2xl right font-semibold text-gray-900">saccofx <span className="text-orange-400">pro.</span></span>
                 <h2 className="text-2xl font-bold text-left  text-gray-800 mb-6">
                     Login
                 </h2>
@@ -14,7 +15,7 @@ export default function Login() {
                             htmlFor="username"
                             className="block text-sm font-medium text-gray-700"
                         >
-                            Username
+                            SACCO Registration Number
                         </label>
                         <input
                             type="text"
@@ -22,7 +23,7 @@ export default function Login() {
                             className="mt-1 block w-full px-3 py-2 border text-black border-gray-300 
                          rounded-md shadow-sm focus:outline-none focus:ring-blue-500 
                          focus:border-blue-500 sm:text-sm"
-                            placeholder="Enter your username"
+                            
                         />
                     </div>
 
@@ -40,7 +41,7 @@ export default function Login() {
                             className="mt-1 block w-full px-3 py-2 border text-black border-gray-300 
                          rounded-md shadow-sm focus:outline-none focus:ring-blue-500 
                          focus:border-blue-500 sm:text-sm"
-                            placeholder="Enter your password"
+                            
                         />
                     </div>
                     <p className="text-sm text-gray-600 mt-2"> Forgot Password? Reset</p>
