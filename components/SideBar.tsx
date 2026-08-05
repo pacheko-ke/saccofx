@@ -36,12 +36,23 @@ const links: NavItem[] = [
     ],
   },
   { href: "/dashboard/docs", label: "Documents", icon: FileText },
+ 
   {
     label: "Settings",
     icon: Settings,
     children: [
       { href: "/dashboard/settings/notifications", label: "Notifications", icon: Bell },
       { href: "/dashboard/settings/security", label: "Security", icon: Shield },
+    ],
+  },
+
+   {
+    label: "Membership",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "View Members", icon: Users },
+      { href: "/dashboard/members/add", label: "Add Member", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Membership Cards", icon: Shield },
     ],
   },
 ];
