@@ -10,28 +10,28 @@ import {
 export default function Main() {
     const stats = [
         {
-            label: "Total revenue",
+            label: "Share Capital",
             value: "$48,290",
             change: "+12.4%",
             trend: "up",
             icon: DollarSign,
         },
         {
-            label: "Active users",
+            label: "Active Members",
             value: "2,834",
             change: "+4.2%",
             trend: "up",
             icon: Users,
         },
         {
-            label: "New signups",
+            label: "Active Loans",
             value: "312",
             change: "-2.1%",
             trend: "down",
             icon: TrendingUp,
         },
         {
-            label: "Server uptime",
+            label: "Total Savings",
             value: "99.98%",
             change: "+0.02%",
             trend: "up",
@@ -40,33 +40,32 @@ export default function Main() {
     ];
 
     const activity = [
-        { user: "Maya Rodriguez", action: "created a new project", time: "2m ago" },
-        { user: "Sam Okafor", action: "invited 3 team members", time: "18m ago" },
-        { user: "Priya Nair", action: "updated billing details", time: "1h ago" },
-        { user: "Liam Chen", action: "deployed to production", time: "3h ago" },
-        { user: "Aisha Bello", action: "closed ticket #4821", time: "5h ago" },
+        { user: "Mary", action: "approved loan LN1234", time: "2m ago" },
+        { user: "Samuel", action: "added a new member", time: "18m ago" },
+        { user: "Geoffrey", action: "declined loan application", time: "1h ago" },
+        
     ];
 
     const recentOrders = [
-        { id: "#3921", customer: "Acme Corp", amount: "$1,240.00", status: "Paid" },
+        { id: "#3921", customer: "Acme Corp", amount: "$1,240.00", status: "Active" },
         { id: "#3920", customer: "Globex Inc", amount: "$890.00", status: "Pending" },
-        { id: "#3919", customer: "Initech", amount: "$2,150.00", status: "Paid" },
-        { id: "#3918", customer: "Umbrella LLC", amount: "$430.00", status: "Failed" },
+        { id: "#3919", customer: "Initech", amount: "$2,150.00", status: "Active" },
+        { id: "#3918", customer: "Umbrella LLC", amount: "$430.00", status: "Active" },
     ];
 
     const statusStyles: Record<string, string> = {
-        Paid: "bg-green-50 text-green-700",
+        Active: "bg-green-50 text-green-700",
         Pending: "bg-amber-50 text-amber-700",
-        Failed: "bg-red-50 text-red-700",
+        Suspended: "bg-red-50 text-red-700",
     };
     return (
 
-        <div className="space-y-6 w-full bg-white ml-14 px-4">
+        <div className="space-y-6 w-full bg-white ml-14 px-4 md:h-screen">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
                 <p className="text-sm text-gray-500 mt-1">
-                    Here's what's happening across your workspace.
+                    Here's an overview of your SACCO operations.
                 </p>
             </div>
 
@@ -135,7 +134,7 @@ export default function Main() {
                 <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-sm font-semibold text-gray-900">
-                            Recent orders
+                            Recent Members
                         </h2>
                         <button className="text-xs font-medium text-gray-500 hover:text-gray-900">
                             View all
@@ -145,8 +144,8 @@ export default function Main() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left text-gray-400 border-b border-gray-100">
-                                    <th className="font-medium pb-2">Order</th>
-                                    <th className="font-medium pb-2">Customer</th>
+                                    <th className="font-medium pb-2">Member ID</th>
+                                    <th className="font-medium pb-2">Name</th>
                                     <th className="font-medium pb-2">Amount</th>
                                     <th className="font-medium pb-2">Status</th>
                                 </tr>
