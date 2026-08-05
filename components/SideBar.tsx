@@ -12,11 +12,14 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowDownRight,
+  
+
   LineChart,
   Coins ,
   Banknote,
   Fingerprint,
   CreditCard ,
+  MessageCircle ,
   Bell,
   Shield,
 } from "lucide-react";
@@ -31,16 +34,16 @@ type NavItem = {
 const links: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
  
-  { href: "/dashboard/docs", label: "Documents", icon: FileText },
+  // { href: "/dashboard/docs", label: "Documents", icon: FileText },
 
-  {
-    label: "Settings",
-    icon: Settings,
-    children: [
-      { href: "/dashboard/settings/notifications", label: "Notifications", icon: Bell },
-      { href: "/dashboard/settings/security", label: "Security", icon: Shield },
-    ],
-  },
+  // {
+  //   label: "Settings",
+  //   icon: Settings,
+  //   children: [
+  //     { href: "/dashboard/settings/notifications", label: "Notifications", icon: Bell },
+  //     { href: "/dashboard/settings/security", label: "Security", icon: Shield },
+  //   ],
+  // },
 
   {
     label: "Membership",
@@ -118,6 +121,18 @@ const links: NavItem[] = [
     ],
   },
 
+    {
+    label: "Communication",
+    icon: MessageCircle ,
+    children: [
+      { href: "/dashboard/members", label: "Document Generation", icon: Users },
+      { href: "/dashboard/financial-reports", label: "Financial Reports", icon: Shield },
+      { href: "/dashboard/members/register", label: "Member Register", icon: Shield },
+   
+
+    ],
+  },
+
   {
     label: "Security and Admin",
     icon: Fingerprint,
@@ -148,6 +163,8 @@ export default function Sidebar() {
   };
 
   return (
+
+    <div>
     <aside
       className={`h-screen sticky top-0 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${collapsed ? "w-16" : "w-64"
         }`}
@@ -245,5 +262,10 @@ export default function Sidebar() {
         })}
       </nav>
     </aside>
+
+    <div className="text-white text-3xl">
+HELLO
+    </div>
+    </div>
   );
 }
