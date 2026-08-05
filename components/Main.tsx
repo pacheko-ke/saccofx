@@ -71,11 +71,11 @@ export default function Main() {
             </div>
 
             {/* Stat cards */}
-            <div className="flex gap-10">
+            <div className=" flex flex-col md:flex-row gap-y-4">
                 {stats.map(({ label, value, change, trend, icon: Icon }) => (
                     <div
                         key={label}
-                        className="bg-white w-1/4 border border-gray-200 rounded-xl p-5"
+                        className="bg-white md:w-1/4 border border-gray-200 rounded-xl p-5"
                     >
                         <div className="flex   items-center justify-between">
                             <span className="text-sm text-gray-500">{label}</span>
