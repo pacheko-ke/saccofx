@@ -42,13 +42,14 @@ export default function Login() {
                             placeholder="Enter your password"
                         />
                     </div>
+                    <p className="text-sm text-gray-600 mt-2"> Forgot Password? Reset</p>
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md 
-                       hover:bg-blue-700 focus:outline-none focus:ring-2 
-                       focus:ring-blue-500 focus:ring-offset-1"
+                        className="w-full bg-orange-600 text-white py-2 px-4 rounded-md 
+                       hover:bg-orange-700 focus:outline-none focus:ring-2 
+                       focus:ring-orange-500 focus:ring-offset-1"
                     >
                         Sign In
                     </button>
