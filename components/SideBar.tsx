@@ -164,7 +164,7 @@ export default function Sidebar() {
 
   return (
 
-    <div>
+    <div className="flex h-screen">
     <aside
       className={`h-screen sticky top-0 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${collapsed ? "w-16" : "w-64"
         }`}
