@@ -157,7 +157,7 @@ export default function Sidebar() {
         }`}
     >
       <div className="flex items-center justify-between px-4 h-14 border-b border-gray-200">
-        {!collapsed && <span className="font-semibold text-gray-900">My App</span>}
+        {!collapsed && <span className="font-semibold text-gray-900">saccofx <span className="text-orange-400">pro.</span></span>}
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500"
