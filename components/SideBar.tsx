@@ -26,17 +26,17 @@ type NavItem = {
 
 const links: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  {
-    label: "Users",
-    icon: Users,
-    children: [
-      { href: "/dashboard/users", label: "All users", icon: Users },
-      { href: "/dashboard/users/invite", label: "Invite user", icon: UserPlus },
-      { href: "/dashboard/users/roles", label: "Roles", icon: UserCog },
-    ],
-  },
+  // {
+  //   label: "Users",
+  //   icon: Users,
+  //   children: [
+  //     { href: "/dashboard/users", label: "All users", icon: Users },
+  //     { href: "/dashboard/users/invite", label: "Invite user", icon: UserPlus },
+  //     { href: "/dashboard/users/roles", label: "Roles", icon: UserCog },
+  //   ],
+  // },
   { href: "/dashboard/docs", label: "Documents", icon: FileText },
- 
+
   {
     label: "Settings",
     icon: Settings,
@@ -46,7 +46,7 @@ const links: NavItem[] = [
     ],
   },
 
-   {
+  {
     label: "Membership",
     icon: Users,
     children: [
@@ -55,6 +55,84 @@ const links: NavItem[] = [
       { href: "/dashboard/members/cards", label: "Membership Cards", icon: Shield },
     ],
   },
+
+  {
+    label: "Payments & Collections",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Teller Deposits", icon: Users },
+      { href: "/dashboard/members/add", label: "Mobile Money", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Loan Repayments", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Cashbook", icon: Shield },
+    ],
+  },
+
+    {
+    label: "Lending",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Active Loans", icon: Users },
+      { href: "/dashboard/members/add", label: "Pending Approvals", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Loan History", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Defaulters", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Closed Loans", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Loan Products & Rates", icon: Shield },
+    ],
+  },
+
+  {
+    label: "Member Finances",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Savings Accounts", icon: Users },
+      { href: "/dashboard/members/add", label: "Share Holdings", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Charges and Fees", icon: Shield },
+
+    ],
+  },
+
+  {
+    label: "Accounting",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Expenditures", icon: Users },
+      { href: "/dashboard/members/add", label: "Budget", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Procurement", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Reversals & Corrections", icon: Shield },
+      { href: "/dashboard/members/cards", label: "General Ledger", icon: Shield },
+
+    ],
+  },
+
+  {
+    label: "Reporting",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Document Generation", icon: Users },
+      { href: "/dashboard/financial-reports", label: "Financial Reports", icon: Shield },
+      { href: "/dashboard/members/register", label: "Member Register", icon: Shield },
+      { href: "/dashboard/members/statements", label: "Member Statements", icon: Shield },
+      { href: "/dashboard/loans", label: "Loan portfolio", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Loan defaulters", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Savings Accounts", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Share Holdings", icon: Shield },
+      { href: "/dashboard/members/cards", label: "General Ledger", icon: Shield },
+      { href: "/dashboard/members/cards", label: "Expenditures", icon: Shield },
+
+    ],
+  },
+
+  {
+    label: "Security and Admin",
+    icon: Users,
+    children: [
+      { href: "/dashboard/members", label: "Users & Roles", icon: Users },
+      { href: "/dashboard/members/add", label: "Security & Audit", icon: Shield },
+
+
+    ],
+  },
+
 ];
 
 export default function Sidebar() {
@@ -75,9 +153,8 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`h-screen sticky top-0 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${
-        collapsed ? "w-16" : "w-64"
-      }`}
+      className={`h-screen sticky top-0 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${collapsed ? "w-16" : "w-64"
+        }`}
     >
       <div className="flex items-center justify-between px-4 h-14 border-b border-gray-200">
         {!collapsed && <span className="font-semibold text-gray-900">My App</span>}
@@ -101,11 +178,10 @@ export default function Sidebar() {
               <Link
                 key={item.label}
                 href={item.href!}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  active
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${active
                     ? "bg-gray-900 text-white"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <Icon size={18} className="shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
@@ -121,11 +197,10 @@ export default function Sidebar() {
             <div key={item.label}>
               <button
                 onClick={() => toggleMenu(item.label)}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  childActive
+                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${childActive
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <span className="flex items-center gap-3">
                   <Icon size={18} className="shrink-0" />
@@ -134,9 +209,8 @@ export default function Sidebar() {
                 {!collapsed && (
                   <ChevronDown
                     size={16}
-                    className={`shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
+                    className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                      }`}
                   />
                 )}
               </button>
@@ -144,9 +218,8 @@ export default function Sidebar() {
               {/* Submenu */}
               {!collapsed && (
                 <div
-                  className={`overflow-hidden transition-all duration-200 ${
-                    isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-200 ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
                 >
                   <div className="ml-4 mt-1 pl-3 border-l border-gray-200 space-y-1">
                     {item.children.map((child) => {
@@ -156,11 +229,10 @@ export default function Sidebar() {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                            active
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${active
                               ? "bg-gray-900 text-white"
                               : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
+                            }`}
                         >
                           <ChildIcon size={15} className="shrink-0" />
                           <span>{child.label}</span>
