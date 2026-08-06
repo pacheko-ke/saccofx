@@ -11,14 +11,14 @@ export default function Register() {
     phone: "",
   });
 
-  const handleChange = (e:MouseEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const handleSubmit = (e:MouseEvent) => {
+  const handleSubmit = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     console.log("Final Data:", formData);
     alert("Registration complete!");
