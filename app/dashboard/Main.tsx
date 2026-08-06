@@ -11,14 +11,14 @@ export default function Main() {
     const stats = [
         {
             label: "Share Capital",
-            value: "$48,290",
+            value: "KES 48290",
             change: "+12.4%",
             trend: "up",
             icon: DollarSign,
         },
         {
             label: "Active Members",
-            value: "2,834",
+            value: "834",
             change: "+4.2%",
             trend: "up",
             icon: Users,
@@ -32,7 +32,7 @@ export default function Main() {
         },
         {
             label: "Total Savings",
-            value: "99.98%",
+            value: "999778.02",
             change: "+0.02%",
             trend: "up",
             icon: Activity,
@@ -47,10 +47,10 @@ export default function Main() {
     ];
 
     const recentOrders = [
-        { id: "#3921", customer: "Acme Corp", amount: "$1,240.00", status: "Active" },
-        { id: "#3920", customer: "Globex Inc", amount: "$890.00", status: "Pending" },
-        { id: "#3919", customer: "Initech", amount: "$2,150.00", status: "Active" },
-        { id: "#3918", customer: "Umbrella LLC", amount: "$430.00", status: "Active" },
+        { id: "#3921", customer: "Patrick", amount: "$1,240.00", status: "Active" },
+        { id: "#3920", customer: "Joshua", amount: "$890.00", status: "Pending" },
+        { id: "#3919", customer: "Janet", amount: "$2,150.00", status: "Active" },
+        { id: "#3918", customer: "Maria", amount: "$430.00", status: "Active" },
     ];
 
     const statusStyles: Record<string, string> = {
