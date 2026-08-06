@@ -28,7 +28,7 @@ export default function Register() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-bold text-center mb-4">
-          Registration (Step {step})
+          Personal Details (Step {step})
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
