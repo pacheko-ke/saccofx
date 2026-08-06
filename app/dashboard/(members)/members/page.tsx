@@ -74,7 +74,7 @@ export default function MembersTable() {
   }
 
   return (
-    <div className="mx-auto rounded-lg border border-stone-200 bg-white">
+    <div className="mx-auto pl-20 rounded-lg border border-stone-200 bg-white">
       {/* Filters */}
       <div className="flex flex-col gap-3 border-b border-stone-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <input
