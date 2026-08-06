@@ -176,8 +176,8 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
   const totalContribution = filtered.reduce((sum, m) => sum + m.monthlyContribution, 0);
 
   return (
-    <div className=" mt-10 mx-auto w-3/4 flex flex-col overflow-hidden rounded-lg  bg-white pl-10">
-      <button className="self-end w-50 bg-green-600 px-10 rounded-md py-2 text-white">Add Member</button>
+    <div className=" mt-10 mx-auto w-full md:w-3/4 flex flex-col overflow-hidden rounded-lg  bg-white pl-10">
+      <button className="self-end w-20 bg-green-600 px-10 rounded-md py-2 text-white">Add Member</button>
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-stone-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <div>
