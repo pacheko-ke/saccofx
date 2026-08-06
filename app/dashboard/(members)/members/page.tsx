@@ -184,16 +184,16 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
           <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-800">
             Membership Register
           </p>
-          <h2 className="mt-1 font-serif text-xl text-stone-900">
+          <h2 className="mt-1 text-xl text-stone-900">
             Members{" "}
-            <span className="font-sans text-sm font-normal text-stone-400">
+            <span className="s text-sm font-normal text-stone-400">
               ({filtered.length})
             </span>
           </h2>
         </div>
 
-        <div className="flex pl-20 flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row pl-20 gap-3 sm:flex-row sm:items-center">
+          <div className="relative self-start">
             <svg
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
               width="15"
@@ -213,7 +213,7 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
                 setPage(1);
               }}
               placeholder="Search name, ID, phone"
-              className="w-full rounded-md border border-stone-300 py-2 pl-9 pr-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 sm:w-56"
+              className="w-3/4 rounded-md border border-stone-300 py-2 pl-9 pr-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 sm:w-56"
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
+        <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-stone-200 bg-stone-50 text-left text-[11px] uppercase tracking-wide text-stone-500">
               <th className="px-6 py-3 font-medium sm:px-8">
