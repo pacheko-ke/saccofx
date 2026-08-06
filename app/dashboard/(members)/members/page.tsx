@@ -74,7 +74,7 @@ export default function MembersTable() {
   }
 
   return (
-    <div className="mx-auto pl-20 rounded-lg border border-stone-200 bg-white">
+    <div className="w-1/2">
       {/* Filters */}
       <div className="flex flex-col gap-3 border-b border-stone-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <input
@@ -96,7 +96,7 @@ export default function MembersTable() {
       </div>
 
       {/* Table */}
-      <table className="w-full border-collapse text-sm">
+      <table className=" border-collapse text-sm">
         <thead>
           <tr className="border-b border-stone-200 bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
             <th className="px-4 py-3 font-medium">Name</th>
