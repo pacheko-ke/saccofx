@@ -197,13 +197,11 @@ export default function MemberRegistrationForm() {
   }
 
   return (
-    <div className="mx-auto overflow-hidden rounded-lg border border-stone-200 bg-white">
+    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
       {/* Header */}
-      <div className="border-b border-stone-200 bg-emerald-900 px-6 py-5 sm:px-8">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-300">
-          Membership Application
-        </p>
-        <h1 className="mt-1 font-serif text-xl text-white sm:text-2xl">Join the Sacco</h1>
+      <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
+       
+        <h1 className="mt-1 text-xl text-orange-500 sm:text-2xl">Add member</h1>
       </div>
 
       {/* Ledger-style progress rail */}
