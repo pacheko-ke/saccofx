@@ -176,12 +176,12 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
   const totalContribution = filtered.reduce((sum, m) => sum + m.monthlyContribution, 0);
 
   return (
-    <div className=" mt-10 mx-auto w-full md:w-3/4 flex flex-col overflow-hidden rounded-lg  bg-white pl-10">
+    <div className=" mt-10 mx-auto w-full flex flex-col overflow-hidden rounded-lg  bg-white">
       <button className="self-end bg-green-600 px-10 rounded-md py-2 text-white">Add Member</button>
       {/* Header */}
-      <div className="flex flex-col gap-4 border-b border-stone-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      <div className="flex flex-col gap-4 border-b border-stone-200 px-6 py-5 sm:flex-row ">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-800">
+          <p className="text-sm font-semibold uppercase tracking-widest text-emerald-800">
             Membership Register
           </p>
           <h2 className="mt-1 text-xl text-stone-900">
@@ -193,7 +193,7 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
         </div>
 
         <div className="flex flex-col md:flex-row pl-20 gap-3 sm:flex-row sm:items-center">
-          <div className="relative self-start">
+          <div className=" self-start">
             <svg
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
               width="15"
@@ -235,7 +235,7 @@ export default function MembersTable({ members = sampleMembers }: { members?: Me
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className=" border-collapse text-sm">
           <thead>
             <tr className="border-b border-stone-200 bg-stone-50 text-left text-[11px] uppercase tracking-wide text-stone-500">
               <th className="px-6 py-3 font-medium sm:px-8">
