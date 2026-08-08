@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -12,14 +12,15 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowDownRight,
-  
+  Menu,
+  X,
 
   LineChart,
-  Coins ,
+  Coins,
   Banknote,
   Fingerprint,
-  CreditCard ,
-  MessageCircle ,
+  CreditCard,
+  MessageCircle,
   Bell,
   Shield,
 } from "lucide-react";
@@ -33,7 +34,7 @@ type NavItem = {
 
 const links: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
- 
+
   // { href: "/dashboard/docs", label: "Documents", icon: FileText },
 
   // {
@@ -57,7 +58,7 @@ const links: NavItem[] = [
 
   {
     label: "Payments & Collections",
-    icon: Coins ,
+    icon: Coins,
     children: [
       { href: "/dashboard/teller-deposits", label: "Teller Deposits", icon: Users },
       { href: "/dashboard/mobile-money", label: "Mobile Money", icon: Shield },
@@ -66,9 +67,9 @@ const links: NavItem[] = [
     ],
   },
 
-    {
+  {
     label: "Lending",
-    icon: CreditCard ,
+    icon: CreditCard,
     children: [
       { href: "/dashboard/active-loans", label: "Active Loans", icon: Users },
       { href: "/dashboard/pending-approvals", label: "Pending Approvals", icon: Shield },
@@ -86,7 +87,6 @@ const links: NavItem[] = [
       { href: "/dashboard/savings-accounts", label: "Savings Accounts", icon: Users },
       { href: "/dashboard/share-holdings", label: "Share Holdings", icon: Shield },
       { href: "/dashboard/charges-and-fees", label: "Charges and Fees", icon: Shield },
-
     ],
   },
 
@@ -99,7 +99,6 @@ const links: NavItem[] = [
       { href: "/dashboard/procurement", label: "Procurement", icon: Shield },
       { href: "/dashboard/reversals-and-corrections", label: "Reversals & Corrections", icon: Shield },
       { href: "/dashboard/general-ledger", label: "General Ledger", icon: Shield },
-
     ],
   },
 
@@ -117,19 +116,16 @@ const links: NavItem[] = [
       { href: "/dashboard/reporting/share-holdings", label: "Share Holdings", icon: Shield },
       { href: "/dashboard/reporting/general-ledger", label: "General Ledger", icon: Shield },
       { href: "/dashboard/reporting/expenditures", label: "Expenditures", icon: Shield },
-
     ],
   },
 
-    {
+  {
     label: "Communication",
-    icon: MessageCircle ,
+    icon: MessageCircle,
     children: [
       { href: "/dashboard/scheduled-emails", label: "Scheduled Emails", icon: Users },
       { href: "/dashboard/scheduled-sms", label: "Scheduled SMS", icon: Shield },
       { href: "/dashboard/members/support-tickets", label: "Support tickets", icon: Shield },
-   
-
     ],
   },
 
@@ -139,16 +135,19 @@ const links: NavItem[] = [
     children: [
       { href: "/dashboard/security/users", label: "Users & Roles", icon: Users },
       { href: "/dashboard/security/audit", label: "Security & Audit", icon: Shield },
-
-
     ],
   },
-
 ];
 
 export default function Sidebar() {
   const pathname = usePathname() ?? "";
+
+  // Desktop collapse (icon-only) state — unchanged behaviour
   const [collapsed, setCollapsed] = useState(false);
+
+  // Mobile drawer state — hidden by default
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const [openMenus, setOpenMenus] = useState<string[]>(() =>
     // auto-open a parent if the current route is inside it
     links
@@ -162,108 +161,166 @@ export default function Sidebar() {
     );
   };
 
+  // Close the mobile drawer whenever the route changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll while the mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
+    <>
+      {/* Mobile top bar trigger — hidden on desktop */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed top-3 left-3 z-40 p-2 rounded-md bg-white border border-gray-200 shadow-sm text-gray-600 hover:bg-gray-100"
+        aria-label="Open sidebar"
+      >
+        <Menu size={20} />
+      </button>
 
-    <div className="fixed">
-    <aside
-      className={`h-screen sticky top-0 flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${collapsed ? "w-16" : "w-64"
-        }`}
-    >
-      <div className="flex items-center justify-between px-4 h-14 border-b border-gray-200">
-        {!collapsed && <span className="font-semibold text-gray-900">saccofx <span className="text-orange-400">pro.</span></span>}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500"
-          aria-label="Toggle sidebar"
+      {/* Backdrop — mobile only, shown when drawer is open */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          aria-hidden="true"
+        />
+      )}
+
+      <div className="md:fixed">
+        <aside
+          className={`
+            fixed md:sticky top-0 left-0 h-screen flex flex-col border-r border-gray-200 bg-white
+            z-50 transition-transform duration-200 ease-in-out
+            w-64
+            ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+            md:translate-x-0
+            ${collapsed ? "md:w-16" : "md:w-64"}
+          `}
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+          <div className="flex items-center justify-between px-4 h-14 border-b border-gray-200">
+            {!collapsed && (
+              <span className="font-semibold text-gray-900">
+                saccofx <span className="text-orange-400">pro.</span>
+              </span>
+            )}
 
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {links.map((item) => {
-          const Icon = item.icon;
+            {/* Mobile close button */}
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden p-1.5 rounded-md hover:bg-gray-100 text-gray-500"
+              aria-label="Close sidebar"
+            >
+              <X size={18} />
+            </button>
 
-          // Leaf item (no children) — plain link
-          if (!item.children) {
-            const pathname = usePathname() ?? "";
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.label}
-                href={item.href!}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${active
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
-              >
-                <Icon size={18} className="shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          }
+            {/* Desktop collapse toggle */}
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="hidden md:inline-flex p-1.5 rounded-md hover:bg-gray-100 text-gray-500"
+              aria-label="Toggle sidebar"
+            >
+              {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+          </div>
 
-          // Parent item with dropdown children
-          const isOpen = openMenus.includes(item.label);
-          const pathname = usePathname() ?? "";
-          const childActive = item.children.some((c) => pathname.startsWith(c.href));
+          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+            {links.map((item) => {
+              const Icon = item.icon;
 
-          return (
-            <div key={item.label}>
-              <button
-                onClick={() => toggleMenu(item.label)}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${childActive
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
-              >
-                <span className="flex items-center gap-3">
-                  <Icon size={18} className="shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </span>
-                {!collapsed && (
-                  <ChevronDown
-                    size={16}
-                    className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-                      }`}
-                  />
-                )}
-              </button>
-
-              {/* Submenu */}
-              {!collapsed && (
-                <div
-                  className={`overflow-hidden transition-all duration-200 ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+              // Leaf item (no children) — plain link
+              if (!item.children) {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href!}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
-                >
-                  <div className="ml-4 mt-1 pl-3 border-l border-gray-200 space-y-1">
-                    {item.children.map((child) => {
-                      const ChildIcon = child.icon;
-                      const active = pathname === child.href;
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${active
-                              ? "bg-gray-900 text-white"
-                              : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                            }`}
-                        >
-                          <ChildIcon size={15} className="shrink-0" />
-                          <span>{child.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+                  >
+                    <Icon size={18} className="shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              }
 
-    
-    </div>
+              // Parent item with dropdown children
+              const isOpen = openMenus.includes(item.label);
+              const childActive = item.children.some((c) => pathname.startsWith(c.href));
+
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => toggleMenu(item.label)}
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      childActive
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Icon size={18} className="shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </span>
+                    {!collapsed && (
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 transition-transform duration-200 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    )}
+                  </button>
+
+                  {/* Submenu */}
+                  {!collapsed && (
+                    <div
+                      className={`overflow-hidden transition-all duration-200 ${
+                        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="ml-4 mt-1 pl-3 border-l border-gray-200 space-y-1">
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon;
+                          const active = pathname === child.href;
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                                active
+                                  ? "bg-gray-900 text-white"
+                                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                              }`}
+                            >
+                              <ChildIcon size={15} className="shrink-0" />
+                              <span>{child.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </aside>
+      </div>
+    </>
   );
 }
