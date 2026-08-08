@@ -74,9 +74,9 @@ export default function MembersTable() {
   }
 
   return (
-    <div className=" mt-10 ml-4 md:ml-20">
+    <div className=" mt-10 ml-4 md:ml-20 ">
       {/* Filters */}
-      <div className="flex flex-col gap-3  ml-4 border-b border-stone-200 py-4 md:flex-row sm:items-center ">
+      <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
         <input
           value={query}
           onChange={(e) => updateQuery(e.target.value)}
@@ -96,7 +96,8 @@ export default function MembersTable() {
       </div>
 
       {/* Table */}
-      <table className=" border-collapse text-sm">
+      <div className="overflow-x-auto">
+      <table className=" text-sm w-full ">
         <thead>
           <tr className="border-b border-stone-200 bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
             <th className="px-4 py-3 font-medium">Name</th>
@@ -134,6 +135,7 @@ export default function MembersTable() {
           )}
         </tbody>
       </table>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3">

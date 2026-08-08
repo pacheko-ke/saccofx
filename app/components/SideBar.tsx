@@ -179,7 +179,7 @@ export default function Sidebar() {
   }, [mobileOpen]);
 
   return (
-    <>
+    <div className="ml-0">
       {/* Mobile top bar trigger — hidden on desktop */}
       <button
         onClick={() => setMobileOpen(true)}
@@ -321,6 +321,6 @@ export default function Sidebar() {
           </nav>
         </aside>
       </div>
-    </>
+    </div>
   );
 }
