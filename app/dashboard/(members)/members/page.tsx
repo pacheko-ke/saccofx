@@ -4,11 +4,17 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-/**
- * Sacco members table with filters and pagination.
- * Drop into a Next.js project and replace `members` with data from Prisma:
- *   const members = await prisma.member.findMany();
- */
+
+// const fetchMembers = async () => {
+//   // Simulate an API call to fetch members
+//   const response = await fetch("/api/members",);
+//   if (!response.ok) {
+//     throw new Error("Failed to fetch members");
+//   }
+//   return response.json();
+// };
+
+
 
 type Member = {
   id: string;
@@ -78,7 +84,7 @@ export default function MembersTable() {
   return (
     <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
       <Link href="./add-members" className="self-end bg-orange-400 text-white rounded-md px-4 py-2">
-        Create Member
+        Create Member 
       </Link>
       {/* Filters */}
       <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">

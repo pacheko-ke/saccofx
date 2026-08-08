@@ -1,601 +1,175 @@
 "use client";
 
-import { useState } from "react";
+// import { Link } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
-type FormData = {
-  // Step 1: Personal details
+
+// const fetchMembers = async () => {
+//   // Simulate an API call to fetch members
+//   const response = await fetch("/api/members",);
+//   if (!response.ok) {
+//     throw new Error("Failed to fetch members");
+//   }
+//   return response.json();
+// };
+
+
+
+type Member = {
+  id: string;
   fullName: string;
   idNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
-
-  // Step 2: Contact & address
   phone: string;
-  email: string;
-  physicalAddress: string;
-  county: string;
-
-  // Step 3: Next of kin
-  kinFullName: string;
-  kinRelationship: string;
-  kinPhone: string;
-
-  // Step 4: Membership & shares
-  memberType: string;
-  monthlyContribution: string;
-  numberOfShares: string;
-  incomeSource: string;
-
-  // Step 5: Confirmation
-  termsAccepted: boolean;
+  shares: number;
+  monthlyContribution: number;
+  status: "active" | "pending" | "dormant";
 };
 
-const initialFormData: FormData = {
-  fullName: "",
-  idNumber: "",
-  dateOfBirth: "",
-  gender: "",
-  maritalStatus: "",
-  phone: "",
-  email: "",
-  physicalAddress: "",
-  county: "",
-  kinFullName: "",
-  kinRelationship: "",
-  kinPhone: "",
-  memberType: "individual",
-  monthlyContribution: "",
-  numberOfShares: "",
-  incomeSource: "",
-  termsAccepted: false,
-};
-
-const STEPS = [
-  { label: "Personal Details", ledger: "01" },
-  { label: "Contact & Address", ledger: "02" },
-  { label: "Next of Kin", ledger: "03" },
-  { label: "Membership & Shares", ledger: "04" },
-  { label: "Review & Submit", ledger: "05" },
+const members: Member[] = [
+  { id: "m_001", fullName: "Wanjiru Kamau", idNumber: "27884451", phone: "0712 345 678", shares: 40, monthlyContribution: 3000, status: "active" },
+  { id: "m_002", fullName: "Otieno Onyango", idNumber: "24551029", phone: "0722 981 004", shares: 15, monthlyContribution: 1500, status: "pending" },
+  { id: "m_003", fullName: "Baraka Traders Chama", idNumber: "31007742", phone: "0701 552 213", shares: 120, monthlyContribution: 12000, status: "active" },
+  { id: "m_004", fullName: "Achieng Odhiambo", idNumber: "29981123", phone: "0733 220 981", shares: 8, monthlyContribution: 1000, status: "dormant" },
+  { id: "m_005", fullName: "Kiptoo Sang", idNumber: "26674401", phone: "0745 667 812", shares: 60, monthlyContribution: 5000, status: "active" },
+  { id: "m_006", fullName: "Nafula Wekesa", idNumber: "28871192", phone: "0788 213 447", shares: 22, monthlyContribution: 2200, status: "pending" },
+  { id: "m_007", fullName: "Mutiso Kioko", idNumber: "25109834", phone: "0711 998 302", shares: 5, monthlyContribution: 800, status: "dormant" },
+  { id: "m_008", fullName: "Chebet Rono", idNumber: "27502217", phone: "0700 445 118", shares: 90, monthlyContribution: 7500, status: "active" },
+  { id: "m_009", fullName: "Riverside Boda Sacco Group", idNumber: "30887761", phone: "0722 004 559", shares: 200, monthlyContribution: 18000, status: "active" },
+  { id: "m_010", fullName: "Njoroge Mwangi", idNumber: "24418825", phone: "0733 771 903", shares: 12, monthlyContribution: 1200, status: "pending" },
+  { id: "m_011", fullName: "Aisha Mohammed", idNumber: "29004471", phone: "0704 552 810", shares: 35, monthlyContribution: 3500, status: "active" },
+  { id: "m_012", fullName: "Kamande Njuguna", idNumber: "23387765", phone: "0712 664 291", shares: 3, monthlyContribution: 500, status: "dormant" },
 ];
 
-const inputClasses =
-  "w-full rounded-md border border-stone-300 bg-white px-3.5 py-2.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 transition-colors";
+const STATUS_STYLES: Record<Member["status"], string> = {
+  active: "bg-emerald-50 text-emerald-800",
+  pending: "bg-amber-50 text-amber-800",
+  dormant: "bg-stone-100 text-stone-500",
+};
 
-const labelClasses = "mb-1.5 block text-[13px] font-medium text-stone-700";
+const PAGE_SIZE = 5;
 
-export default function MemberRegistrationForm() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+export default function MembersTable() {
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Member["status"] | "all">("all");
+  const [page, setPage] = useState(1);
 
-  const isLastStep = step === STEPS.length - 1;
+  const filtered = useMemo(() => {
+    return members.filter((m) => {
+      const matchesStatus = statusFilter === "all" || m.status === statusFilter;
+      const q = query.trim().toLowerCase();
+      const matchesQuery =
+        !q ||
+        m.fullName.toLowerCase().includes(q) ||
+        m.idNumber.includes(q) ||
+        m.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
+      return matchesStatus && matchesQuery;
+    });
+  }, [query, statusFilter]);
 
-  function update<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function updateQuery(value: string) {
+    setQuery(value);
+    setPage(1);
   }
 
-  function validateStep(current: number): boolean {
-    const next: Partial<Record<keyof FormData, string>> = {};
-
-    if (current === 0) {
-      if (!formData.fullName.trim()) next.fullName = "Full name is required";
-      if (!formData.idNumber.trim()) next.idNumber = "National ID number is required";
-      else if (!/^\d{6,10}$/.test(formData.idNumber.trim()))
-        next.idNumber = "Enter a valid ID number";
-      if (!formData.dateOfBirth) next.dateOfBirth = "Date of birth is required";
-      if (!formData.gender) next.gender = "Select a gender";
-    }
-
-    if (current === 1) {
-      if (!formData.phone.trim()) next.phone = "Phone number is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.phone.trim()))
-        next.phone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-      if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email))
-        next.email = "Enter a valid email address";
-      if (!formData.physicalAddress.trim()) next.physicalAddress = "Address is required";
-      if (!formData.county.trim()) next.county = "County is required";
-    }
-
-    if (current === 2) {
-      if (!formData.kinFullName.trim()) next.kinFullName = "Next of kin name is required";
-      if (!formData.kinRelationship.trim()) next.kinRelationship = "Relationship is required";
-      if (!formData.kinPhone.trim()) next.kinPhone = "Next of kin phone is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.kinPhone.trim()))
-        next.kinPhone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-    }
-
-    if (current === 3) {
-      if (!formData.monthlyContribution || Number(formData.monthlyContribution) <= 0)
-        next.monthlyContribution = "Enter a monthly contribution amount";
-      if (!formData.numberOfShares || Number(formData.numberOfShares) <= 0)
-        next.numberOfShares = "Enter number of shares to purchase";
-      if (!formData.incomeSource.trim()) next.incomeSource = "Source of income is required";
-    }
-
-    if (current === 4) {
-      if (!formData.termsAccepted) next.termsAccepted = "You must accept the membership terms";
-    }
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
+  function updateStatus(value: Member["status"] | "all") {
+    setStatusFilter(value);
+    setPage(1);
   }
 
-  function goNext() {
-    if (!validateStep(step)) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }
+  return (
+    <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
+      <Link href="./add-members" className="self-end bg-orange-400 text-white rounded-md px-4 py-2">
+        Create Member 
+      </Link>
+      {/* Filters */}
+      <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
+        <input
+          value={query}
+          onChange={(e) => updateQuery(e.target.value)}
+          placeholder="Search name, ID, phone"
+          className=" rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 "
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => updateStatus(e.target.value as Member["status"] | "all")}
+          className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="dormant">Dormant</option>
+        </select>
+      </div>
 
-  function goBack() {
-    setErrors({});
-    setStep((s) => Math.max(s - 1, 0));
-  }
+      {/* Table */}
+      <div className="overflow-x-auto">
+      <table className=" text-sm w-full ">
+        <thead>
+          <tr className="border-b border-stone-200 bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
+            <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">ID number</th>
+            <th className="px-4 py-3 font-medium">Phone</th>
+            <th className="px-4 py-3 font-medium">Shares</th>
+            <th className="px-4 py-3 font-medium">Contribution</th>
+            <th className="px-4 py-3 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-stone-100">
+          {paged.map((m) => (
+            <tr key={m.id}>
+              <td className="px-4 py-3 font-medium text-stone-900">{m.fullName}</td>
+              <td className="px-4 py-3 font-mono text-stone-600">{m.idNumber}</td>
+              <td className="px-4 py-3 text-stone-700">{m.phone}</td>
+              <td className="px-4 py-3 text-stone-700">{m.shares}</td>
+              <td className="px-4 py-3 text-stone-700">
+                KES {m.monthlyContribution.toLocaleString()}
+              </td>
+              <td className="px-4 py-3">
+                <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[m.status]}`}>
+                  {m.status}
+                </span>
+              </td>
+            </tr>
+          ))}
 
-  async function handleSubmit() {
-    if (!validateStep(4)) return;
-    setSubmitting(true);
-    setSubmitError("");
-    try {
-      // Replace with your actual API route.
-      const res = await fetch("/api/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error("Failed to submit application");
-      setSubmitted(true);
-    } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
+          {paged.length === 0 && (
+            <tr>
+              <td colSpan={6} className="px-4 py-10 text-center text-sm text-stone-400">
+                No members match your search.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      </div>
 
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-xl rounded-lg border border-stone-200 bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-800 text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+      {/* Pagination */}
+      <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3">
+        <p className="text-xs text-stone-500">
+          Page {currentPage} of {totalPages} · {filtered.length} member{filtered.length === 1 ? "" : "s"}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+          >
+            Next
+          </button>
         </div>
-        <h2 className="font-serif text-2xl text-stone-900">Application received</h2>
-        <p className="mt-2 text-[15px] text-stone-600">
-          {formData.fullName.split(" ")[0] || "Your"} application to join has been recorded.
-          A membership officer will verify your details and confirm your share allocation.
-        </p>
-        <button
-          onClick={() => {
-            setFormData(initialFormData);
-            setStep(0);
-            setSubmitted(false);
-          }}
-          className="mt-6 rounded-md border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-        >
-          Register another member
-        </button>
       </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
-      {/* Header */}
-      <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
-       
-        <h1 className="mt-1 text-xl text-orange-500 sm:text-2xl">Add member</h1>
-      </div>
-
-      {/* Ledger-style progress rail */}
-      <div className="flex border-b border-stone-200 bg-stone-50 px-2 sm:px-4">
-        {STEPS.map((s, i) => {
-          const state = i < step ? "done" : i === step ? "active" : "upcoming";
-          return (
-            <div
-              key={s.label}
-              className={`flex flex-1 flex-col items-center gap-1.5 border-t-2 px-1 py-3 text-center ${
-                state === "active"
-                  ? "border-emerald-800"
-                  : state === "done"
-                  ? "border-emerald-800/40"
-                  : "border-transparent"
-              }`}
-            >
-              <span
-                className={`font-mono text-[11px] tabular-nums ${
-                  state === "upcoming" ? "text-stone-400" : "text-emerald-800"
-                }`}
-              >
-                {s.ledger}
-              </span>
-              <span
-                className={`hidden text-[11px] font-medium leading-tight sm:block ${
-                  state === "upcoming" ? "text-stone-400" : "text-stone-800"
-                }`}
-              >
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Body */}
-      <div className="px-6 py-7 sm:px-8">
-        <p className="mb-6 font-serif text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
-
-        {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                placeholder="As it appears on your national ID"
-              />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>National ID number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.idNumber}
-                  onChange={(e) => update("idNumber", e.target.value)}
-                  placeholder="e.g. 12345678"
-                  inputMode="numeric"
-                />
-                {errors.idNumber && <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Date of birth</label>
-                <input
-                  type="date"
-                  className={inputClasses}
-                  value={formData.dateOfBirth}
-                  onChange={(e) => update("dateOfBirth", e.target.value)}
-                />
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Gender</label>
-                <select
-                  className={inputClasses}
-                  value={formData.gender}
-                  onChange={(e) => update("gender", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="other">Prefer not to say</option>
-                </select>
-                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Marital status</label>
-                <select
-                  className={inputClasses}
-                  value={formData.maritalStatus}
-                  onChange={(e) => update("maritalStatus", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="single">Single</option>
-                  <option value="married">Married</option>
-                  <option value="widowed">Widowed</option>
-                  <option value="divorced">Divorced</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Email (optional)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="you@example.com"
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Physical address</label>
-              <input
-                className={inputClasses}
-                value={formData.physicalAddress}
-                onChange={(e) => update("physicalAddress", e.target.value)}
-                placeholder="Estate, street, house number"
-              />
-              {errors.physicalAddress && (
-                <p className="mt-1 text-xs text-red-600">{errors.physicalAddress}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClasses}>County</label>
-              <input
-                className={inputClasses}
-                value={formData.county}
-                onChange={(e) => update("county", e.target.value)}
-                placeholder="e.g. Nairobi"
-              />
-              {errors.county && <p className="mt-1 text-xs text-red-600">{errors.county}</p>}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-            <p className="text-sm text-stone-500">
-              Your next of kin will be the designated beneficiary on your account.
-            </p>
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.kinFullName}
-                onChange={(e) => update("kinFullName", e.target.value)}
-              />
-              {errors.kinFullName && (
-                <p className="mt-1 text-xs text-red-600">{errors.kinFullName}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Relationship</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinRelationship}
-                  onChange={(e) => update("kinRelationship", e.target.value)}
-                  placeholder="e.g. Spouse, Sibling"
-                />
-                {errors.kinRelationship && (
-                  <p className="mt-1 text-xs text-red-600">{errors.kinRelationship}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinPhone}
-                  onChange={(e) => update("kinPhone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.kinPhone && <p className="mt-1 text-xs text-red-600">{errors.kinPhone}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Membership type</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "individual", label: "Individual" },
-                  { value: "group", label: "Group / Chama" },
-                ].map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => update("memberType", opt.value)}
-                    className={`rounded-md border px-4 py-3 text-left text-sm font-medium transition-colors ${
-                      formData.memberType === opt.value
-                        ? "border-emerald-800 bg-emerald-50 text-emerald-900"
-                        : "border-stone-300 text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Monthly contribution (KES)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.monthlyContribution}
-                  onChange={(e) => update("monthlyContribution", e.target.value)}
-                  placeholder="e.g. 2000"
-                  inputMode="numeric"
-                />
-                {errors.monthlyContribution && (
-                  <p className="mt-1 text-xs text-red-600">{errors.monthlyContribution}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Number of shares</label>
-                <input
-                  className={inputClasses}
-                  value={formData.numberOfShares}
-                  onChange={(e) => update("numberOfShares", e.target.value)}
-                  placeholder="e.g. 20"
-                  inputMode="numeric"
-                />
-                {errors.numberOfShares && (
-                  <p className="mt-1 text-xs text-red-600">{errors.numberOfShares}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Main source of income</label>
-              <input
-                className={inputClasses}
-                value={formData.incomeSource}
-                onChange={(e) => update("incomeSource", e.target.value)}
-                placeholder="e.g. Employment, business, farming"
-              />
-              {errors.incomeSource && (
-                <p className="mt-1 text-xs text-red-600">{errors.incomeSource}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-6">
-            <div className="rounded-md border border-stone-200 divide-y divide-stone-200 overflow-hidden">
-              <ReviewSection
-                title="Personal details"
-                rows={[
-                  ["Full name", formData.fullName],
-                  ["ID number", formData.idNumber],
-                  ["Date of birth", formData.dateOfBirth],
-                  ["Gender", formData.gender],
-                ]}
-                onEdit={() => setStep(0)}
-              />
-              <ReviewSection
-                title="Contact & address"
-                rows={[
-                  ["Phone", formData.phone],
-                  ["Email", formData.email || "—"],
-                  ["Address", formData.physicalAddress],
-                  ["County", formData.county],
-                ]}
-                onEdit={() => setStep(1)}
-              />
-              <ReviewSection
-                title="Next of kin"
-                rows={[
-                  ["Name", formData.kinFullName],
-                  ["Relationship", formData.kinRelationship],
-                  ["Phone", formData.kinPhone],
-                ]}
-                onEdit={() => setStep(2)}
-              />
-              <ReviewSection
-                title="Membership & shares"
-                rows={[
-                  ["Type", formData.memberType],
-                  ["Monthly contribution", `KES ${formData.monthlyContribution || "0"}`],
-                  ["Shares", formData.numberOfShares],
-                  ["Income source", formData.incomeSource],
-                ]}
-                onEdit={() => setStep(3)}
-              />
-            </div>
-
-            <label className="flex items-start gap-2.5 text-sm text-stone-700">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-800 focus:ring-emerald-800/30"
-                checked={formData.termsAccepted}
-                onChange={(e) => update("termsAccepted", e.target.checked)}
-              />
-              <span>
-                I confirm the information provided is accurate and I agree to the Sacco's
-                membership terms and bylaws.
-              </span>
-            </label>
-            {errors.termsAccepted && (
-              <p className="text-xs text-red-600">{errors.termsAccepted}</p>
-            )}
-
-            {submitError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Footer nav */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-6 py-4 sm:px-8">
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={step === 0}
-          className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-0"
-        >
-          Back
-        </button>
-        {!isLastStep ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-60 transition-colors"
-          >
-            {submitting ? "Submitting…" : "Submit application"}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ReviewSection({
-  title,
-  rows,
-  onEdit,
-}: {
-  title: string;
-  rows: [string, string][];
-  onEdit: () => void;
-}) {
-  return (
-    <div className="px-4 py-3.5">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-          {title}
-        </p>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="text-xs font-medium text-emerald-800 hover:underline"
-        >
-          Edit
-        </button>
-      </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-stone-500">{label}</dt>
-            <dd className="text-stone-900">{value || "—"}</dd>
-          </div>
-        ))}
-      </dl>
     </div>
   );
 }
