@@ -74,14 +74,14 @@ export default function MembersTable() {
   }
 
   return (
-    <div className="w-1/2">
+    <div className=" mt-10 ml-4 md:ml-20">
       {/* Filters */}
-      <div className="flex flex-col gap-3 border-b border-stone-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3  ml-4 border-b border-stone-200 py-4 md:flex-row sm:items-center ">
         <input
           value={query}
           onChange={(e) => updateQuery(e.target.value)}
           placeholder="Search name, ID, phone"
-          className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 sm:w-56"
+          className=" rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 "
         />
         <select
           value={statusFilter}

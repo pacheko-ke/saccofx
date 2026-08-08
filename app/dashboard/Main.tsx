@@ -60,7 +60,7 @@ export default function Main() {
     };
     return (
 
-        <div className="space-y-6 w-full bg-white md:h-screen">
+        <div className="space-y-6 w-full bg-white px-4 md:h-screen">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
