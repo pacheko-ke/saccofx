@@ -185,7 +185,7 @@ export default function MemberRegistrationForm() {
   }
 
   return (
-    <div className="mx-4 mt-4  overflow-hidden rounded-lg border border-stone-200 bg-white">
+    <div className="mx-4 mt-14  overflow-hidden rounded-lg border border-stone-200 bg-white">
       {/* Header */}
       <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
        
@@ -208,7 +208,7 @@ export default function MemberRegistrationForm() {
               }`}
             >
               <span
-                className={`font-mono text-[11px] tabular-nums ${
+                className={` text-[11px] tabular-nums ${
                   state === "upcoming" ? "text-stone-400" : "text-emerald-800"
                 }`}
               >
@@ -228,7 +228,7 @@ export default function MemberRegistrationForm() {
 
       {/* Body */}
       <div className="px-6 py-7 sm:px-8">
-        <p className="mb-6 font-serif text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
+        <p className="mb-6  text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
 
         {step === 0 && (
           <div className="space-y-5">

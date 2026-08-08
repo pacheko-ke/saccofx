@@ -1,5 +1,7 @@
 "use client";
 
+// import { Link } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 /**
@@ -75,7 +77,9 @@ export default function MembersTable() {
 
   return (
     <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
-      <button className="self-end bg-orange-400 text-white rounded-md px-4 py-2">Create Member</button>
+      <Link href="./add-members" className="self-end bg-orange-400 text-white rounded-md px-4 py-2">
+        Create Member
+      </Link>
       {/* Filters */}
       <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
         <input
