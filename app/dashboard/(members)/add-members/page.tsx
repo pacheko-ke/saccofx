@@ -185,7 +185,7 @@ export default function MemberRegistrationForm() {
   }
 
   return (
-    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
+    <div className="mx-4 mt-4  overflow-hidden rounded-lg border border-stone-200 bg-white">
       {/* Header */}
       <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
        
@@ -546,7 +546,7 @@ export default function MemberRegistrationForm() {
           <button
             type="button"
             onClick={goNext}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
+            className="rounded-md bg-orange-400 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
           >
             Continue
           </button>
