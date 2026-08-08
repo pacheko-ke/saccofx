@@ -74,7 +74,8 @@ export default function MembersTable() {
   }
 
   return (
-    <div className=" mt-10 ml-4 md:ml-20 ">
+    <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
+      <button className="self-end bg-orange-400 text-white rounded-md px-4 py-2">Create Member</button>
       {/* Filters */}
       <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
         <input
