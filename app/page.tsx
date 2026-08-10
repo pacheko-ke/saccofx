@@ -107,12 +107,12 @@ export default function Home() {
               BUILT FOR KENYAN SACCOs
             </span>
             <h1
-              className="text-[42px] leading-[1.08] tracking-tight text-[#0F2F26] md:text-[54px]"
+              className="text-[40px] leading-[1.08] tracking-tight text-[#0F2F26] md:text-[54px] px-auto"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
             >
               One ledger for every share, saving and loan.
             </h1>
-            <p className="mt-6 max-w-md text-[17px] leading-relaxed text-[#3D4F47]">
+            <p className="mt-6 md:max-w-md text-[17px] leading-relaxed text-[#3D4F47]">
               SaccoFX Pro is core banking software for savings and credit cooperatives —
               member accounts, loans and M-Pesa payments, kept in a single balanced book.
             </p>
@@ -137,7 +137,7 @@ export default function Home() {
 
           {/* Signature element: live passbook ledger */}
           <div className="relative flex items-center">
-            <div className="relative w-full overflow-hidden rounded-[4px] border border-[#D8CFBA] bg-[#FFFDF8] shadow-[0_1px_0_#D8CFBA,0_18px_40px_-24px_rgba(15,47,38,0.35)]">
+            <div className="relative w-screen overflow-hidden rounded-[4px] border border-[#D8CFBA] bg-[#FFFDF8] shadow-[0_1px_0_#D8CFBA,0_18px_40px_-24px_rgba(15,47,38,0.35)]">
               {/* perforated edge */}
               <div className="absolute left-0 top-0 flex h-full w-4 flex-col items-center justify-around bg-[#0F2F26]/[0.04]">
                 {Array.from({ length: 14 }).map((_, i) => (
@@ -208,7 +208,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-[4px] border border-[#D8CFBA] bg-[#D8CFBA] sm:grid-cols-2">
+          <div className="mt-14 grid gap-px overflow-hidden rounded-sm border border-[#D8CFBA] bg-[#D8CFBA] sm:grid-cols-2">
             {FEATURES.map((f) => (
               <div key={f.label} className="bg-[#FFFDF8] p-8">
                 <span
