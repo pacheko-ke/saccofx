@@ -19,7 +19,7 @@ export async function GET(request: Request) {
           loans.principal_amount,
           loans.outstanding_principal,
           loans.member_id,
-          loans.id_number,
+    
           loans.created_at,
 
           members.member_number,
@@ -27,7 +27,6 @@ export async function GET(request: Request) {
           members.last_name,
           members.id_number,
           members.phone_primary,
-
           loan_products.product_name,
           loan_products.product_code
 
