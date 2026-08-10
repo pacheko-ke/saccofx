@@ -95,7 +95,7 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[#D8CFBA]/70 pr-10">
+      <section className=" md:relative border-b border-[#D8CFBA]/70 pr-10">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 py-20 md:grid-cols-[1.1fr_1fr] md:py-28">
           <div className="flex flex-col justify-center">
             <span
