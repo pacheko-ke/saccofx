@@ -77,8 +77,8 @@ export default function MembersPage() {
   );
 
   return (
-    <div className="p-6 mt-10 flex flex-col gap-4">
-      <Link href="/dashboard/add-member" className="text-white bg-orange-400 px-4 py-2 rounded-md self-end">Add Member</Link>
+    <div className="px-2 mt-10 flex flex-col gap-4 md:mx-20">
+      <Link href="/dashboard/add-members" className="text-white bg-orange-400 px-4 py-2 rounded-md self-end">Add Member</Link>
       <h1 className="text-xl font-semibold mb-4">Members</h1>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
