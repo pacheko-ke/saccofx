@@ -95,14 +95,14 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[#D8CFBA]/70">
+      <section className="relative overflow-hidden border-b border-[#D8CFBA]/70 mx-auto">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 py-20 md:grid-cols-[1.1fr_1fr] md:py-28">
           <div className="flex flex-col justify-center">
             <span
               className="mb-6 inline-flex w-fit items-center gap-2 rounded-[3px] border border-[#B98A3D]/40 bg-[#B98A3D]/10 px-3 py-1 text-[12px] font-medium tracking-wide text-[#8C6825]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
-              BUILT FOR KENYAN SACCOs
+              BUILT FOR MODERN SACCOs
             </span>
             <h1
               className="text-[42px] leading-[1.08] tracking-tight text-[#0F2F26] md:text-[54px]"
