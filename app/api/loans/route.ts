@@ -19,6 +19,7 @@ export async function GET(request: Request) {
           loans.principal_amount,
           loans.outstanding_principal,
           loans.member_id,
+          loans.id_number,
           loans.created_at,
 
           members.member_number,

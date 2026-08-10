@@ -86,7 +86,7 @@ setLoans(data.loans);
         href="/dashboard/add-members"
         className="text-white bg-orange-400 px-4 py-2 rounded-md self-end"
       >
-        Add Member
+        Loan Application
       </Link>
       <h1 className="text-xl font-semibold mb-4">Loans</h1>
 
@@ -148,7 +148,7 @@ setLoans(data.loans);
                   <td className="px-4 py-2">
                     {l.first_name} {l.last_name}
                   </td>
-                  <td className="px-4 py-2">{l.member_id}</td>
+                  <td className="px-4 py-2">{l.id_number}</td>
                   <td className="px-4 py-2">{l.product_name}</td>
                   <td className="px-4 py-2">
                     KES {Number(l.principal_amount).toLocaleString()}
