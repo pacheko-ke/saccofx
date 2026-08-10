@@ -102,7 +102,7 @@ export default function Home() {
               className="mb-6 inline-flex w-fit items-center gap-2 rounded-[3px] border border-[#B98A3D]/40 bg-[#B98A3D]/10 px-3 py-1 text-[12px] font-medium tracking-wide text-[#8C6825]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
-              BUILT FOR MODERN SACCOs
+              BUILT FOR MODERN SACCOs--
             </span>
             <h1
               className="text-[42px] leading-[1.08] tracking-tight text-[#0F2F26] md:text-[54px]"
