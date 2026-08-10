@@ -69,7 +69,9 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-[#D8CFBA]/70 bg-[#F6F3EC]/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-           
+            <span className="flex h-7 w-7 items-center justify-center rounded-[3px] bg-[#0F2F26] text-[13px] font-semibold text-[#F6F3EC]" style={{ fontFamily: "var(--font-mono)" }}>
+              S
+            </span>
             <span className="text-[15px] font-semibold tracking-tight">SaccoFX Pro</span>
           </div>
           <nav className="hidden items-center gap-8 text-[14px] text-[#3D4F47] md:flex">
@@ -95,14 +97,14 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className=" md:relative border-b border-[#D8CFBA]/70 pr-10">
+      <section className="relative overflow-hidden border-b border-[#D8CFBA]/70">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 py-20 md:grid-cols-[1.1fr_1fr] md:py-28">
           <div className="flex flex-col justify-center">
             <span
               className="mb-6 inline-flex w-fit items-center gap-2 rounded-[3px] border border-[#B98A3D]/40 bg-[#B98A3D]/10 px-3 py-1 text-[12px] font-medium tracking-wide text-[#8C6825]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
-              BUILT FOR MODERN SACCOs--
+              BUILT FOR KENYAN SACCOs
             </span>
             <h1
               className="text-[42px] leading-[1.08] tracking-tight text-[#0F2F26] md:text-[54px]"
@@ -281,7 +283,7 @@ export default function Home() {
       <footer className="bg-[#0B241C] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-[13px] text-[#7C9186] sm:flex-row">
           <span>© {new Date().getFullYear()} SaccoFX Pro</span>
-          <span style={{ fontFamily: "var(--font-mono)" }}>Pacheko Technologies</span>
+          <span style={{ fontFamily: "var(--font-mono)" }}>Nairobi, Kenya</span>
         </div>
       </footer>
 
