@@ -19,7 +19,7 @@ interface Loan {
   created_at: string;
 }
 
-const STATUS_OPTIONS = ["all", "pending", "disbursed", "disbursed", "closed", "written_off"];
+const STATUS_OPTIONS = ["all", "pending", "disbursed", "closed", "written_off"];
 const PAGE_SIZE = 20;
 
 export default function LoansPage() {
@@ -39,7 +39,7 @@ export default function LoansPage() {
         const data = await res.json();
         const flatLoans = Array.isArray(data.loans[0]) ? data.loans.flat() : data.loans;
 setLoans(data.loans);
-        console.log(data.loans);
+        // console.log(data.loans);
         // setLoans(data.loans);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
@@ -57,7 +57,7 @@ setLoans(data.loans);
       if (!matchesStatus) return false;
 
       if (!q) return true;
-      console.log(l.status)
+      // console.log(l.status)
 
       const fullName = `${l.first_name} ${l.last_name}`.toLowerCase();
       return (
@@ -142,7 +142,7 @@ setLoans(data.loans);
               </tr>
             ) : (
               paginated.map((l) => (
-                console.log(l.principal_amount),
+                
                 <tr key={l.loan_id} className="border-t">
                   <td className="px-4 py-2">{l.loan_account_number}</td>
                   <td className="px-4 py-2">

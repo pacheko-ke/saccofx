@@ -47,10 +47,10 @@ export default function Main() {
     ];
 
     const recentOrders = [
-        { id: "#3921", customer: "Patrick", amount: "$1,240.00", status: "Active" },
-        { id: "#3920", customer: "Joshua", amount: "$890.00", status: "Pending" },
-        { id: "#3919", customer: "Janet", amount: "$2,150.00", status: "Active" },
-        { id: "#3918", customer: "Maria", amount: "$430.00", status: "Active" },
+        { id: "#3921", customer: "Patrick", amount: "KES 1,240.00", status: "Active" },
+        { id: "#3920", customer: "Joshua", amount: "KES 890.00", status: "Pending" },
+        { id: "#3919", customer: "Janet", amount: "KES 2,150.00", status: "Active" },
+        { id: "#3918", customer: "Maria", amount: "KES 430.00", status: "Active" },
     ];
 
     const statusStyles: Record<string, string> = {

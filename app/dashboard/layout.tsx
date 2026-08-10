@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <Sidebar></Sidebar>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <div className="min-h-full flex flex-col">{children}</div>
     </html>
   );
 }
