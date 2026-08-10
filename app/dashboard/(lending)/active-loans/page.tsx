@@ -1,169 +1,194 @@
 "use client";
 
-// import { Link } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+interface Loan {
+  loan_id: string;
+  loan_account_number: string;
+  member_id: string;
+  member_number: string;
+  first_name: string;
+  last_name: string;
+  id_number: string;
+  phone_primary: string;
+  product_name: string;
+  principal_amount: string;
+  outstanding_principal: string;
+  status: string;
+  created_at: string;
+}
 
-// const fetchMembers = async () => {
-//   // Simulate an API call to fetch members
-//   const response = await fetch("/api/members",);
-//   if (!response.ok) {
-//     throw new Error("Failed to fetch members");
-//   }
-//   return response.json();
-// };
+const STATUS_OPTIONS = ["all", "pending", "disbursed", "disbursed", "closed", "written_off"];
+const PAGE_SIZE = 20;
 
+export default function LoansPage() {
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-
-type Member = {
-  id: string;
-  fullName: string;
-  idNumber: string;
-  phone: string;
-  shares: number;
-  monthlyContribution: number;
-  status: "active" | "pending" | "dormant";
-};
-
-const members: Member[] = [
-  { id: "m_001", fullName: "Wanjiru Kamau", idNumber: "27884451", phone: "0712 345 678", shares: 40, monthlyContribution: 3000, status: "active" },
-  { id: "m_002", fullName: "Otieno Onyango", idNumber: "24551029", phone: "0722 981 004", shares: 15, monthlyContribution: 1500, status: "pending" },
-  { id: "m_003", fullName: "Baraka Traders Chama", idNumber: "31007742", phone: "0701 552 213", shares: 120, monthlyContribution: 12000, status: "active" },
-  { id: "m_004", fullName: "Achieng Odhiambo", idNumber: "29981123", phone: "0733 220 981", shares: 8, monthlyContribution: 1000, status: "dormant" },
-  { id: "m_005", fullName: "Kiptoo Sang", idNumber: "26674401", phone: "0745 667 812", shares: 60, monthlyContribution: 5000, status: "active" },
-  { id: "m_006", fullName: "Nafula Wekesa", idNumber: "28871192", phone: "0788 213 447", shares: 22, monthlyContribution: 2200, status: "pending" },
-  { id: "m_007", fullName: "Mutiso Kioko", idNumber: "25109834", phone: "0711 998 302", shares: 5, monthlyContribution: 800, status: "dormant" },
-  { id: "m_008", fullName: "Chebet Rono", idNumber: "27502217", phone: "0700 445 118", shares: 90, monthlyContribution: 7500, status: "active" },
-  { id: "m_009", fullName: "Riverside Boda Sacco Group", idNumber: "30887761", phone: "0722 004 559", shares: 200, monthlyContribution: 18000, status: "active" },
-  { id: "m_010", fullName: "Njoroge Mwangi", idNumber: "24418825", phone: "0733 771 903", shares: 12, monthlyContribution: 1200, status: "pending" },
-  { id: "m_011", fullName: "Aisha Mohammed", idNumber: "29004471", phone: "0704 552 810", shares: 35, monthlyContribution: 3500, status: "active" },
-  { id: "m_012", fullName: "Kamande Njuguna", idNumber: "23387765", phone: "0712 664 291", shares: 3, monthlyContribution: 500, status: "dormant" },
-];
-
-const STATUS_STYLES: Record<Member["status"], string> = {
-  active: "bg-emerald-50 text-emerald-800",
-  pending: "bg-amber-50 text-amber-800",
-  dormant: "bg-stone-100 text-stone-500",
-};
-
-const PAGE_SIZE = 5;
-
-export default function MembersTable() {
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Member["status"] | "all">("all");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/loans");
+        if (!res.ok) throw new Error("Failed to load loans");
+        const data = await res.json();
+        const flatLoans = Array.isArray(data.loans[0]) ? data.loans.flat() : data.loans;
+setLoans(data.loans);
+        console.log(data.loans);
+        // setLoans(data.loans);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   const filtered = useMemo(() => {
-    return members.filter((m) => {
-      const matchesStatus = statusFilter === "all" || m.status === statusFilter;
-      const q = query.trim().toLowerCase();
-      const matchesQuery =
-        !q ||
-        m.fullName.toLowerCase().includes(q) ||
-        m.idNumber.includes(q) ||
-        m.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
-      return matchesStatus && matchesQuery;
+    const q = search.trim().toLowerCase();
+
+    return loans.filter((l) => {
+      const matchesStatus = status === "all" || l.status === status;
+      if (!matchesStatus) return false;
+
+      if (!q) return true;
+      console.log(l.status)
+
+      const fullName = `${l.first_name} ${l.last_name}`.toLowerCase();
+      return (
+        l.loan_account_number.toLowerCase().includes(q) ||
+        l.member_number.toLowerCase().includes(q) ||
+        l.product_name.toLowerCase().includes(q) ||
+        l.first_name.toLowerCase().includes(q) ||
+        l.last_name.toLowerCase().includes(q) ||
+        fullName.includes(q) ||
+        l.phone_primary.toLowerCase().includes(q) ||
+        l.id_number.toLowerCase().includes(q)
+      );
     });
-  }, [query, statusFilter]);
+  }, [loans, search, status]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, status]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  function updateQuery(value: string) {
-    setQuery(value);
-    setPage(1);
-  }
-
-  function updateStatus(value: Member["status"] | "all") {
-    setStatusFilter(value);
-    setPage(1);
-  }
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
-      <Link href="./add-members" className="self-end bg-orange-400 text-white rounded-md px-4 py-2">
-Loan Apllication      </Link>
-      {/* Filters */}
-      <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
+    <div className="px-2 mt-10 flex flex-col gap-4 md:mx-20 mb-4">
+      <Link
+        href="/dashboard/add-members"
+        className="text-white bg-orange-400 px-4 py-2 rounded-md self-end"
+      >
+        Add Member
+      </Link>
+      <h1 className="text-xl font-semibold mb-4">Loans</h1>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
-          value={query}
-          onChange={(e) => updateQuery(e.target.value)}
-          placeholder="Search name, ID, phone"
-          className=" rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 "
+          type="text"
+          placeholder="Search by name, phone, member no., ID..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border rounded px-3 py-2 text-sm"
         />
         <select
-          value={statusFilter}
-          onChange={(e) => updateStatus(e.target.value as Member["status"] | "all")}
-          className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="border rounded px-3 py-2 text-sm capitalize"
         >
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="pending">Pending</option>
-          <option value="dormant">Dormant</option>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s} className="capitalize">
+              {s === "all" ? "All statuses" : s}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-      <table className=" text-sm w-full ">
-        <thead>
-          <tr className="border-b border-stone-200 bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
-            <th className="px-4 py-3 font-medium">Name</th>
-            <th className="px-4 py-3 font-medium">ID number</th>
-            <th className="px-4 py-3 font-medium">Phone</th>
-            <th className="px-4 py-3 font-medium">Shares</th>
-            <th className="px-4 py-3 font-medium">Contribution</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-stone-100">
-          {paged.map((m) => (
-            <tr key={m.id}>
-              <td className="px-4 py-3 font-medium text-stone-900">{m.fullName}</td>
-              <td className="px-4 py-3 font-mono text-stone-600">{m.idNumber}</td>
-              <td className="px-4 py-3 text-stone-700">{m.phone}</td>
-              <td className="px-4 py-3 text-stone-700">{m.shares}</td>
-              <td className="px-4 py-3 text-stone-700">
-                KES {m.monthlyContribution.toLocaleString()}
-              </td>
-              <td className="px-4 py-3">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[m.status]}`}>
-                  {m.status}
-                </span>
-              </td>
-            </tr>
-          ))}
+      {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 
-          {paged.length === 0 && (
+      <div className="overflow-x-auto border rounded-lg">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-left">
             <tr>
-              <td colSpan={6} className="px-4 py-10 text-center text-sm text-stone-400">
-                No members match your search.
-              </td>
+              <th className="px-4 py-2">App. No</th>
+              <th className="px-4 py-2">Applicant</th>
+              <th className="px-4 py-2">Applicant ID</th>
+              <th className="px-4 py-2">Product</th>
+              <th className="px-4 py-2">Loan Amount</th>
+              <th className="px-4 py-2">Outstanding</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Action</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
+                  Loading...
+                </td>
+              </tr>
+            ) : paginated.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
+                  No Loans found
+                </td>
+              </tr>
+            ) : (
+              paginated.map((l) => (
+                console.log(l.principal_amount),
+                <tr key={l.loan_id} className="border-t">
+                  <td className="px-4 py-2">{l.loan_account_number}</td>
+                  <td className="px-4 py-2">
+                    {l.first_name} {l.last_name}
+                  </td>
+                  <td className="px-4 py-2">{l.member_id}</td>
+                  <td className="px-4 py-2">{l.product_name}</td>
+                  <td className="px-4 py-2">
+                    KES {Number(l.principal_amount).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2">
+                    KES {Number(l.outstanding_principal).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2 capitalize">{l.status}</td>
+                  <td className="px-4 py-2">
+                    <Link
+                      href={`/dashboard/loans/${l.loan_id}`}
+                      className="text-emerald-800 hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3">
-        <p className="text-xs text-stone-500">
-          Page {currentPage} of {totalPages} · {filtered.length} member{filtered.length === 1 ? "" : "s"}
-        </p>
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-sm text-gray-500">
+          {filtered.length} loan{filtered.length !== 1 ? "s" : ""} · Page {page} of{" "}
+          {totalPages}
+        </span>
         <div className="flex gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+            disabled={page === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
           >
-            Previous
+            Prev
           </button>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+            disabled={page >= totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
           >
             Next
           </button>
