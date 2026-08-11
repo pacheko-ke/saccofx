@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyOtp, OtpPurpose } from "@/app/lib/otp/route";
+import { verifyOtp, OtpPurpose } from "@/app/lib/otp/otp";
 
 export async function POST(req: NextRequest) {
   try {
