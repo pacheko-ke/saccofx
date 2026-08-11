@@ -195,7 +195,7 @@ function ModeSelect({ onSelect }: { onSelect: (m: Mode) => void }) {
           onClick={() => onSelect("single")}
           className="rounded-lg border border-[#c9a24b]/40 bg-white p-5 text-left transition-colors hover:border-[#1c2b22]"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e4efe6] text-[#1c2b22]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e4efe6] text-[#1c2b22]">
             ✎
           </div>
           <p className="mt-3 font-serif text-lg text-[#1c2b22]">Add one member</p>
