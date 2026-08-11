@@ -40,7 +40,7 @@ export default function LoanProductsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/loan-products");
+        const res = await fetch("/api/loans/loan-products");
         if (!res.ok) throw new Error("Failed to load loan products");
         const data = await res.json();
         setProducts(data.loanProducts);
