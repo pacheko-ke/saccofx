@@ -107,7 +107,7 @@ interface BulkRow {
 }
 
 function downloadMemberTemplate() {
-  const worksheetData = [TEMPLATE_COLUMNS, SAMPLE_ROW];
+  const worksheetData: string[][] = [[...TEMPLATE_COLUMNS], SAMPLE_ROW];
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   worksheet["!cols"] = TEMPLATE_COLUMNS.map(() => ({ wch: 24 }));
 
