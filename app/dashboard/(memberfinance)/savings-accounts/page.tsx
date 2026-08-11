@@ -14,7 +14,7 @@ interface Member {
   createdAt: string;
 }
 
-const STATUS_OPTIONS = ["all", "active", "inactive", "pending", "suspended"];
+const STATUS_OPTIONS = ["all", "active", "inactive", "suspended"];
 const PAGE_SIZE = 20;
 
 const STATUS_STYLES: Record<string, string> = {
@@ -24,7 +24,7 @@ const STATUS_STYLES: Record<string, string> = {
   suspended: "bg-[#f4dede] text-[#8a2c2c]",
 };
 
-export default function MembersPage() {
+export default function Savings() {
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +37,8 @@ export default function MembersPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/members");
-        if (!res.ok) throw new Error("Failed to load members");
+        const res = await fetch("/api/savings");
+        if (!res.ok) throw new Error("Failed to load accounts");
         const data = await res.json();
         setAllMembers(data.members);
       } catch (err) {

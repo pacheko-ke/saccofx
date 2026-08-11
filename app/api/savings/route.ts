@@ -13,17 +13,17 @@ export async function GET(request: Request) {
     const [members, totalResult] = await Promise.all([
       sql`
         SELECT
-        id_number      AS "idNumber",
-          member_number   AS "memberNumber",
-          first_name      AS "firstName",
-          last_name       AS "lastName",
-          phone_primary  AS "phone",
-          status,
-          join_date      AS "createdAt"
-        FROM members
-        ORDER BY join_date DESC
-        LIMIT ${pageSize}
-        OFFSET ${offset}
+        savings_account_id,
+        account_number AS "accountNumber",
+        members.member_id,
+        savings_accounts.member_id AS "idNumber",
+        balance AS "balance",
+        status AS "status",
+        created_at AS "created"
+        FROM savings_accounts
+        INNER JOIN members ON savings_accounts.member_id=members.member_id
+    
+        
       `,
       sql`SELECT COUNT(*)::int AS count FROM members`,
     ]);
