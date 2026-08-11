@@ -114,8 +114,8 @@ export default function GeneralLedgerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#eee7d6]">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
+    <div className="min-h-screen bg-[#eee7d6] pt-4">
+      <div className="mx-auto max-w-6xl px-2 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="font-serif text-2xl text-[#1c2b22]">General ledger</h1>
@@ -138,7 +138,7 @@ export default function GeneralLedgerPage() {
         </div>
 
         {/* Filters */}
-        <div className="mb-5 rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-4">
+        <div className="mb-5 rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-2">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-[#4a5c50]">Account</label>

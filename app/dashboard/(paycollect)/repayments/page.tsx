@@ -1,8 +1,7 @@
-export default function repayments() {
+export default function MembershipCards() {
   return (
-    <div>
-      <h1>Repayments Page</h1>
-      {/* Add your repayments page content here */}
+    <div className="flex bg-white mt-50 mx-auto">
+      <h1>Module Under Development</h1>
     </div>
   );
 }
