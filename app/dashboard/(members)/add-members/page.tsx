@@ -183,19 +183,19 @@ export default function MemberRegistrationForm() {
 
 function ModeSelect({ onSelect }: { onSelect: (m: Mode) => void }) {
   return (
-    <div className="px-6 py-8 sm:px-8">
+    <div className="px-2 md:px-6 py-8 sm:px-8">
       <h1 className="font-serif text-xl text-[#1c2b22] sm:text-2xl">Add members</h1>
       <p className="mt-1 text-sm text-[#4a5c50]">
         Register a single member by hand, or import a batch of members from an Excel file.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 ">
         <button
           type="button"
           onClick={() => onSelect("single")}
           className="rounded-lg border border-[#c9a24b]/40 bg-white p-5 text-left transition-colors hover:border-[#1c2b22]"
         >
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e4efe6] text-[#1c2b22]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e4efe6] text-[#1c2b22]">
             ✎
           </div>
           <p className="mt-3 font-serif text-lg text-[#1c2b22]">Add one member</p>
