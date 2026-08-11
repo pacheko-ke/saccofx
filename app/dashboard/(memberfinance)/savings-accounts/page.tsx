@@ -1,173 +1,208 @@
 "use client";
 
-// import { Link } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-
-// const fetchMembers = async () => {
-//   // Simulate an API call to fetch members
-//   const response = await fetch("/api/members",);
-//   if (!response.ok) {
-//     throw new Error("Failed to fetch members");
-//   }
-//   return response.json();
-// };
-
-
-
-type Member = {
+interface Member {
   id: string;
-  fullName: string;
-  idNumber: string;
+  memberNumber: string;
+  firstName: string;
+  lastName: string;
   phone: string;
-  shares: number;
-  monthlyContribution: number;
-  status: "active" | "pending" | "dormant";
+  idNumber: string;
+  status: string;
+  createdAt: string;
+}
+
+const STATUS_OPTIONS = ["all", "active", "inactive", "pending", "suspended"];
+const PAGE_SIZE = 20;
+
+const STATUS_STYLES: Record<string, string> = {
+  active: "bg-[#e4efe6] text-[#1c2b22]",
+  pending: "bg-[#f3e6c8] text-[#7a5c1e]",
+  inactive: "bg-[#e2ddd0] text-[#4a5c50]",
+  suspended: "bg-[#f4dede] text-[#8a2c2c]",
 };
 
-const members: Member[] = [
-  { id: "m_001", fullName: "Wanjiru Kamau", idNumber: "27884451", phone: "0712 345 678", shares: 40, monthlyContribution: 3000, status: "active" },
-  { id: "m_002", fullName: "Otieno Onyango", idNumber: "24551029", phone: "0722 981 004", shares: 15, monthlyContribution: 1500, status: "pending" },
-  { id: "m_003", fullName: "Baraka Traders Chama", idNumber: "31007742", phone: "0701 552 213", shares: 120, monthlyContribution: 12000, status: "active" },
-  { id: "m_004", fullName: "Achieng Odhiambo", idNumber: "29981123", phone: "0733 220 981", shares: 8, monthlyContribution: 1000, status: "dormant" },
-  { id: "m_005", fullName: "Kiptoo Sang", idNumber: "26674401", phone: "0745 667 812", shares: 60, monthlyContribution: 5000, status: "active" },
-  { id: "m_006", fullName: "Nafula Wekesa", idNumber: "28871192", phone: "0788 213 447", shares: 22, monthlyContribution: 2200, status: "pending" },
-  { id: "m_007", fullName: "Mutiso Kioko", idNumber: "25109834", phone: "0711 998 302", shares: 5, monthlyContribution: 800, status: "dormant" },
-  { id: "m_008", fullName: "Chebet Rono", idNumber: "27502217", phone: "0700 445 118", shares: 90, monthlyContribution: 7500, status: "active" },
-  { id: "m_009", fullName: "Riverside Boda Sacco Group", idNumber: "30887761", phone: "0722 004 559", shares: 200, monthlyContribution: 18000, status: "active" },
-  { id: "m_010", fullName: "Njoroge Mwangi", idNumber: "24418825", phone: "0733 771 903", shares: 12, monthlyContribution: 1200, status: "pending" },
-  { id: "m_011", fullName: "Aisha Mohammed", idNumber: "29004471", phone: "0704 552 810", shares: 35, monthlyContribution: 3500, status: "active" },
-  { id: "m_012", fullName: "Kamande Njuguna", idNumber: "23387765", phone: "0712 664 291", shares: 3, monthlyContribution: 500, status: "dormant" },
-];
+export default function MembersPage() {
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const STATUS_STYLES: Record<Member["status"], string> = {
-  active: "bg-emerald-50 text-emerald-800",
-  pending: "bg-amber-50 text-amber-800",
-  dormant: "bg-stone-100 text-stone-500",
-};
-
-const PAGE_SIZE = 5;
-
-export default function MembersTable() {
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Member["status"] | "all">("all");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
+  // Fetch full member list once on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/members");
+        if (!res.ok) throw new Error("Failed to load members");
+        const data = await res.json();
+        setAllMembers(data.members);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Filter entirely client-side
   const filtered = useMemo(() => {
-    return members.filter((m) => {
-      const matchesStatus = statusFilter === "all" || m.status === statusFilter;
-      const q = query.trim().toLowerCase();
-      const matchesQuery =
-        !q ||
-        m.fullName.toLowerCase().includes(q) ||
-        m.idNumber.includes(q) ||
-        m.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
-      return matchesStatus && matchesQuery;
+    const q = search.trim().toLowerCase();
+
+    return allMembers.filter((m) => {
+      const matchesStatus = status === "all" || m.status === status;
+      if (!matchesStatus) return false;
+
+      if (!q) return true;
+
+      const fullName = `${m.firstName} ${m.lastName}`.toLowerCase();
+      return (
+        m.memberNumber.toLowerCase().includes(q) ||
+        m.firstName.toLowerCase().includes(q) ||
+        m.lastName.toLowerCase().includes(q) ||
+        fullName.includes(q) ||
+        m.phone.toLowerCase().includes(q) ||
+        m.idNumber.toLowerCase().includes(q)
+      );
     });
-  }, [query, statusFilter]);
+  }, [allMembers, search, status]);
+
+  // Reset to page 1 whenever the filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, status]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  function updateQuery(value: string) {
-    setQuery(value);
-    setPage(1);
-  }
-
-  function updateStatus(value: Member["status"] | "all") {
-    setStatusFilter(value);
-    setPage(1);
-  }
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className=" mt-10 mx-4 md:ml-20  flex flex-col">
-      {/* <Link href="./add-members" className="self-end bg-orange-400 text-white rounded-md px-4 py-2">
-        
-      </Link> */}
-      {/* Filters */}
-      <div className="flex flex-col gap-3   border-b border-stone-200 py-4 md:flex-row sm:items-center ">
-        <input
-          value={query}
-          onChange={(e) => updateQuery(e.target.value)}
-          placeholder="Search name, ID, phone"
-          className=" rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 "
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => updateStatus(e.target.value as Member["status"] | "all")}
-          className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
-        >
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="pending">Pending</option>
-          <option value="dormant">Dormant</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-      <table className=" text-sm w-full ">
-        <thead>
-          <tr className="border-b border-stone-200 bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
-            <th className="px-4 py-3 font-medium">Name</th>
-            <th className="px-4 py-3 font-medium">ID number</th>
-            <th className="px-4 py-3 font-medium">Phone</th>
-            <th className="px-4 py-3 font-medium">Shares</th>
-            <th className="px-4 py-3 font-medium">Contribution</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-stone-100">
-          {paged.map((m) => (
-            <tr key={m.id}>
-              <td className="px-4 py-3 font-medium text-stone-900">{m.fullName}</td>
-              <td className="px-4 py-3 font-mono text-stone-600">{m.idNumber}</td>
-              <td className="px-4 py-3 text-stone-700">{m.phone}</td>
-              <td className="px-4 py-3 text-stone-700">{m.shares}</td>
-              <td className="px-4 py-3 text-stone-700">
-                KES {m.monthlyContribution.toLocaleString()}
-              </td>
-              <td className="px-4 py-3">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[m.status]}`}>
-                  {m.status}
-                </span>
-              </td>
-            </tr>
-          ))}
-
-          {paged.length === 0 && (
-            <tr>
-              <td colSpan={6} className="px-4 py-10 text-center text-sm text-stone-400">
-                No members match your search.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3">
-        <p className="text-xs text-stone-500">
-          Page {currentPage} of {totalPages} · {filtered.length} member{filtered.length === 1 ? "" : "s"}
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+    <div className="min-h-screen bg-[#eee7d6]">
+      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-serif text-2xl text-[#1c2b22]">Savings Accounts</h1>
+            <p className="mt-1 text-sm text-[#4a5c50]">View Savings across accounts.</p>
+          </div>
+          <Link
+            href="/dashboard/add-members"
+            className="inline-flex items-center justify-center rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
           >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+            + Open Account
+          </Link>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            placeholder="Search by name, phone, member no., ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] placeholder:text-[#9aa79f] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
+          />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm capitalize text-[#1c2b22] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
           >
-            Next
-          </button>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s} className="capitalize">
+                {s === "all" ? "All statuses" : s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-md bg-[#f4dede] px-4 py-2 text-sm text-[#8a2c2c]">{error}</div>
+        )}
+
+        {/* Ledger table */}
+        <div className="overflow-x-auto rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] shadow-sm">
+          <table className="min-w-full text-sm">
+            <thead className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60 text-left">
+              <tr>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Account No.</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Owner Name</th>
+                                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">ID No.</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Balance</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Created</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Status</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#c9a24b]/15">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[#9aa79f]">
+                    Loading members...
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[#9aa79f]">
+                    No members found
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((m) => (
+                  <tr key={m.id} className="hover:bg-[#eee7d6]/40">
+                    <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{m.memberNumber}</td>
+                    <td className="px-4 py-3 text-[#1c2b22]">
+                      {m.firstName} {m.lastName}
+                    </td>
+                    <td className="px-4 py-3 text-[#4a5c50]">{m.phone}</td>
+                    <td className="px-4 py-3 text-[#4a5c50]">{m.idNumber}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                          STATUS_STYLES[m.status] ?? "bg-[#e2ddd0] text-[#4a5c50]"
+                        }`}
+                      >
+                        {m.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/members/${m.id}`}
+                        className="font-medium text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#233a2c]"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-[#4a5c50]">
+            {filtered.length} member{filtered.length !== 1 ? "s" : ""} · Page {page} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
