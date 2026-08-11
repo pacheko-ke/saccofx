@@ -112,7 +112,7 @@ export default function LoanApplicationPage() {
   const selectedProduct = LOAN_PRODUCTS.find((p) => p.id === loanDetails.loanProductId);
 
   return (
-    <div className="min-h-screen bg-[#eee7d6]">
+    <div className="min-h-screen bg-[#eee7d6] pt-4">
       <div className="mx-auto max-w-2xl px-4 py-10">
         <h1 className="font-serif text-2xl text-[#1c2b22]">Loan application</h1>
         <p className="mt-1 text-sm text-[#4a5c50]">SaccoFX Pro · Complete every step to submit your request.</p>
