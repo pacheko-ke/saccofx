@@ -14,6 +14,7 @@ interface LoanSummary {
     id: string;
     loanNumber: string;
     product_name: string;
+    outstanding:number;
     first_name: string;
     last_name: string;
     loan_account_number:string,
@@ -113,6 +114,7 @@ export default function LoanRepaymentsPage() {
     const loanId = params.loanId as string;
 
     const [loan, setLoan] = useState<LoanSummary | null>(null);
+    const [outstanding, setOutsatnding] = useState(null);
     const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
     const [repayments, setRepayments] = useState<RepaymentRow[]>([]);
     const [loading, setLoading] = useState(true);
@@ -133,6 +135,7 @@ export default function LoanRepaymentsPage() {
                     fetch(`/api/loans/${loanId}/schedule`),
                     fetch(`/api/loans/${loanId}/repayments`),
                 ]);
+              
 
                 if (!loanRes.ok) {
                     throw new Error(`Loan fetch failed: ${loanRes.status} ${loanRes.statusText}`);
@@ -144,7 +147,7 @@ export default function LoanRepaymentsPage() {
                     throw new Error(`Repayments fetch failed: ${repayRes.status} ${repayRes.statusText}`);
                 }
 
-                const loanData = await loanRes.json();
+                const loanData= await loanRes.json();
                 const scheduleData = await scheduleRes.json();
                 const repayData = await repayRes.json();
 
@@ -152,6 +155,10 @@ export default function LoanRepaymentsPage() {
 
                 if (!cancelled) {
                     setLoan(loanData.loan ?? loanData.loan);
+                    setOutsatnding(loanData.outstanding.outstanding_balance);
+                   
+                    // const outstandingBalance = data.outstanding.outstanding_balance;
+                    // console.log(loanData.outstanding.outstanding_balance)
                     // setSchedule(scheduleData.schedule ?? scheduleData ?? []);
                     // setRepayments(repayData.repayments ?? repayData ?? []);
                 }
@@ -215,7 +222,7 @@ export default function LoanRepaymentsPage() {
                 {/* Header */}
                 <header className="mb-6 border-b border-[#c9a24b]/40 pb-6">
                     <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c9a24b]">
-                        Loans &middot; Repayments
+                        Loans &middot; Repayments 
                     </p>
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
@@ -243,7 +250,8 @@ export default function LoanRepaymentsPage() {
 
                 {/* Summary cards */}
                 <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <SummaryCard label="Outstanding Balance" value={KES.format(loan.outstandingBalance)} accent="neutral" />
+                    <SummaryCard label="Outstanding Balance" value={KES.format(outstanding)} accent="neutral" />
+                    
                     <SummaryCard
                         label="Arrears"
                         value={loan.arrearsAmount > 0 ? KES.format(loan.arrearsAmount) : "None"}

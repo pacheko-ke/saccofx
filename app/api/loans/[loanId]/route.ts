@@ -23,11 +23,20 @@ export async function GET(
       WHERE loan_id = ${loanId}
     `;
 
+    const [outstanding] = await sql`
+      SELECT 
+  l.principal_amount - COALESCE(SUM(r.principal_component), 0) AS outstanding_balance
+FROM loans l
+LEFT JOIN loan_repayments r ON r.loan_id = l.loan_id
+WHERE l.loan_id = ${loanId}
+GROUP BY l.loan_id, l.principal_amount;
+    `;
+
     if (!loan) {
       return NextResponse.json({ error: "Loan not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ loan });
+    return NextResponse.json({ loan,outstanding });
   } catch (err) {
     console.error("Route error:", err);
     return NextResponse.json(
