@@ -215,7 +215,7 @@ export default function Dashboard() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-wide text-[#1c2b22]/55">Growth Trend</p>
-                <h2 className="font-serif text-lg text-[#1c2b22]">Savings &amp; Share Capital</h2>
+                <h2 className="font-serif md:text-lg text-[#1c2b22]">Savings &amp; Share Capital</h2>
               </div>
               <div className="flex gap-4 text-xs">
                 <LegendDot color="#1c2b22" label="Savings" />
@@ -392,12 +392,12 @@ export default function Dashboard() {
         <div className="mt-6 rounded-sm border border-[#c9a24b]/30 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-serif text-lg text-[#1c2b22]">Recent Members</h2>
-            <a
+            {/* <a
               href="#"
               className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]"
             >
               View all
-            </a>
+            </a> */}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
