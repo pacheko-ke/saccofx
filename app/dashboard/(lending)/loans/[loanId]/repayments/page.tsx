@@ -250,7 +250,7 @@ export default function LoanRepaymentsPage() {
 
                 {/* Summary cards */}
                 <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <SummaryCard label="Outstanding Balance" value={KES.format(outstanding)} accent="neutral" />
+                    <SummaryCard label="Outstanding Balance" value={KES.format(outstanding??0)} accent="neutral" />
                     
                     <SummaryCard
                         label="Arrears"
