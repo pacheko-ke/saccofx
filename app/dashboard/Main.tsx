@@ -181,7 +181,7 @@ export default function Dashboard() {
   const totalLoans = useMemo(() => portfolio.reduce((s, p) => s + p.value, 0), [portfolio]);
 
   return (
-    <div className="min-h-screen md:pt-0 bg-[#faf6ec] font-sans text-[#1c2b22] pt-10 w-full md:ml-14">
+    <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22]">
       <div className="mx-auto max-w-7xl px-6 py-10">
         {/* Header */}
         <header className="mb-8 border-b border-[#c9a24b]/40 pb-6">
@@ -196,7 +196,7 @@ export default function Dashboard() {
 
         {usingDemoData && (
           <div className="mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
-            Couldn't reach <code className="font-mono">/api/dashboard</code>.
+            Showing sample data — couldn't reach <code className="font-mono">/api/dashboard</code>.
             Connect the reporting endpoint to see live figures.
           </div>
         )}
@@ -215,7 +215,7 @@ export default function Dashboard() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-wide text-[#1c2b22]/55">Growth Trend</p>
-                <h2 className="font-serif md:text-lg text-[#1c2b22]">Savings &amp; Share Capital</h2>
+                <h2 className="font-serif text-lg text-[#1c2b22]">Savings &amp; Share Capital</h2>
               </div>
               <div className="flex gap-4 text-xs">
                 <LegendDot color="#1c2b22" label="Savings" />
@@ -248,8 +248,8 @@ export default function Dashboard() {
                   tickFormatter={(v) => `${v}M`}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `KES ${value.toFixed(2)}M`,
+                  formatter={(value, name) => [
+                    `KES ${Number(value ?? 0).toFixed(2)}M`,
                     name === "savings" ? "Savings" : "Share Capital",
                   ]}
                   contentStyle={{
@@ -286,10 +286,10 @@ export default function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value} loans (${((value / totalLoans) * 100).toFixed(1)}%)`,
-                    name,
-                  ]}
+                  formatter={(value, name) => {
+                    const n = Number(value ?? 0);
+                    return [`${n} loans (${((n / totalLoans) * 100).toFixed(1)}%)`, name];
+                  }}
                   contentStyle={{
                     background: "#faf6ec",
                     border: "1px solid rgba(201,162,75,0.4)",
@@ -346,8 +346,8 @@ export default function Dashboard() {
                   tickFormatter={(v) => `${v}M`}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `KES ${value.toFixed(2)}M`,
+                  formatter={(value, name) => [
+                    `KES ${Number(value ?? 0).toFixed(2)}M`,
                     name === "deposits" ? "Deposits" : "Withdrawals",
                   ]}
                   contentStyle={{
@@ -392,12 +392,12 @@ export default function Dashboard() {
         <div className="mt-6 rounded-sm border border-[#c9a24b]/30 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-serif text-lg text-[#1c2b22]">Recent Members</h2>
-            {/* <a
+            <a
               href="#"
               className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]"
             >
               View all
-            </a> */}
+            </a>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -445,7 +445,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
   const Icon = kpi.icon;
   const TrendIcon = kpi.trend === "up" ? ArrowUpRight : ArrowDownRight;
   return (
-    <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6] p-2 md:p-4">
+    <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6] p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs uppercase tracking-wide text-[#1c2b22]/55">{kpi.label}</span>
         <div className="rounded-sm border border-[#c9a24b]/30 bg-[#faf6ec] p-1.5">
@@ -453,7 +453,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
         </div>
       </div>
       <div className="flex items-end justify-between gap-2">
-        <span className="font-mono text-lg md:text-xl leading-none text-[#1c2b22]">{kpi.value}</span>
+        <span className="font-mono text-xl leading-none text-[#1c2b22]">{kpi.value}</span>
         <span
           className={`flex items-center gap-0.5 text-[11px] font-medium ${
             kpi.trend === "up" ? "text-[#5c7a5f]" : "text-[#b8543a]"
