@@ -13,14 +13,16 @@ type RepaymentMethod = "MPESA" | "COOP_IFT" | "PESALINK" | "CASH" | "BANK_TRANSF
 interface LoanSummary {
     id: string;
     loanNumber: string;
+    product_name: string;
     first_name: string;
     last_name: string;
     loan_account_number:string,
     member_number:string,
     productName: string;
     principal: number;
+    memberName:string;
     interestRate: number;
-    disbursedDate: string;
+    disbursed_at: string;
     termMonths: number;
     outstandingBalance: number;
     arrearsAmount: number;
