@@ -181,7 +181,7 @@ export default function Dashboard() {
   const totalLoans = useMemo(() => portfolio.reduce((s, p) => s + p.value, 0), [portfolio]);
 
   return (
-    <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22]">
+    <div className="min-h-screen pt-4 md:pl-0 mx-auto bg-[#faf6ec] font-sans text-[#1c2b22]">
       <div className="mx-auto max-w-7xl px-6 py-10">
         {/* Header */}
         <header className="mb-8 border-b border-[#c9a24b]/40 pb-6">
@@ -196,7 +196,7 @@ export default function Dashboard() {
 
         {usingDemoData && (
           <div className="mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
-            Showing sample data — couldn't reach <code className="font-mono">/api/dashboard</code>.
+            Couldn't reach <code className="font-mono">/api/dashboard</code>.
             Connect the reporting endpoint to see live figures.
           </div>
         )}
@@ -392,12 +392,12 @@ export default function Dashboard() {
         <div className="mt-6 rounded-sm border border-[#c9a24b]/30 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-serif text-lg text-[#1c2b22]">Recent Members</h2>
-            <a
+            {/* <a
               href="#"
               className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]"
             >
               View all
-            </a>
+            </a> */}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
