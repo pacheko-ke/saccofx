@@ -113,7 +113,7 @@ export default function ShareHoldingsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#faf6ec] font-[IBM_Plex_Sans] placeholder-sky-100 pt-10 pl-16">
+    <div className="min-h-screen bg-[#faf6ec] font-[IBM_Plex_Sans] placeholder-sky-100 pt-10 md:pl-16">
       
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
