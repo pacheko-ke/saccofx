@@ -116,6 +116,7 @@ export default function LoanRepaymentsPage() {
     const [loan, setLoan] = useState<LoanSummary | null>(null);
     const [outstanding, setOutsatnding] = useState(null);
     const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
+    const [due,setDueDate] = useState()
     const [repayments, setRepayments] = useState<RepaymentRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -156,7 +157,7 @@ export default function LoanRepaymentsPage() {
                 if (!cancelled) {
                     setLoan(loanData.loan ?? loanData.loan);
                     setOutsatnding(loanData.outstanding.outstanding_balance);
-                   
+                   setDueDate(scheduleData.loan_schedule.due_date?? scheduleData.loan_schedule.due_date)
                     // const outstandingBalance = data.outstanding.outstanding_balance;
                     // console.log(loanData.outstanding.outstanding_balance)
                     // setSchedule(scheduleData.schedule ?? scheduleData ?? []);
@@ -222,7 +223,7 @@ export default function LoanRepaymentsPage() {
                 {/* Header */}
                 <header className="mb-6 border-b border-[#c9a24b]/40 pb-6">
                     <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c9a24b]">
-                        Loans &middot; Repayments 
+                        Loans &middot; Repayments {due}
                     </p>
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
@@ -261,7 +262,7 @@ export default function LoanRepaymentsPage() {
                     <SummaryCard
                         label="Next Due"
                         value={loan.nextDueAmount != null ? KES.format(loan.nextDueAmount) : "—"}
-                        sub={loan.nextDueDate ?? undefined}
+                        sub={due}
                         accent="due"
                     />
                     <SummaryCard label="Repaid to Date" value={`${totals.percentPaid}%`} sub={KES.format(totals.totalPaid)} accent="paid" />
