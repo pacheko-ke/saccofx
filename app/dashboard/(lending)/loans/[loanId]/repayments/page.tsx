@@ -14,7 +14,7 @@ interface LoanSummary {
     id: string;
     loanNumber: string;
     product_name: string;
-    outstanding:number;
+    outstanding:any;
     first_name: string;
     last_name: string;
     loan_account_number:string,
