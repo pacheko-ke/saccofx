@@ -325,7 +325,7 @@ export default function ChargesAndFeesPage() {
   }, [charges, feeTypes]);
 
   return (
-    <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22] pl-12 pt-10">
+    <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22] md:pl-12 pt-10">
       <div className="mx-auto max-w-6xl px-6 py-10">
         {/* Header */}
         <header className="mb-8 flex flex-col justify-between gap-4 border-b border-[#c9a24b]/40 pb-6 sm:flex-row sm:items-end">
@@ -485,7 +485,7 @@ function FeeTypesTable({ rows }: { rows: FeeType[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-sm border border-[#c9a24b]/30 bg-white">
+    <div className="overflow-scroll rounded-sm border border-[#c9a24b]/30 bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
