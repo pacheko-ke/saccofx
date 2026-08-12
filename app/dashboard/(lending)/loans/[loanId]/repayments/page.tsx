@@ -13,11 +13,13 @@ type RepaymentMethod = "MPESA" | "COOP_IFT" | "PESALINK" | "CASH" | "BANK_TRANSF
 interface LoanSummary {
     id: string;
     loanNumber: string;
-    memberName: string;
-    memberNumber: string;
+    first_name: string;
+    last_name: string;
+    loan_account_number:string,
+    member_number:string,
     productName: string;
     principal: number;
-    interestRate: number; // annual %
+    interestRate: number;
     disbursedDate: string;
     termMonths: number;
     outstandingBalance: number;
@@ -53,51 +55,6 @@ interface RepaymentRow {
     penaltyAllocated: number;
     postedBy: string;
 }
-
-/* ────────────────────────────────────────────────────────────
-   Demo fallback data
-   ──────────────────────────────────────────────────────────── */
-
-
-
-
-const DEMO_LOAN: LoanSummary = {
-    id: "getID()",
-    loanNumber: "LN-2026-00842",
-    memberName: "Wanjiru Kamau",
-    memberNumber: "SFX-2201",
-    productName: "Development Loan",
-    principal: 250000,
-    interestRate: 12,
-    disbursedDate: "2026-02-01",
-    termMonths: 24,
-    outstandingBalance: 187420,
-    arrearsAmount: 8600,
-    daysInArrears: 14,
-    nextDueDate: "2026-08-31",
-    nextDueAmount: 12325,
-    status: "WATCH",
-};
-
-const DEMO_SCHEDULE: ScheduleRow[] = [
-    { id: "s1", installmentNo: 1, dueDate: "2026-03-01", principalDue: 9200, interestDue: 2500, totalDue: 11700, principalPaid: 9200, interestPaid: 2500, totalPaid: 11700, balanceAfter: 240800, status: "PAID" },
-    { id: "s2", installmentNo: 2, dueDate: "2026-04-01", principalDue: 9292, interestDue: 2408, totalDue: 11700, principalPaid: 9292, interestPaid: 2408, totalPaid: 11700, balanceAfter: 231508, status: "PAID" },
-    { id: "s3", installmentNo: 3, dueDate: "2026-05-01", principalDue: 9385, interestDue: 2315, totalDue: 11700, principalPaid: 9385, interestPaid: 2315, totalPaid: 11700, balanceAfter: 222123, status: "PAID" },
-    { id: "s4", installmentNo: 4, dueDate: "2026-06-01", principalDue: 9479, interestDue: 2221, totalDue: 11700, principalPaid: 9479, interestPaid: 2221, totalPaid: 11700, balanceAfter: 212644, status: "PAID" },
-    { id: "s5", installmentNo: 5, dueDate: "2026-07-01", principalDue: 9574, interestDue: 2126, totalDue: 11700, principalPaid: 4000, interestPaid: 2126, totalPaid: 6126, balanceAfter: 203070, status: "PARTIAL" },
-    { id: "s6", installmentNo: 6, dueDate: "2026-07-31", principalDue: 9669, interestDue: 2031, totalDue: 11700, principalPaid: 0, interestPaid: 0, totalPaid: 0, balanceAfter: 203070, status: "OVERDUE" },
-    { id: "s7", installmentNo: 7, dueDate: "2026-08-31", principalDue: 9766, interestDue: 1934, totalDue: 11700, principalPaid: 0, interestPaid: 0, totalPaid: 0, balanceAfter: 203070, status: "DUE" },
-    { id: "s8", installmentNo: 8, dueDate: "2026-09-30", principalDue: 9863, interestDue: 1837, totalDue: 11700, principalPaid: 0, interestPaid: 0, totalPaid: 0, balanceAfter: 193207, status: "UPCOMING" },
-    { id: "s9", installmentNo: 9, dueDate: "2026-10-31", principalDue: 9962, interestDue: 1738, totalDue: 11700, principalPaid: 0, interestPaid: 0, totalPaid: 0, balanceAfter: 183245, status: "UPCOMING" },
-];
-
-const DEMO_REPAYMENTS: RepaymentRow[] = [
-    { id: "r1", paidDate: "2026-07-05", amount: 4000, method: "MPESA", reference: "QGH7K2LX9M", principalAllocated: 4000, interestAllocated: 0, penaltyAllocated: 0, postedBy: "System (STK Push)" },
-    { id: "r2", paidDate: "2026-06-01", amount: 11700, method: "MPESA", reference: "QGH4J8PT2R", principalAllocated: 9479, interestAllocated: 2221, penaltyAllocated: 0, postedBy: "System (STK Push)" },
-    { id: "r3", paidDate: "2026-05-02", amount: 11700, method: "COOP_IFT", reference: "CI-88213445", principalAllocated: 9385, interestAllocated: 2315, penaltyAllocated: 0, postedBy: "J. Mwangi" },
-    { id: "r4", paidDate: "2026-04-01", amount: 11700, method: "MPESA", reference: "QGH1M5NB7C", principalAllocated: 9292, interestAllocated: 2408, penaltyAllocated: 0, postedBy: "System (STK Push)" },
-    { id: "r5", paidDate: "2026-03-01", amount: 11700, method: "CASH", reference: "RCPT-004521", principalAllocated: 9200, interestAllocated: 2500, penaltyAllocated: 0, postedBy: "F. Achieng" },
-];
 
 /* ────────────────────────────────────────────────────────────
    Display helpers
@@ -150,15 +107,14 @@ function Pill({ label, className }: { label: string; className: string }) {
 type Tab = "schedule" | "history";
 
 export default function LoanRepaymentsPage() {
-
     const params = useParams();
-    const loanId = params.loanId;
+    const loanId = params.loanId as string;
 
-    const [loan, setLoan] = useState<LoanSummary>(DEMO_LOAN);
-    const [schedule, setSchedule] = useState<ScheduleRow[]>(DEMO_SCHEDULE);
-    const [repayments, setRepayments] = useState<RepaymentRow[]>(DEMO_REPAYMENTS);
+    const [loan, setLoan] = useState<LoanSummary | null>(null);
+    const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
+    const [repayments, setRepayments] = useState<RepaymentRow[]>([]);
     const [loading, setLoading] = useState(true);
-    const [usingDemoData, setUsingDemoData] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [tab, setTab] = useState<Tab>("schedule");
     const [showRecordModal, setShowRecordModal] = useState(false);
 
@@ -166,31 +122,48 @@ export default function LoanRepaymentsPage() {
         let cancelled = false;
 
         async function load() {
+            setLoading(true);
+            setError(null);
+
             try {
                 const [loanRes, scheduleRes, repayRes] = await Promise.all([
                     fetch(`/api/loans/${loanId}`),
                     fetch(`/api/loans/${loanId}/schedule`),
                     fetch(`/api/loans/${loanId}/repayments`),
                 ]);
-                if (!loanRes.ok || !scheduleRes.ok || !repayRes.ok) {
-                    throw new Error("Loan API unavailable");
+
+                if (!loanRes.ok) {
+                    throw new Error(`Loan fetch failed: ${loanRes.status} ${loanRes.statusText}`);
                 }
+                if (!scheduleRes.ok) {
+                    throw new Error(`Schedule fetch failed: ${scheduleRes.status} ${scheduleRes.statusText}`);
+                }
+                if (!repayRes.ok) {
+                    throw new Error(`Repayments fetch failed: ${repayRes.status} ${repayRes.statusText}`);
+                }
+
                 const loanData = await loanRes.json();
                 const scheduleData = await scheduleRes.json();
                 const repayData = await repayRes.json();
+
+                console.log(repayData)
+
                 if (!cancelled) {
-                    setLoan(loanData);
-                    setSchedule(scheduleData);
-                    setRepayments(repayData);
+                    setLoan(loanData.loan ?? loanData.loan);
+                    // setSchedule(scheduleData.schedule ?? scheduleData ?? []);
+                    // setRepayments(repayData.repayments ?? repayData ?? []);
                 }
-            } catch {
-                if (!cancelled) setUsingDemoData(true);
+            } catch (err) {
+                console.error("Failed to load loan data:", err);
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : "Failed to load loan data");
+                }
             } finally {
                 if (!cancelled) setLoading(false);
             }
         }
 
-        load();
+        if (loanId) load();
         return () => {
             cancelled = true;
         };
@@ -203,6 +176,37 @@ export default function LoanRepaymentsPage() {
         return { totalScheduled, totalPaid, percentPaid };
     }, [schedule]);
 
+    /* ── Loading state ── */
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#faf6ec] font-sans text-[#1c2b22]">
+                <p className="text-sm text-[#1c2b22]/60">Loading loan…</p>
+            </div>
+        );
+    }
+
+    /* ── Error state ── */
+    if (error || !loan) {
+        return (
+            <div className="min-h-screen bg-[#faf6ec] px-6 py-10 font-sans text-[#1c2b22]">
+                <div className="mx-auto max-w-2xl rounded-sm border border-[#b8543a]/50 bg-[#efd9d4] px-5 py-4">
+                    <p className="font-serif text-lg text-[#7a2e1c]">Couldn't load this loan</p>
+                    <p className="mt-1 text-sm text-[#7a2e1c]/80">
+                        {error ?? "No loan data returned."} (loan id: <code className="font-mono">{loanId}</code>)
+                    </p>
+                    <p className="mt-3 text-xs text-[#7a2e1c]/70">
+                        Check the Network tab for the failing request, and confirm
+                        <code className="mx-1 font-mono">/api/loans/{loanId}</code>,
+                        <code className="mx-1 font-mono">/api/loans/{loanId}/schedule</code>, and
+                        <code className="mx-1 font-mono">/api/loans/{loanId}/repayments</code>
+                        all return 200 with JSON.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    /* ── Loaded state ── */
     return (
         <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22]">
             <div className="mx-auto max-w-6xl px-6 py-10">
@@ -214,13 +218,13 @@ export default function LoanRepaymentsPage() {
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
                             <h1 className="font-serif text-3xl text-[#1c2b22]">
-                                {loan.memberName}
+                                {loan.first_name} {loan.last_name}
                                 <span className="ml-3 align-middle font-mono text-base text-[#1c2b22]/45">
-                                    {loan.loanNumber}
+                                    {loan.loan_account_number}
                                 </span>
                             </h1>
                             <p className="mt-1 text-sm text-[#1c2b22]/60">
-                                {loan.productName} &middot; {loan.memberNumber} &middot; Disbursed {loan.disbursedDate}
+                                {loan.product_name} &middot; {loan.member_number} &middot; Disbursed {loan.disbursed_at}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -234,13 +238,6 @@ export default function LoanRepaymentsPage() {
                         </div>
                     </div>
                 </header>
-
-                {usingDemoData && (
-                    <div className="mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
-                        Couldn't reach the loan API for{" "}
-                        <code className="font-mono">{loanId}</code>. Connect the loan endpoints to see live figures.
-                    </div>
-                )}
 
                 {/* Summary cards */}
                 <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -263,10 +260,7 @@ export default function LoanRepaymentsPage() {
                 {/* Progress bar */}
                 <div className="mb-8">
                     <div className="h-2 w-full overflow-hidden rounded-full bg-[#eee7d6]">
-                        <div
-                            className="h-full bg-[#c9a24b] transition-all"
-                            style={{ width: `${totals.percentPaid}%` }}
-                        />
+                        <div className="h-full bg-[#c9a24b] transition-all" style={{ width: `${totals.percentPaid}%` }} />
                     </div>
                 </div>
 
@@ -281,23 +275,11 @@ export default function LoanRepaymentsPage() {
                 </div>
 
                 {/* Content */}
-                {loading ? (
-                    <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6] px-4 py-10 text-center text-sm text-[#1c2b22]/60">
-                        Loading…
-                    </div>
-                ) : tab === "schedule" ? (
-                    <ScheduleTable rows={schedule} />
-                ) : (
-                    <HistoryTable rows={repayments} />
-                )}
+                {tab === "schedule" ? <ScheduleTable rows={schedule} /> : <HistoryTable rows={repayments} />}
             </div>
 
             {showRecordModal && (
-                <RecordRepaymentModal
-                    loan={loan}
-                    schedule={schedule}
-                    onClose={() => setShowRecordModal(false)}
-                />
+                <RecordRepaymentModal loan={loan} schedule={schedule} onClose={() => setShowRecordModal(false)} />
             )}
         </div>
     );
@@ -307,15 +289,7 @@ export default function LoanRepaymentsPage() {
    Sub-components
    ──────────────────────────────────────────────────────────── */
 
-function TabButton({
-    active,
-    onClick,
-    children,
-}: {
-    active: boolean;
-    onClick: () => void;
-    children: React.ReactNode;
-}) {
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
     return (
         <button
             onClick={onClick}
@@ -399,7 +373,7 @@ function HistoryTable({ rows }: { rows: RepaymentRow[] }) {
 
     return (
         <div className="overflow-x-auto rounded-sm border border-[#c9a24b]/30 bg-white">
-            <table className="w-full min-w-205 text-sm">
+            <table className="w-full min-w-[820px] text-sm">
                 <thead>
                     <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
                         {["Date", "Amount", "Method", "Reference", "Principal", "Interest", "Penalty", "Posted By"].map((h) => (
@@ -439,14 +413,11 @@ function EmptyState({ message }: { message: string }) {
 }
 
 /* ────────────────────────────────────────────────────────────
-   Record Repayment modal — previews FIFO allocation against
-   the oldest unpaid/partial installments before submit
+   Record Repayment modal
    ──────────────────────────────────────────────────────────── */
 
 function computeFifoAllocation(amount: number, schedule: ScheduleRow[]) {
-    const outstandingRows = schedule
-        .filter((r) => r.status !== "PAID")
-        .sort((a, b) => a.installmentNo - b.installmentNo);
+    const outstandingRows = schedule.filter((r) => r.status !== "PAID").sort((a, b) => a.installmentNo - b.installmentNo);
 
     let remaining = amount;
     const allocations: { installmentNo: number; dueDate: string; applied: number; remainingOnRow: number }[] = [];
@@ -456,12 +427,7 @@ function computeFifoAllocation(amount: number, schedule: ScheduleRow[]) {
         const rowOutstanding = row.totalDue - row.totalPaid;
         const applied = Math.min(remaining, rowOutstanding);
         if (applied > 0) {
-            allocations.push({
-                installmentNo: row.installmentNo,
-                dueDate: row.dueDate,
-                applied,
-                remainingOnRow: rowOutstanding - applied,
-            });
+            allocations.push({ installmentNo: row.installmentNo, dueDate: row.dueDate, applied, remainingOnRow: rowOutstanding - applied });
             remaining -= applied;
         }
     }
@@ -469,15 +435,7 @@ function computeFifoAllocation(amount: number, schedule: ScheduleRow[]) {
     return { allocations, unallocated: remaining };
 }
 
-function RecordRepaymentModal({
-    loan,
-    schedule,
-    onClose,
-}: {
-    loan: LoanSummary;
-    schedule: ScheduleRow[];
-    onClose: () => void;
-}) {
+function RecordRepaymentModal({ loan, schedule, onClose }: { loan: LoanSummary; schedule: ScheduleRow[]; onClose: () => void }) {
     const [amount, setAmount] = useState<string>("");
     const [method, setMethod] = useState<RepaymentMethod>("MPESA");
     const [reference, setReference] = useState("");
@@ -513,12 +471,7 @@ function RecordRepaymentModal({
                             />
                         </Field>
                         <Field label="Date Paid">
-                            <input
-                                type="date"
-                                className="input"
-                                value={paidDate}
-                                onChange={(e) => setPaidDate(e.target.value)}
-                            />
+                            <input type="date" className="input" value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
                         </Field>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -541,11 +494,8 @@ function RecordRepaymentModal({
                         </Field>
                     </div>
 
-                    {/* FIFO allocation preview */}
                     <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6]/50 p-4">
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
-                            FIFO Allocation Preview
-                        </p>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">FIFO Allocation Preview</p>
                         {parsedAmount <= 0 ? (
                             <p className="text-sm text-[#1c2b22]/50">Enter an amount to preview how it will be applied.</p>
                         ) : preview.allocations.length === 0 ? (
@@ -612,9 +562,7 @@ function RecordRepaymentModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <label className="block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
-                {label}
-            </span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">{label}</span>
             {children}
         </label>
     );
