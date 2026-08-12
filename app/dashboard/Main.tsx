@@ -181,7 +181,7 @@ export default function Dashboard() {
   const totalLoans = useMemo(() => portfolio.reduce((s, p) => s + p.value, 0), [portfolio]);
 
   return (
-    <div className="min-h-screen pt-4 md:pl-0 mx-auto bg-[#faf6ec] font-sans text-[#1c2b22]">
+    <div className="w-full min-h-screen pt-4 md:pl-0 mx-auto bg-[#faf6ec] font-sans text-[#1c2b22]">
       <div className="mx-auto max-w-7xl px-6 py-10">
         {/* Header */}
         <header className="mb-8 border-b border-[#c9a24b]/40 pb-6">
