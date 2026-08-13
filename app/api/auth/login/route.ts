@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     if (!passwordMatches) {
       return NextResponse.json(
-        { error: "Wrong Password" },
+        { error: "Invalid Credentials" },
         { status: 401 }
       );
     }
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     );
 
     await client.query(
-      `UPDATE users SET last_login_at = now() WHERE id = $1`,
+      `UPDATE users SET last_login_at = now() WHERE user_id = $1`,
       [user.user_id]
     );
 
