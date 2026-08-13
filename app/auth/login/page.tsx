@@ -170,8 +170,8 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-xs text-[#faf6ec]/40">
           Regulated under SASRA.
         </p>
-          <p className="mt-2 text-center text-xs text-[#faf6ec]/40" >
-           <a href="https://wa.me/254769869064">Powered by Pacheko Technologies.</a>
+          <p className="mt-2 text-center text-xs text-[#faf6ec]/40 " >
+           <a href="https://wa.me/254769869064">Powered by <span className="underline">Pacheko Technologies.</span></a>
         </p>
       </div>
     </div>
