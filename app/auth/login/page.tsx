@@ -41,8 +41,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#1c2b22] px-4 py-12">
-      {/* faint passbook perforation motif on the page background */}
+    <div className="flex min-h-screen items-center justify-center bg-[#1c2b22] px-4 md:px-4 py-12">
+     
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
@@ -57,7 +57,7 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
          
           <h1 className="mt-4 font-serif text-2xl tracking-tight text-[#faf6ec]">
-            Saccofx Pro
+            saccofx pro.
           </h1>
           <p className="mt-1 text-sm text-[#faf6ec]/60">
             Sign in to your SACCO account
@@ -76,7 +76,7 @@ export default function LoginPage() {
             }}
           />
 
-          <form onSubmit={handleSubmit} className="px-8 py-9 pl-11">
+          <form onSubmit={handleSubmit} className="px-4 md:px-8 pl-5 py-7 ">
             {error && (
               <div className="mb-5 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
@@ -112,7 +112,7 @@ export default function LoginPage() {
                     Password
                   </label>
                   <a
-                    href="/forgot-password"
+                    href="/auth/forgot-password"
                     className="text-xs text-[#c9a24b] hover:underline"
                   >
                     Forgot password?
@@ -168,7 +168,10 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-[#faf6ec]/40">
-          Regulated under SASRA · Your information is end to end encrypted
+          Regulated under SASRA.
+        </p>
+          <p className="mt-2 text-center text-xs text-[#faf6ec]/40" >
+           <a href="https://wa.me/254769869064">Powered by Pacheko Technologies.</a>
         </p>
       </div>
     </div>
