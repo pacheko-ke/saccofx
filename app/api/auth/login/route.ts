@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         {
           error:
             user.status === "suspended"
-              ? "Your account has been suspended. Contact your SACCO branch."
+              ? "Your account has been suspended. Contact your SACCO branch.."
               : "Your account is not yet active. Contact your SACCO branch.",
         },
         { status: 403 }
