@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
-import { createSession } from "../../../lib/auth";
+import { createAuthToken } from "../../../lib/auth";
 
-// simple in-memory rate limit guard per identifier; swap for Upstash/Redis
-// in production if running across multiple serverless instances.
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -24,7 +22,6 @@ function isRateLimited(key: string) {
 
 export async function POST(req: NextRequest) {
   const { identifier, password, remember } = await req.json();
-  console.log(identifier)
 
   if (!identifier || !password) {
     return NextResponse.json(
@@ -46,14 +43,18 @@ export async function POST(req: NextRequest) {
   const client = await pool.connect();
 
   try {
-    // Login happens pre-tenant-context, so this query intentionally runs
-    // without SET LOCAL RLS scoping — it looks up the user across tenants
-    // by unique identifier, then the session going forward is scoped.
+    // 1. Query user with required authentication & profile fields
     const result = await client.query(
       `SELECT
-       u.username
+        u.user_id,
+        u.username,
+        u.password_hash,
+        m.status,
+        m.first_name,
+        m.last_name,
+        m.member_id
        FROM users u 
-       INNER JOIN members m ON m.member_id=u.member_id
+       LEFT JOIN members m ON m.member_id = u.member_id
        WHERE lower(u.username) = $1
           OR lower(m.phone_primary) = $1
           OR lower(m.email) = $1
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { error: "Wrong username..." },
+        { error: "Wrong credentials." },
         { status: 401 }
       );
     }
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
         {
           error:
             user.status === "suspended"
-              ? "Your account has been suspended. Contact your SACCO branch.."
+              ? "Your account has been suspended. Contact your SACCO branch."
               : "Your account is not yet active. Contact your SACCO branch.",
         },
         { status: 403 }
@@ -91,31 +92,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await createSession({
-      userId: user.id,
-      tenantId: user.tenant_id,
-      role: user.role,
-      memberId: user.member_id ?? undefined,
-      remember: Boolean(remember),
-    });
+    // 2. Generate JWT token
+    const tokenDuration = remember ? "30d" : "1d";
+    const token = await createAuthToken(
+      {
+        userId: user.user_id,
+        tenantId: user.tenant_id,
+        role: "admin",//to be replace by user.role in production
+        memberId: user.member_id ?? undefined,
+      },
+      tokenDuration
+    );
 
     await client.query(
       `UPDATE users SET last_login_at = now() WHERE id = $1`,
-      [user.id]
+      [user.user_id]
     );
 
     const redirectTo =
       user.role === "member" ? "/member/dashboard" : "/dashboard";
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       redirectTo,
       user: {
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role,
-        tenantName: user.tenant_name,
+        role: "admin",//replace with user role
       },
     });
+
+    // 3. Attach JWT to HTTP-only cookie
+    const maxAgeInSeconds = remember
+      ? 30 * 24 * 60 * 60
+      : 24 * 60 * 60;
+
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: maxAgeInSeconds,
+    });
+
+    return response;
   } catch (err) {
     console.error("Login failed:", err);
     return NextResponse.json(
