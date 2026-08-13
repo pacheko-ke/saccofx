@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 interface Member {
   id: string;
   memberNumber: string;
+  accountNumber:string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -152,12 +153,14 @@ export default function Savings() {
               ) : (
                 paginated.map((m) => (
                   <tr key={m.id} className="hover:bg-[#eee7d6]/40">
-                    <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{m.memberNumber}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{m.accountNumber}</td>
                     <td className="px-4 py-3 text-[#1c2b22]">
                       {m.firstName} {m.lastName}
                     </td>
-                    <td className="px-4 py-3 text-[#4a5c50]">{m.phone}</td>
-                    <td className="px-4 py-3 text-[#4a5c50]">{m.idNumber}</td>
+                    <td className="px-4 py-3 text-[#4a5c50]">{m.memberID}</td>
+                    <td className="px-4 py-3 text-[#4a5c50]">{m.balance}</td>
+
+                    <td className="px-4 py-3 text-[#4a5c50]">{m.created}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${

@@ -13,13 +13,15 @@ export async function GET(request: Request) {
     const [members, totalResult] = await Promise.all([
       sql`
         SELECT
-        savings_account_id,
-        account_number AS "accountNumber",
-        members.member_id,
+        savings_accounts.savings_account_id,
+        savings_accounts.account_number AS "accountNumber",
+        members.id_number AS "memberID",
+        members.first_name AS "lastName",
+        members.last_name AS "firstName",
         savings_accounts.member_id AS "idNumber",
-        balance AS "balance",
-        status AS "status",
-        created_at AS "created"
+        savings_accounts.balance AS "balance",
+        savings_accounts.status AS "status",
+        savings_accounts.created_at AS "created"
         FROM savings_accounts
         INNER JOIN members ON savings_accounts.member_id=members.member_id
     
@@ -32,9 +34,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ members, total, page, pageSize });
   } catch (error) {
-    console.log("Failed to fetch members:", error);
+    console.log("Failed to fetch accounts:", error);
     return NextResponse.json(
-      { error: "Failed to fetch members" },
+      { error: "Failed to fetch accounts" },
       { status: 500 }
     );
   }
