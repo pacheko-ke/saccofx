@@ -10,6 +10,7 @@ interface Member {
   lastName: string;
   phone: string;
   idNumber: string;
+  member_id: string;
   status: string;
   createdAt: string;
 }
@@ -168,7 +169,7 @@ export default function MembersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/dashboard/members/${m.id}`}
+                        href={`/dashboard/members/${m.member_id}`}
                         className="font-medium text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#233a2c]"
                       >
                         View

@@ -14,7 +14,6 @@ export async function GET(request: Request) {
       sql`
         SELECT
         id_number      AS "idNumber",
-        member_id,
           member_number   AS "memberNumber",
           first_name      AS "firstName",
           last_name       AS "lastName",
