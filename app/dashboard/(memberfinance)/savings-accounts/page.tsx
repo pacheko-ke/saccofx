@@ -9,10 +9,13 @@ interface Member {
   accountNumber:string;
   firstName: string;
   lastName: string;
+  memberID: string;
+  balance:string;
+  created: string;
   phone: string;
   idNumber: string;
   status: string;
-  createdAt: string;
+ 
 }
 
 const STATUS_OPTIONS = ["all", "active", "inactive", "suspended"];
