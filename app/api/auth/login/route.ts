@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
-import { createSession } from "@/app/lib/auth";
+import { createSession } from "../../../lib/auth";
 
 // simple in-memory rate limit guard per identifier; swap for Upstash/Redis
 // in production if running across multiple serverless instances.
@@ -24,6 +24,7 @@ function isRateLimited(key: string) {
 
 export async function POST(req: NextRequest) {
   const { identifier, password, remember } = await req.json();
+  console.log(identifier)
 
   if (!identifier || !password) {
     return NextResponse.json(
@@ -50,29 +51,19 @@ export async function POST(req: NextRequest) {
     // by unique identifier, then the session going forward is scoped.
     const result = await client.query(
       `SELECT
-         u.id,
-         u.tenant_id,
-         u.password_hash,
-         u.role,
-         u.status,
-         u.member_id,
-         m.first_name,
-         m.last_name,
-         t.subdomain AS tenant_subdomain,
-         t.name AS tenant_name
-       FROM users u
-       LEFT JOIN members m ON m.id = u.member_id
-       JOIN tenants t ON t.id = u.tenant_id
-       WHERE lower(u.member_number) = $1
-          OR lower(u.phone) = $1
-          OR lower(u.email) = $1
+       u.username
+       FROM users u 
+       INNER JOIN members m ON m.member_id=u.member_id
+       WHERE lower(u.username) = $1
+          OR lower(m.phone_primary) = $1
+          OR lower(m.email) = $1
        LIMIT 1`,
       [normalizedIdentifier]
     );
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { error: "Invalid credentials. Please try again." },
+        { error: "Wrong username..." },
         { status: 401 }
       );
     }
@@ -95,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     if (!passwordMatches) {
       return NextResponse.json(
-        { error: "Invalid credentials. Please try again." },
+        { error: "Wrong Password" },
         { status: 401 }
       );
     }

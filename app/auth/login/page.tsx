@@ -55,11 +55,9 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Brand mark */}
         <div className="mb-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#c9a24b] bg-[#1c2b22]">
-            <span className="font-serif text-2xl text-[#c9a24b]">S</span>
-          </div>
+         
           <h1 className="mt-4 font-serif text-2xl tracking-tight text-[#faf6ec]">
-            SaccoFX Pro
+            Saccofx Pro
           </h1>
           <p className="mt-1 text-sm text-[#faf6ec]/60">
             Sign in to your SACCO account
@@ -160,17 +158,17 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <p className="mt-6 text-center text-sm text-[#1c2b22]/60">
+            {/* <p className="mt-6 text-center text-sm text-[#1c2b22]/60">
               Not a member yet?{" "}
               <a href="/register" className="text-[#c9a24b] hover:underline">
                 Join the SACCO
               </a>
-            </p>
+            </p> */}
           </form>
         </div>
 
         <p className="mt-6 text-center text-xs text-[#faf6ec]/40">
-          Regulated under SASRA · Your savings are protected
+          Regulated under SASRA · Your information is end to end encrypted
         </p>
       </div>
     </div>
