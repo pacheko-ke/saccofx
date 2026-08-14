@@ -58,7 +58,7 @@ export default function MemberCardsPage() {
   }, [members, search]);
 
   const selectedMembers = useMemo(
-    () => members.filter((m) => selected.has(m.id)),
+    () => members.filter((m) => selected.has(m.memberNo)),
     [members, selected]
   );
 
@@ -74,10 +74,10 @@ export default function MemberCardsPage() {
   function toggleAllFiltered() {
     setSelected((prev) => {
       const next = new Set(prev);
-      const allSelected = filtered.every((m) => next.has(m.id));
+      const allSelected = filtered.every((m) => next.has(m.memberNo));
       filtered.forEach((m) => {
-        if (allSelected) next.delete(m.id);
-        else next.add(m.id);
+        if (allSelected) next.delete(m.memberNo);
+        else next.add(m.memberNo);
       });
       return next;
     });
@@ -132,7 +132,7 @@ export default function MemberCardsPage() {
               onClick={toggleAllFiltered}
               className="rounded-md border border-[#1c2b22]/20 bg-white px-4 py-2 text-sm text-[#1c2b22] hover:bg-[#eee7d6]"
             >
-              {filtered.length > 0 && filtered.every((m) => selected.has(m.id))
+              {filtered.length > 0 && filtered.every((m) => selected.has(m.memberNo))
                 ? "Deselect all"
                 : "Select all"}
             </button>
@@ -164,15 +164,15 @@ export default function MemberCardsPage() {
                 <tbody>
                   {filtered.map((m) => (
                     <tr
-                      key={m.id}
+                      key={m.memberNo}
                       className="cursor-pointer border-t border-[#1c2b22]/5 hover:bg-[#faf6ec]"
-                      onClick={() => toggle(m.id)}
+                      onClick={() => toggle(m.memberNo)}
                     >
                       <td className="px-3 py-2">
                         <input
                           type="checkbox"
-                          checked={selected.has(m.id)}
-                          onChange={() => toggle(m.id)}
+                          checked={selected.has(m.memberNo)}
+                          onChange={() => toggle(m.memberNo)}
                           onClick={(e) => e.stopPropagation()}
                           className="accent-[#c9a24b]"
                         />
@@ -209,7 +209,7 @@ export default function MemberCardsPage() {
       <div className="hidden print:block">
         <div className="card-sheet">
           {selectedMembers.map((m) => (
-            <div key={m.id} className="card-pair">
+            <div key={m.memberNo} className="card-pair">
               {(side === "front" || side === "both") && (
                 <div className="card card-front">
                   <div className="card-header">
