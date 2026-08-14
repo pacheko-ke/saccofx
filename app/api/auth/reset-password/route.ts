@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
-export default function Page() {
+export default function POST() {
   
  
 
