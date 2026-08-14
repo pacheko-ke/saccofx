@@ -190,16 +190,16 @@ export default function TellerDepositsPage() {
   const todayTotal = todayDeposits.reduce((sum, d) => sum + Number(d.amount), 0);
 
   return (
-    <div className="min-h-screen bg-[#faf6ec]">
-      <div className="print:hidden">
-        <header className="border-b border-[#c9a24b]/30 bg-[#1c2b22] px-6 py-5">
+    <div className="min-h-screen bg-[#faf6ec] ">
+      <div className="print:hidden ">
+        <header className=" pt-16 md:pl-20 border-b border-[#c9a24b]/30 bg-[#1c2b22] px-6 py-5">
           <h1 className="font-serif text-2xl text-[#faf6ec]">Teller Deposits</h1>
           <p className="mt-1 text-sm text-[#eee7d6]/80">
             Post member savings deposits and print receipts
           </p>
         </header>
 
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_1.1fr]">
+        <div className="md:ml-20 mx-auto grid max-w-6xl gap-6 px-6 py-6 lg:grid-cols-[1fr_1.1fr]">
           {/* Deposit form */}
           <div className="rounded-lg border border-[#1c2b22]/10 bg-white p-5">
             <h2 className="mb-4 font-serif text-lg text-[#1c2b22]">New Deposit</h2>
