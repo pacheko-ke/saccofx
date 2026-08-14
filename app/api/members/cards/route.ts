@@ -72,18 +72,18 @@ export async function GET(request: NextRequest) {
     const result = await client.query(
       `
       SELECT
-        m.id,
-        m.member_no        AS "memberNo",
+        m.member_id,
+        m.member_number        AS "memberNo",
         m.first_name        AS "firstName",
         m.last_name         AS "lastName",
-        m.national_id       AS "nationalId",
-        m.phone,
+        m.id_number       AS "nationalId",
+        m.phone_primary,
         m.photo_url         AS "photoUrl",
         m.join_date         AS "joinDate",
         m.status,
-        b.name               AS "branchName"
+        b.branch_name               AS "branchName"
       FROM members m
-      LEFT JOIN branches b ON b.id = m.branch_id
+      LEFT JOIN branches b ON b.branch_id = m.branch_id
       ${whereClause}
       ORDER BY m.last_name, m.first_name
       LIMIT 500
