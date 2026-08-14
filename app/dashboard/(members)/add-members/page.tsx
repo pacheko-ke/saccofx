@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import {formatDatePicker} from '@/app/lib/utils'
 
 type FormData = {
   // Step 1: Personal details
@@ -620,6 +621,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
                   className={inputClasses}
                   value={formData.dateOfBirth}
                   onChange={(e) => update("dateOfBirth", e.target.value)}
+                  max={formatDatePicker()}
                 />
                 {errors.dateOfBirth && <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>}
               </div>
