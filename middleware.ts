@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isProtectedPath =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/member/dashboard");
+    pathname.startsWith("/dashboard") || pathname.startsWith("/member/dashboard") || pathname.startsWith("/api");
 
   if (isProtectedPath) {
     if (!token) {
@@ -28,5 +28,5 @@ console.log("successsss")
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/member/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/member/dashboard/:path*", "/api/:path*"],
 };
