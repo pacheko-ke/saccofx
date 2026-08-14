@@ -1,8 +1,5 @@
-import { neon } from '@neondatabase/serverless';
+import { NextResponse } from "next/server";
 
-export default function POST() {
-  
- 
-
-  return 0;
+export async function POST() {
+  return NextResponse.json({ message: "hello" });
 }
