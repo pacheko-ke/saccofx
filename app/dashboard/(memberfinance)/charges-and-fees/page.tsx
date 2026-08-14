@@ -347,7 +347,7 @@ export default function ChargesAndFeesPage() {
         </header>
 
         {usingDemoData && (
-          <div className="mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
+          <div className="hidden mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
              Couldn't reach <code className="font-mono">/api/fees</code>.
             Connect the fee endpoints to see live figures.
           </div>
