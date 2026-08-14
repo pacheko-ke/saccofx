@@ -27,3 +27,5 @@ export async function verifyAuthToken(token: string): Promise<JWTPayload | null>
     return null;
   }
 }
+
+

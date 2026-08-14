@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLogout } from "../auth/logout/logout";
+
+
 import {
   LayoutDashboard,
   Users,
@@ -135,11 +138,19 @@ const links: NavItem[] = [
     children: [
       { href: "/dashboard/security/users", label: "Users & Roles", icon: Users },
       { href: "/dashboard/security/audit", label: "Security & Audit", icon: Shield },
+      // { href: "/dashboard/security/audit", label: "Logout", icon: Shield },
     ],
   },
+
+  
 ];
 
+
+
+
+
 export default function Sidebar() {
+   const { logout, loading } = useLogout();
   const pathname = usePathname() ?? "";
 
   // Desktop collapse (icon-only) state — unchanged behaviour
@@ -318,6 +329,8 @@ export default function Sidebar() {
                 </div>
               );
             })}
+
+          <h1 onClick={logout}>Logout</h1>
           </nav>
         </aside>
       </div>
