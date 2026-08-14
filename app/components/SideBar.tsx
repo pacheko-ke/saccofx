@@ -330,7 +330,7 @@ export default function Sidebar() {
               );
             })}
 
-          <h1 onClick={logout}>Logout</h1>
+          <h1 onClick={logout} className="ml-4 cursor-pointer text-red-500">Logout</h1>
           </nav>
         </aside>
       </div>
