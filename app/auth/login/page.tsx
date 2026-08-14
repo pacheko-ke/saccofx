@@ -35,7 +35,7 @@ export default function LoginPage() {
       router.push(data.redirectTo ?? "/dashboard");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please check your connection.");
+      setError(`Something went wrong. Please check your connection.${error}`);
       setLoading(false);
     }
   }

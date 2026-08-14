@@ -28,5 +28,5 @@ console.log("successsss")
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/member/dashboard/:path*", "/api/:path*"],
+  matcher: ["/dashboard/:path*", "/member/dashboard/:path*","/api/:path((?!auth).*)"],
 };
