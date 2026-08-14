@@ -38,22 +38,22 @@ export async function GET(request: NextRequest) {
     const result = await client.query(
       `
       SELECT
-        st.id,
-        st.reference,
+        st.transaction_id,
+        st.reference_number,
         st.amount,
         st.channel,
-        st.narration,
+        st.narrative,
         st.balance_after   AS "balanceAfter",
         st.created_at      AS "createdAt",
-        st.journal_entry_id AS "journalEntryId",
-        sa.account_no       AS "accountNo",
-        m.member_no          AS "memberNo",
+        st.journal_id AS "journalEntryId",
+        sa.account_number       AS "accountNo",
+        m.member_number         AS "memberNo",
         m.first_name          AS "firstName",
         m.last_name           AS "lastName"
-      FROM savings_transactions st
-      JOIN savings_accounts sa ON sa.id = st.account_id
-      JOIN members m ON m.id = sa.member_id
-      WHERE st.type = 'deposit'
+      FROM transactions st
+      JOIN savings_accounts sa ON sa.savings_account_id = st.savings_account_id
+      JOIN members m ON m.member_id = sa.member_id
+      WHERE st.tx_type = 'deposit'
         AND st.teller_id = $1
         AND st.created_at::date = COALESCE($2::date, CURRENT_DATE)
       ORDER BY st.created_at DESC
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
 
     const txResult = await client.query(
       `
-      INSERT INTO savings_transactions (
+      INSERT INTO transactions (
         tenant_id, account_id, member_id, type, amount,
         balance_after, channel, reference, narration,
         teller_id, journal_entry_id, created_at
