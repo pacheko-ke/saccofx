@@ -162,23 +162,13 @@ function ResetPasswordContent() {
           style={{ backgroundColor: "#1c2b22", borderColor: "#c9a24b" }}
         >
           <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: "#c9a24b" }}
-            >
-              <span
-                className="font-serif text-sm"
-                style={{ color: "#c9a24b" }}
-              >
-                SF
-              </span>
-            </div>
-            <div>
+            
+            <div className="flex flex-col gap-1">
               <p
                 className="font-serif text-lg leading-tight"
                 style={{ color: "#faf6ec" }}
               >
-                SaccoFX Pro
+                saccofx pro
               </p>
               <p
                 className="text-xs tracking-wide uppercase"
@@ -274,7 +264,7 @@ function ResetPasswordContent() {
                 style={{ borderColor: "#c9a24b33" }}
               >
                 <a
-                  href="/login"
+                  href="/auth/login"
                   className="font-medium hover:underline"
                   style={{ color: "#1c2b22" }}
                 >
