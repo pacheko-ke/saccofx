@@ -223,7 +223,7 @@ export default function LoanRepaymentsPage() {
                 {/* Header */}
                 <header className="mb-6 border-b border-[#c9a24b]/40 pb-6">
                     <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c9a24b]">
-                        Loans &middot; Repayments {due}
+                        Loans &middot; Repayments
                     </p>
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>

@@ -9,6 +9,7 @@ import { useLogout } from "../auth/logout/logout";
 import {
   LayoutDashboard,
   Users,
+
   Settings,
   FileText,
   ChevronLeft,
@@ -26,6 +27,7 @@ import {
   MessageCircle,
   Bell,
   Shield,
+  LogOut,
 } from "lucide-react";
 
 type NavItem = {
@@ -329,8 +331,10 @@ export default function Sidebar() {
                 </div>
               );
             })}
-
+            <div className="flex ml-3 mt-6">
+          <LogOut className="size-5"/>
           <h1 onClick={logout} className="ml-4 cursor-pointer text-red-500">Logout</h1>
+          </div>
           </nav>
         </aside>
       </div>
