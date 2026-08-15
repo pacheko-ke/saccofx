@@ -184,33 +184,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve the two GL accounts this deposit touches
-    // const debitCode = DEBIT_ACCOUNT_CODE[method];
-    // const glResult = await client.query(
-    //   `
-    //   SELECT code, id
-    //   FROM chart_of_accounts
-    //   WHERE code IN ($1, $2)
-    //     AND is_active = true
-    //   `,
-    //   [debitCode, SAVINGS_CONTROL_ACCOUNT_CODE]
-    // );
+    Resolve the two GL accounts this deposit touches
+    const debitCode = DEBIT_ACCOUNT_CODE[method];
+    const glResult = await client.query(
+      `
+      SELECT code, id
+      FROM chart_of_accounts
+      WHERE code IN ($1, $2)
+        AND is_active = true
+      `,
+      [debitCode, SAVINGS_CONTROL_ACCOUNT_CODE]
+    );
 
-    // const debitAccount = glResult.rows.find((r) => r.code === debitCode);
-    // const creditAccount = glResult.rows.find(
-    //   (r) => r.code === SAVINGS_CONTROL_ACCOUNT_CODE
-    // );
+    const debitAccount = glResult.rows.find((r) => r.code === debitCode);
+    const creditAccount = glResult.rows.find(
+      (r) => r.code === SAVINGS_CONTROL_ACCOUNT_CODE
+    );
 
-    // if (!debitAccount || !creditAccount) {
-    //   await client.query("ROLLBACK");
-    //   console.error(
-    //     `Missing chart_of_accounts entry for code(s): ${debitCode}, ${SAVINGS_CONTROL_ACCOUNT_CODE}`
-    //   );
-    //   return NextResponse.json(
-    //     { error: "GL accounts are not configured for this deposit method" },
-    //     { status: 500 }
-    //   );
-    // }
+    if (!debitAccount || !creditAccount) {
+      await client.query("ROLLBACK");
+      console.error(
+        `Missing chart_of_accounts entry for code(s): ${debitCode}, ${SAVINGS_CONTROL_ACCOUNT_CODE}`
+      );
+      return NextResponse.json(
+        { error: "GL accounts are not configured for this deposit method" },
+        { status: 500 }
+      );
+    }
 
     const entryNarration =
       safeNarration ||
