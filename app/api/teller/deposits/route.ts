@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       JOIN savings_accounts sa ON sa.savings_account_id = st.savings_account_id
       JOIN members m ON m.member_id = sa.member_id
       WHERE st.tx_type = 'deposit'
-        AND st.teller_id = $1
+        AND st.processed_by = $1
         AND st.created_at::date = COALESCE($2::date, CURRENT_DATE)
       ORDER BY st.created_at DESC
       LIMIT 100
