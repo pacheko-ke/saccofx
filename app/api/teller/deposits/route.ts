@@ -161,9 +161,9 @@ export async function POST(request: NextRequest) {
     // on the same balance.
     const accountResult = await client.query(
       `
-      SELECT id, member_id AS "memberId", account_no AS "accountNo", balance, status
+      SELECT savings_account_id, member_id AS "memberId", account_number AS "accountNo", balance, status
       FROM savings_accounts
-      WHERE id = $1
+      WHERE savings_account_id = $1
       FOR UPDATE
       `,
       [accountId]
@@ -185,32 +185,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve the two GL accounts this deposit touches
-    const debitCode = DEBIT_ACCOUNT_CODE[method];
-    const glResult = await client.query(
-      `
-      SELECT code, id
-      FROM chart_of_accounts
-      WHERE code IN ($1, $2)
-        AND is_active = true
-      `,
-      [debitCode, SAVINGS_CONTROL_ACCOUNT_CODE]
-    );
+    // const debitCode = DEBIT_ACCOUNT_CODE[method];
+    // const glResult = await client.query(
+    //   `
+    //   SELECT code, id
+    //   FROM chart_of_accounts
+    //   WHERE code IN ($1, $2)
+    //     AND is_active = true
+    //   `,
+    //   [debitCode, SAVINGS_CONTROL_ACCOUNT_CODE]
+    // );
 
-    const debitAccount = glResult.rows.find((r) => r.code === debitCode);
-    const creditAccount = glResult.rows.find(
-      (r) => r.code === SAVINGS_CONTROL_ACCOUNT_CODE
-    );
+    // const debitAccount = glResult.rows.find((r) => r.code === debitCode);
+    // const creditAccount = glResult.rows.find(
+    //   (r) => r.code === SAVINGS_CONTROL_ACCOUNT_CODE
+    // );
 
-    if (!debitAccount || !creditAccount) {
-      await client.query("ROLLBACK");
-      console.error(
-        `Missing chart_of_accounts entry for code(s): ${debitCode}, ${SAVINGS_CONTROL_ACCOUNT_CODE}`
-      );
-      return NextResponse.json(
-        { error: "GL accounts are not configured for this deposit method" },
-        { status: 500 }
-      );
-    }
+    // if (!debitAccount || !creditAccount) {
+    //   await client.query("ROLLBACK");
+    //   console.error(
+    //     `Missing chart_of_accounts entry for code(s): ${debitCode}, ${SAVINGS_CONTROL_ACCOUNT_CODE}`
+    //   );
+    //   return NextResponse.json(
+    //     { error: "GL accounts are not configured for this deposit method" },
+    //     { status: 500 }
+    //   );
+    // }
 
     const entryNarration =
       safeNarration ||
@@ -219,9 +219,9 @@ export async function POST(request: NextRequest) {
     // 1. Journal entry (event header)
     const journalEntryResult = await client.query(
       `
-      INSERT INTO journal_entries (
-        tenant_id, entry_date, reference, narration,
-        source_type, source_id, created_by, created_at
+      INSERT INTO gl_journal_entries (
+        member_id, entry_date, reference, decription,
+        reference_type, source_id, posted_by, created_at
       )
       VALUES ($1, CURRENT_DATE, $2, $3, 'savings_deposit', $4, $5, now())
       RETURNING id
