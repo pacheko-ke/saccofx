@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    Resolve the two GL accounts this deposit touches
+    // Resolve the two GL accounts this deposit touches
     const debitCode = DEBIT_ACCOUNT_CODE[method];
     const glResult = await client.query(
       `
