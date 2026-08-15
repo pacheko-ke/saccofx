@@ -64,7 +64,10 @@ export default function LoginPage() {
           </p>
         </div>
  <div className="flex flex-col py-2 demo-credentials mb-2  rounded-sm pl-2 text-[#faf6ec]/40 tracking-wide font-sm text-md ">
-
+  <h1 >Demo credentials</h1>
+              <h1>username: member.55b2550c </h1>
+              <h1>password: demo </h1>
+            </div>
         {/* Card with perforated left edge, passbook motif */}
         <div className="relative overflow-hidden rounded-lg bg-[#faf6ec] shadow-2xl">
           <div
