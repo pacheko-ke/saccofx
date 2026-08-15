@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#1c2b22] px-4 md:px-4 py-12">
-     
+
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
@@ -55,7 +55,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Brand mark */}
         <div className="mb-8 text-center">
-         
+
           <h1 className="mt-4 font-serif text-2xl tracking-tight text-[#faf6ec]">
             saccofx pro.
           </h1>
@@ -63,11 +63,7 @@ export default function LoginPage() {
             Sign in to your SACCO account
           </p>
         </div>
- <div className="flex flex-col py-2 demo-credentials mb-2  rounded-sm pl-2 text-[#faf6ec]/40 tracking-wide font-sm text-md ">
-  <h1 >Demo credentials</h1>
-              <h1>username: member.55b2550c </h1>
-              <h1>password: demo </h1>
-            </div>
+       
         {/* Card with perforated left edge, passbook motif */}
         <div className="relative overflow-hidden rounded-lg bg-[#faf6ec] shadow-2xl">
           <div
@@ -87,7 +83,7 @@ export default function LoginPage() {
               </div>
             )}
 
-           
+
 
             <div className="space-y-5">
               <div>
@@ -176,8 +172,8 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-xs text-[#faf6ec]/40">
           Regulated under SASRA.
         </p>
-          <p className="mt-2 text-center text-xs text-[#faf6ec]/40 " >
-           <a href="https://wa.me/254769869064">Powered by <span className="underline underline-offset-4">Pacheko Technologies.</span></a>
+        <p className="mt-2 text-center text-xs text-[#faf6ec]/40 " >
+          <a href="https://wa.me/254769869064">Powered by <span className="underline underline-offset-4">Pacheko Technologies.</span></a>
         </p>
       </div>
     </div>
