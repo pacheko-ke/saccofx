@@ -40,16 +40,16 @@ export async function GET(request: NextRequest) {
         m.member_number       AS "memberNo",
         m.first_name       AS "firstName",
         m.last_name        AS "lastName",
-        m.primary_phone,
+        m.phone_primary,
         COALESCE(
           json_agg(
             json_build_object(
-              'accountId', sa.id,
-              'accountNo', sa.account_no,
-              'productName', sp.name,
+              'accountId', sa.savings_account_id,
+              'accountNo', sa.account_number,
+              'productName', sp.product_name,
               'balance', sa.balance
             )
-          ) FILTER (WHERE sa.id IS NOT NULL),
+          ) FILTER (WHERE sa.savings_account_id IS NOT NULL),
           '[]'
         ) AS accounts
       FROM members m
@@ -59,10 +59,10 @@ export async function GET(request: NextRequest) {
         AND (
           m.first_name ILIKE $1
           OR m.last_name ILIKE $1
-          OR m.member_no ILIKE $1
-          OR m.primary_phone ILIKE $1
+          OR m.member_number ILIKE $1
+          OR m.phone_primary ILIKE $1
         )
-      GROUP BY m.member_id, m.member_number, m.first_name, m.last_name, m.primary_phone
+      GROUP BY m.member_id, m.member_number, m.first_name, m.last_name, m.phone_primary
       ORDER BY m.last_name, m.first_name
       LIMIT 15
       `,
