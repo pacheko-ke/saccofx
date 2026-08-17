@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   try {
     await client.query("BEGIN");
     // tenantId is validated via Number.isInteger() above — SET LOCAL can't take placeholders
-    await client.query(`SET LOCAL app.current_tenant = ${tenantId}`);
+    await client.query(`SET LOCAL app.current_tenant = ${memberId}`);
 
     // ---- Lock the member's share account row ------------------------------
     const { rows: accountRows } = await client.query(
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     // ---- Get par value from tenant config (fallback to 100) ----------------
     const { rows: configRows } = await client.query(
       `SELECT par_value_kes FROM "SaccoConfig" WHERE tenant_id = $1 LIMIT 1`,
-      [tenantId]
+      [memberId]
     );
     const parValueKes = configRows[0]?.par_value_kes ?? 100;
     const amountKes = sharesToAdd * parValueKes;
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
         ($1, $2, 'purchase', $3, $4, $5, $6, now())
       RETURNING id, created_at
       `,
-      [account.id, tenantId, sharesToAdd, amountKes, notes ?? null, payload.userId]
+      [account.id, memberId, sharesToAdd, amountKes, notes ?? null, payload.userId]
     );
 
     // ---- Update the share account balance ------------------------------------
