@@ -140,7 +140,7 @@ const links: NavItem[] = [
     children: [
       { href: "/dashboard/security/users", label: "Users & Roles", icon: Users },
       { href: "/dashboard/security/audit", label: "Security & Audit", icon: Shield },
-      // { href: "/dashboard/security/audit", label: "Logout", icon: Shield },
+      { href: "/dashboard/security/config", label: "Sacco Config", icon: Shield },
     ],
   },
 
