@@ -201,7 +201,7 @@ export default function ShareHoldingsPage() {
                 <tr className="bg-[#1c2b22]">
                   {[
                     "Member",
-                    "Certificate No.",
+                    
                     "Shares Held",
                     "Value at Par",
                     "Date Joined",
@@ -241,9 +241,9 @@ export default function ShareHoldingsPage() {
                             {h.memberNo}
                           </a>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-[IBM_Plex_Mono] text-sm text-[#4a5a4c]">
+                        {/* <td className="whitespace-nowrap px-4 py-3 font-[IBM_Plex_Mono] text-sm text-[#4a5a4c]">
                           {h.certificateNo}
-                        </td>
+                        </td> */}
                         <td className="whitespace-nowrap px-4 py-3 font-[IBM_Plex_Mono] text-sm text-[#1c2b22]">
                           {h.sharesHeld.toLocaleString()}
                         </td>
