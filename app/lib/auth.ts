@@ -8,7 +8,7 @@ export type JWTPayload = {
   userId: string;
   tenantId: string;
   role: string;
-  // id_number:string;
+  id_number:string;
   memberId?: string;
 }
 

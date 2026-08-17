@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
         userId: user.user_id,
         tenantId: user.tenant_id,
         role: "admin",//to be replace by user.role in production
+        id_number:user.id_number,
         memberId: user.id_number ?? undefined,
       },
       tokenDuration
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
         firstName: user.first_name,
         lastName: user.last_name,
         userId:user.id_number,
+        memberId:user.id_number,
         role: "admin",//replace with user role
       },
     });
