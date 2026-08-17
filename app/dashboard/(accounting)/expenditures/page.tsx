@@ -501,7 +501,7 @@ export default function ExpenditurePage() {
   return (
     <div className="min-h-screen bg-[#faf6ec] pb-16">
       {/* Header */}
-      <div className=" pt-16 border-b border-[#1c2b22]/15 bg-[#1c2b22] px-6 py-6 sm:px-10">
+      <div className="border-b border-[#1c2b22]/15 bg-[#1c2b22] px-6 py-6 sm:px-10">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a24b]">
@@ -610,7 +610,7 @@ export default function ExpenditurePage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => formatKES(value)}
+                    formatter={(value) => formatKES(Number(value))}
                     contentStyle={{
                       background: "#faf6ec",
                       border: "1px solid #1c2b22",
