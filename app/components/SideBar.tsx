@@ -67,7 +67,7 @@ const links: NavItem[] = [
     children: [
       { href: "/dashboard/teller-deposits", label: "Teller Deposits", icon: Users },
       { href: "/dashboard/mobile-money", label: "Mobile Money", icon: Shield },
-      { href: "/dashboard/loan-repayments", label: "Loan Repayments", icon: Shield },
+      { href: "/dashboard/loans/repayments", label: "Loan Repayments", icon: Shield },
       { href: "/dashboard/cashbook", label: "Cashbook", icon: Shield },
     ],
   },

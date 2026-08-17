@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         m.status,
         m.first_name,
         m.last_name,
+        m.id_number,
         m.member_id
        FROM users u 
        LEFT JOIN members m ON m.member_id = u.member_id
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
         userId: user.user_id,
         tenantId: user.tenant_id,
         role: "admin",//to be replace by user.role in production
-        memberId: user.member_id ?? undefined,
+        memberId: user.id_number ?? undefined,
       },
       tokenDuration
     );
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       user: {
         firstName: user.first_name,
         lastName: user.last_name,
+        userId:user.id_number,
         role: "admin",//replace with user role
       },
     });

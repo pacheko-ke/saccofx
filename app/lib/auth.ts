@@ -4,10 +4,11 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "default-secret-change-me-in-env-file-min-32-bytes"
 );
 
-export interface JWTPayload {
+export type JWTPayload = {
   userId: string;
   tenantId: string;
   role: string;
+  // id_number:string;
   memberId?: string;
 }
 
