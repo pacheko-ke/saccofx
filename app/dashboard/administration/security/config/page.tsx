@@ -18,6 +18,7 @@ const FINANCIAL_YEAR_OPTIONS = [
   { value: "OCTOBER", label: "October – September" },
 ] as const;
 
+//loan rates options
 const LOAN_INTEREST_OPTIONS = [
   { value: "REDUCING_BALANCE", label: "Reducing balance" },
   { value: "FLAT_RATE", label: "Flat rate" },
