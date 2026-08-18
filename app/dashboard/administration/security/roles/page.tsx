@@ -146,16 +146,16 @@ export default function UsersRolesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F3EC] text-[#14231E]">
-      <div className="mx-auto max-w-5xl px-6 py-10">
+    <div className="min-h-screen bg-[#F6F3EC] text-[#14231E] ">
+      <div className="mx-auto max-w-5xl px-6 py-10 ">
         {/* Header */}
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#0F2F26]/10 pb-6">
+        <header className="mb-6 flex flex-wrap pt-10 items-end justify-between gap-4 border-b-2 border-[#0F2F26]/10 pb-6">
           <div>
             <p
               className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#8C6825]"
               style={{ fontFamily: "var(--font-mono, monospace)" }}
             >
-              SaccoFX Pro &middot; Tenant Settings
+              SaccoFX Pro &middot; sacco Settings
             </p>
             <h1
               className="mt-1 text-[28px] font-semibold text-[#0F2F26]"

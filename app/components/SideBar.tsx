@@ -138,8 +138,8 @@ const links: NavItem[] = [
     label: "Security and Admin",
     icon: Fingerprint,
     children: [
-      { href: "/dashboard/security/users", label: "Users & Roles", icon: Users },
-      { href: "/dashboard/security/audit", label: "Security & Audit", icon: Shield },
+      { href: "/dashboard/administration/security/roles", label: "Users & Roles", icon: Users },
+      { href: "/dashboard/administration/security/audit", label: "Security & Audit", icon: Shield },
       { href: "/dashboard/administration/security/config", label: "Sacco Config", icon: Shield },
     ],
   },
