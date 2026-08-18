@@ -40,7 +40,7 @@ export default function LoanProductsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/loans/loan-products");
+        const res = await fetch("/api/v1/loans/products");
         if (!res.ok) throw new Error("Failed to load loan products");
         const data = await res.json();
         setProducts(data.loanProducts);
@@ -82,7 +82,7 @@ export default function LoanProductsPage() {
             <p className="mt-1 text-sm text-[#4a5c50]">Catalogue of loan products offered by the SACCO.</p>
           </div>
           <Link
-            href="/dashboard/loan-products/new"
+            href="/dashboard/loans/products/new"
             className="inline-flex items-center justify-center rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
           >
             + New loan product
