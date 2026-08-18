@@ -8,7 +8,7 @@ import {
   type BudgetLine,
   type BudgetReportData,
   type BudgetStatus,
-} from "@/app/lib/budget/budget.ts";
+} from "@/app/lib/budget/budget";
 
 // ---------------------------------------------------------------------------
 // Formatting helpers

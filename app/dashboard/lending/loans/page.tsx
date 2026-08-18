@@ -41,7 +41,7 @@ export default function LoansPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/loans");
+        const res = await fetch("/api/v1/loans");
         if (!res.ok) throw new Error("Failed to load loans");
         const data = await res.json();
         const flatLoans = Array.isArray(data.loans[0]) ? data.loans.flat() : data.loans;
