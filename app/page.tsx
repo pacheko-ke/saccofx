@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { Source_Serif_4, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 
 const serif = Source_Serif_4({
@@ -16,12 +18,6 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "500"],
   variable: "--font-mono",
 });
-
-export const metadata: Metadata = {
-  title: "SaccoFX Pro — Core banking for SACCOs",
-  description:
-    "One ledger for shares, savings, loans and dividends — built for Kenyan SACCOs.",
-};
 
 const LEDGER_ROWS = [
   { date: "03 Aug", particulars: "Monthly Contribution", debit: "", credit: "3,500.00", balance: "142,780.00" },
@@ -59,7 +55,243 @@ const STEPS = [
   { mark: "Reports", text: "Trial balance, PAR and SASRA returns are always current, never rebuilt." },
 ];
 
+const SECURITY_FEATURES = [
+  {
+    title: "Tenant isolation at the database layer",
+    body: "Each SACCO's records sit behind Postgres row-level security, not just an application filter. A query scoped to the wrong tenant isn't hidden — it's structurally impossible.",
+  },
+  {
+    title: "Signed, verified sessions",
+    body: "Every request carries a signed session token that's verified before any ledger read or write. Nothing reaches your books unauthenticated.",
+  },
+  {
+    title: "An audit trail that can't be edited away",
+    body: "Postings, disbursements and write-offs are never silently deleted. Corrections are reversing entries — who did what, and when, stays on the record.",
+  },
+  {
+    title: "Role-scoped access",
+    body: "Tellers, loan officers, credit committee and auditors each see exactly what their role requires — no more, no less.",
+  },
+];
+
+const FLEXIBILITY_FEATURES = [
+  {
+    title: "Configurable charges and products",
+    body: "Define ledger fees, loan products and penalty structures per SACCO, without waiting on a code release.",
+  },
+  {
+    title: "Multi-branch, multi-till from day one",
+    body: "Run a single branch or twenty, each till reconciling independently against the same set of books.",
+  },
+  {
+    title: "Open payment rails",
+    body: "M-Pesa, PesaLink and bank transfer disbursement all run side by side, so members and staff aren't boxed into one channel.",
+  },
+  {
+    title: "Built for today's regulation, ready for tomorrow's",
+    body: "SASRA-aligned reporting out of the box, on a ledger structure designed to absorb new regulatory formats without a rebuild.",
+  },
+];
+
+function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setSubmitted(false);
+    setSubmitting(false);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    const t = setTimeout(() => firstFieldRef.current?.focus(), 20);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      clearTimeout(t);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitting(true);
+    // TODO: wire to a real Server Action / API route that sends this to
+    // sales, e.g. via Resend, instead of simulating a delay.
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 700);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="demo-modal-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-[#0B241C]/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Dialog */}
+      <div
+        ref={dialogRef}
+        className="relative w-full max-w-md overflow-hidden rounded-[4px] border border-[#D8CFBA] bg-[#FFFDF8] shadow-[0_24px_60px_-20px_rgba(11,36,28,0.5)]"
+      >
+        {/* perforated edge, echoing the passbook card */}
+        <div className="absolute left-0 top-0 flex h-full w-3 flex-col items-center justify-around bg-[#0F2F26]/[0.04]">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span key={i} className="h-1.5 w-1.5 rounded-full bg-[#F6F3EC] ring-1 ring-[#D8CFBA]" />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-[3px] text-[#6B7F76] transition-colors hover:bg-[#0F2F26]/[0.06] hover:text-[#0F2F26]"
+        >
+          ✕
+        </button>
+
+        <div className="pl-8 pr-6 pt-7 pb-6 sm:pl-9 sm:pr-7">
+          {submitted ? (
+            <div className="py-4">
+              <span
+                className="text-[11px] font-medium uppercase tracking-wide text-[#B98A3D]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Request received
+              </span>
+              <h2
+                id="demo-modal-title"
+                className="mt-2 text-[22px] text-[#0F2F26]"
+                style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+              >
+                We'll be in touch shortly.
+              </h2>
+              <p className="mt-3 text-[14.5px] leading-relaxed text-[#3D4F47]">
+                A member of the SaccoFX Pro team will reach out within one business day to
+                schedule your walkthrough.
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-6 rounded-[3px] bg-[#0F2F26] px-5 py-2.5 text-[14px] font-medium text-[#F6F3EC] transition-colors hover:bg-[#153D32]"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <>
+              <span
+                className="text-[11px] font-medium uppercase tracking-wide text-[#B98A3D]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Book a demo
+              </span>
+              <h2
+                id="demo-modal-title"
+                className="mt-2 text-[22px] text-[#0F2F26]"
+                style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+              >
+                See your SACCO's books in SaccoFX Pro.
+              </h2>
+              <p className="mt-2 text-[14px] leading-relaxed text-[#3D4F47]">
+                A 30-minute walkthrough with your own member and loan data. No obligation.
+              </p>
+
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                <Field
+                  ref={firstFieldRef}
+                  label="Full name"
+                  name="name"
+                  type="text"
+                  placeholder="Jane Wambui"
+                  required
+                />
+                <Field
+                  label="Work email"
+                  name="email"
+                  type="email"
+                  placeholder="jane@yoursacco.co.ke"
+                  required
+                />
+                <Field
+                  label="SACCO name"
+                  name="sacco"
+                  type="text"
+                  placeholder="Amani Farmers SACCO"
+                  required
+                />
+                <Field
+                  label="Phone (optional)"
+                  name="phone"
+                  type="tel"
+                  placeholder="07XX XXX XXX"
+                />
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-2 w-full rounded-[3px] bg-[#0F2F26] px-5 py-3 text-[14.5px] font-medium text-[#F6F3EC] transition-colors hover:bg-[#153D32] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Sending…" : "Request demo"}
+                </button>
+                <p className="text-center text-[11.5px] text-[#8A9A92]">
+                  We'll only use these details to schedule your demo.
+                </p>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  name,
+  type,
+  placeholder,
+  required,
+  ref,
+}: {
+  label: string;
+  name: string;
+  type: string;
+  placeholder?: string;
+  required?: boolean;
+  ref?: React.Ref<HTMLInputElement>;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[12.5px] font-medium text-[#0F2F26]">{label}</span>
+      <input
+        ref={ref}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        className="mt-1.5 w-full rounded-[3px] border border-[#D8CFBA] bg-[#FFFDF8] px-3 py-2.5 text-[14px] text-[#14231E] placeholder:text-[#A9B5AE] focus:border-[#B98A3D] focus:outline-none focus:ring-2 focus:ring-[#B98A3D]/25"
+      />
+    </label>
+  );
+}
+
 export default function Home() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <div
       className={`${serif.variable} ${sans.variable} ${mono.variable} min-h-screen w-full overflow-x-hidden bg-[#F6F3EC] text-[#14231E]`}
@@ -69,27 +301,28 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-[#D8CFBA]/70 bg-[#F6F3EC]/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
-           
             <span className="truncate text-[15px] font-semibold tracking-tight">SaccoFX Pro</span>
           </div>
           <nav className="hidden items-center gap-8 text-[14px] text-[#3D4F47] md:flex">
             <a href="#features" className="hover:text-[#0F2F26]">Platform</a>
+            <a href="#security" className="hover:text-[#0F2F26]">Security &amp; flexibility</a>
             <a href="#ledger" className="hover:text-[#0F2F26]">The ledger</a>
             <a href="#how" className="hover:text-[#0F2F26]">How it works</a>
           </nav>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <a
-              href="#demo"
+              href="#"
               className="hidden text-[14px] font-medium text-[#0F2F26] hover:text-[#B98A3D] sm:block"
             >
               Sign in
             </a>
-            <a
-              href="#demo"
+            <button
+              type="button"
+              onClick={() => setDemoOpen(true)}
               className="whitespace-nowrap rounded-[3px] bg-[#0F2F26] px-3.5 py-2 text-[13px] font-medium text-[#F6F3EC] transition-colors hover:bg-[#153D32] sm:px-4 sm:text-[14px]"
             >
               Book a demo
-            </a>
+            </button>
           </div>
         </div>
       </header>
@@ -115,12 +348,13 @@ export default function Home() {
               member accounts, loans and M-Pesa payments, kept in a single balanced book.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4 sm:mt-9">
-              <a
-                href="#demo"
+              <button
+                type="button"
+                onClick={() => setDemoOpen(true)}
                 className="rounded-[3px] bg-[#0F2F26] px-6 py-3 text-[15px] font-medium text-[#F6F3EC] transition-colors hover:bg-[#153D32]"
               >
                 Book a demo
-              </a>
+              </button>
               <a
                 href="#features"
                 className="text-[15px] font-medium text-[#0F2F26] underline decoration-[#B98A3D]/50 decoration-2 underline-offset-4 hover:decoration-[#B98A3D]"
@@ -129,7 +363,7 @@ export default function Home() {
               </a>
             </div>
             <p className="mt-8 text-[12px] text-[#6B7F76] sm:text-[13px]" style={{ fontFamily: "var(--font-mono)" }}>
-              SASRA-aligned reporting · Daraja & PesaLink built in
+              SASRA-aligned reporting · Daraja &amp; PesaLink built in · Row-level tenant isolation
             </p>
           </div>
 
@@ -230,6 +464,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Security & Flexibility */}
+      <section id="security" className="border-b border-[#D8CFBA]/70 bg-[#FFFDF8]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="max-w-xl">
+            <span
+              className="text-[11px] font-medium uppercase tracking-wide text-[#B98A3D]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Trust &amp; adaptability
+            </span>
+            <h2
+              className="mt-3 text-[26px] leading-tight text-[#0F2F26] sm:text-[30px]"
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            >
+              Built to be trusted with members' money. Flexible enough to grow with the SACCO.
+            </h2>
+            <p className="mt-4 text-[14.5px] leading-relaxed text-[#3D4F47] sm:text-[15px]">
+              Security isn't a settings page you configure once — it's structural. Flexibility
+              isn't a roadmap promise — it's how every product and branch is already modeled.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-10 sm:mt-14 md:grid-cols-2 md:gap-14">
+            {/* Security column */}
+            <div>
+              <h3
+                className="text-[13px] font-semibold uppercase tracking-wide text-[#0F2F26]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Security
+              </h3>
+              <div className="mt-5 space-y-6 border-l border-[#D8CFBA] pl-5">
+                {SECURITY_FEATURES.map((item) => (
+                  <div key={item.title} className="relative">
+                    <span className="absolute -left-[26px] top-1.5 h-2 w-2 rounded-full bg-[#2F6B4F]" />
+                    <h4 className="text-[15px] font-semibold text-[#0F2F26]">{item.title}</h4>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-[#3D4F47]">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Flexibility column */}
+            <div>
+              <h3
+                className="text-[13px] font-semibold uppercase tracking-wide text-[#0F2F26]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Flexibility
+              </h3>
+              <div className="mt-5 space-y-6 border-l border-[#D8CFBA] pl-5">
+                {FLEXIBILITY_FEATURES.map((item) => (
+                  <div key={item.title} className="relative">
+                    <span className="absolute -left-[26px] top-1.5 h-2 w-2 rounded-full bg-[#B98A3D]" />
+                    <h4 className="text-[15px] font-semibold text-[#0F2F26]">{item.title}</h4>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-[#3D4F47]">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
       <section id="how" className="border-b border-[#D8CFBA]/70">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -270,12 +568,13 @@ export default function Home() {
               A 30-minute walkthrough with your own member and loan data, no obligation.
             </p>
           </div>
-          <a
-            href="mailto:hello@saccofxpro.co.ke?subject=Book%20a%20demo"
+          <button
+            type="button"
+            onClick={() => setDemoOpen(true)}
             className="w-full shrink-0 rounded-[3px] bg-[#F6F3EC] px-7 py-3.5 text-center text-[15px] font-medium text-[#0F2F26] transition-colors hover:bg-[#B98A3D] hover:text-[#0F2F26] sm:w-auto"
           >
             Book a demo
-          </a>
+          </button>
         </div>
       </section>
 
@@ -286,6 +585,8 @@ export default function Home() {
           <span style={{ fontFamily: "var(--font-mono)" }}>Saccofx pro</span>
         </div>
       </footer>
+
+      <DemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
 
       <style>{`
         @keyframes ledger-row {
