@@ -3,6 +3,10 @@ import { Pool } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
 import { createAuthToken } from "../../../../lib/auth";
 
+// 1. Maintain pool connection across invocations (outside handler)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -39,17 +43,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const client = await pool.connect();
 
   try {
-    // 1. Query user with required authentication & profile fields
+    // 2. Included u.tenant_id, u.role, u.status fallback, and m.member_id in WHERE clause
     const result = await client.query(
       `SELECT
         u.user_id,
         u.username,
         u.password_hash,
-        m.status,
+        u.tenant_id,
+        u.role,
+        COALESCE(m.status, u.status, 'active') AS user_status,
         m.first_name,
         m.last_name,
         m.id_number,
@@ -59,6 +64,8 @@ export async function POST(req: NextRequest) {
        WHERE lower(u.username) = $1
           OR lower(m.phone_primary) = $1
           OR lower(m.email) = $1
+          OR lower(m.member_id) = $1
+          OR lower(m.id_number) = $1
        LIMIT 1`,
       [normalizedIdentifier]
     );
@@ -72,11 +79,12 @@ export async function POST(req: NextRequest) {
 
     const user = result.rows[0];
 
-    if (user.status !== "active") {
+    // 3. Safely evaluate user_status
+    if (user.user_status !== "active") {
       return NextResponse.json(
         {
           error:
-            user.status === "suspended"
+            user.user_status === "suspended"
               ? "Your account has been suspended. Contact your SACCO branch."
               : "Your account is not yet active. Contact your SACCO branch.",
         },
@@ -93,15 +101,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Generate JWT token
+    const activeRole = user.role || "admin";
     const tokenDuration = remember ? "30d" : "1d";
+
+    // 4. Ensure non-null values for JWTPayload
     const token = await createAuthToken(
       {
-        userId: user.user_id,
-        tenantId: user.tenant_id,
-        role: "admin",//to be replace by user.role in production
-        id_number:user.id_number,
-        memberId: user.id_number ?? undefined,
+        userId: String(user.user_id),
+        tenantId: String(user.tenant_id ?? ""),
+        role: activeRole,
+        id_number: user.id_number ?? "",
+        memberId: user.member_id ?? undefined,
       },
       tokenDuration
     );
@@ -112,20 +122,19 @@ export async function POST(req: NextRequest) {
     );
 
     const redirectTo =
-      user.role === "member" ? "/member/dashboard" : "/dashboard";
+      activeRole === "member" ? "/member/dashboard" : "/dashboard";
 
     const response = NextResponse.json({
       redirectTo,
       user: {
         firstName: user.first_name,
         lastName: user.last_name,
-        userId:user.id_number,
-        memberId:user.id_number,
-        role: "admin",//replace with user role
+        userId: user.user_id,
+        memberId: user.member_id,
+        role: activeRole,
       },
     });
 
-    // 3. Attach JWT to HTTP-only cookie
     const maxAgeInSeconds = remember
       ? 30 * 24 * 60 * 60
       : 24 * 60 * 60;
@@ -147,6 +156,5 @@ export async function POST(req: NextRequest) {
     );
   } finally {
     client.release();
-    await pool.end();
   }
 }

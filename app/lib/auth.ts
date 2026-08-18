@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default-secret-change-me-in-env-file-min-32-bytes"
+  process.env.JWT_SECRET
 );
 
 export type JWTPayload = {

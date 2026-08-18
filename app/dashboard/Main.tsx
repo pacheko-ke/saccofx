@@ -25,19 +25,31 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from "recharts";
 
 /* ────────────────────────────────────────────────────────────
    Types
    ──────────────────────────────────────────────────────────── */
 
+// The API sends a string key for the icon (JSON can't carry a component
+// reference) — this maps it back to the actual lucide component client-side.
+const ICONS = {
+  PiggyBank,
+  Wallet,
+  Users,
+  Landmark,
+  ShieldAlert,
+  TrendingUp,
+} as const;
+
+type KpiIconKey = keyof typeof ICONS;
+
 interface Kpi {
   label: string;
   value: string;
   change: string;
   trend: "up" | "down";
-  icon: typeof Users;
+  icon: KpiIconKey;
   sub?: string;
 }
 
@@ -72,16 +84,16 @@ interface PortfolioSlice {
 }
 
 /* ────────────────────────────────────────────────────────────
-   Demo fallback data
+   Demo fallback data — used only if /api/v1/dashboard is unreachable
    ──────────────────────────────────────────────────────────── */
 
 const DEMO_KPIS: Kpi[] = [
-  { label: "Total Savings", value: "KES 99.98M", change: "+0.9%", trend: "up", icon: PiggyBank },
-  { label: "Share Capital", value: "KES 48.29M", change: "+12.4%", trend: "up", icon: Wallet },
-  { label: "Active Members", value: "834", change: "+4.2%", trend: "up", icon: Users },
-  { label: "Active Loans", value: "312", change: "-2.1%", trend: "down", icon: Landmark },
-  { label: "Portfolio at Risk", value: "6.8%", change: "+1.1pp", trend: "down", sub: "PAR > 30 days", icon: ShieldAlert },
-  { label: "Disbursed (MTD)", value: "KES 5.62M", change: "+18.0%", trend: "up", icon: TrendingUp },
+  { label: "Total Savings", value: "KES 99.98M", change: "+0.9%", trend: "up", icon: "PiggyBank" },
+  { label: "Share Capital", value: "KES 48.29M", change: "+12.4%", trend: "up", icon: "Wallet" },
+  { label: "Active Members", value: "834", change: "+4.2%", trend: "up", icon: "Users" },
+  { label: "Active Loans", value: "312", change: "-2.1%", trend: "down", icon: "Landmark" },
+  { label: "Portfolio at Risk", value: "6.8%", change: "+1.1pp", trend: "down", sub: "PAR > 30 days", icon: "ShieldAlert" },
+  { label: "Disbursed (MTD)", value: "KES 5.62M", change: "+18.0%", trend: "up", icon: "TrendingUp" },
 ];
 
 const DEMO_ACTIVITY: ActivityItem[] = [
@@ -154,7 +166,7 @@ export default function Dashboard() {
 
     async function load() {
       try {
-        const res = await fetch("/api/dashboard");
+        const res = await fetch("/api/v1/dashboard");
         if (!res.ok) throw new Error("Dashboard API unavailable");
         const data = await res.json();
         if (!cancelled) {
@@ -195,8 +207,8 @@ export default function Dashboard() {
         </header>
 
         {usingDemoData && (
-          <div className=" hidden mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
-            Couldn't reach <code className="font-mono">/api/dashboard</code>.
+          <div className=" mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
+            Couldn't reach <code className="font-mono">/api/v1/dashboard</code>.
             Connect the reporting endpoint to see live figures.
           </div>
         )}
@@ -288,7 +300,8 @@ export default function Dashboard() {
                 <Tooltip
                   formatter={(value, name) => {
                     const n = Number(value ?? 0);
-                    return [`${n} loans (${((n / totalLoans) * 100).toFixed(1)}%)`, name];
+                    const pct = totalLoans === 0 ? 0 : (n / totalLoans) * 100;
+                    return [`${n} loans (${pct.toFixed(1)}%)`, name];
                   }}
                   contentStyle={{
                     background: "#faf6ec",
@@ -392,12 +405,6 @@ export default function Dashboard() {
         <div className="mt-6 rounded-sm border border-[#c9a24b]/30 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-serif text-lg text-[#1c2b22]">Recent Members</h2>
-            {/* <a
-              href="#"
-              className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]"
-            >
-              View all
-            </a> */}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -442,7 +449,7 @@ export default function Dashboard() {
    ──────────────────────────────────────────────────────────── */
 
 function KpiCard({ kpi }: { kpi: Kpi }) {
-  const Icon = kpi.icon;
+  const Icon = ICONS[kpi.icon] ?? Users;
   const TrendIcon = kpi.trend === "up" ? ArrowUpRight : ArrowDownRight;
   return (
     <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6] p-4">
@@ -454,14 +461,16 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
       </div>
       <div className="flex items-end justify-between gap-2">
         <span className="font-mono text-xl leading-none text-[#1c2b22]">{kpi.value}</span>
-        <span
-          className={`flex items-center gap-0.5 text-[11px] font-medium ${
-            kpi.trend === "up" ? "text-[#5c7a5f]" : "text-[#b8543a]"
-          }`}
-        >
-          <TrendIcon size={13} />
-          {kpi.change}
-        </span>
+        {kpi.change && (
+          <span
+            className={`flex items-center gap-0.5 text-[11px] font-medium ${
+              kpi.trend === "up" ? "text-[#5c7a5f]" : "text-[#b8543a]"
+            }`}
+          >
+            <TrendIcon size={13} />
+            {kpi.change}
+          </span>
+        )}
       </div>
       {kpi.sub && <p className="mt-1 text-[11px] text-[#1c2b22]/45">{kpi.sub}</p>}
     </div>

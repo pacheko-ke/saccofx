@@ -12,37 +12,40 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password, remember }),
       });
 
       const data = await res.json();
+      
 
       if (!res.ok) {
         setError(data.error ?? "Login failed. Please try again.");
         setLoading(false);
+      
         return;
       }
 
       router.push(data.redirectTo ?? "/dashboard");
       router.refresh();
     } catch {
-      setError(`Something went wrong. Please check your connection.${error}`);
+      setError(`Something went wrong. Please check your network connection. ${error}`);
       setLoading(false);
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#1c2b22] px-4 md:px-4 py-12">
-
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
@@ -53,9 +56,7 @@ export default function LoginPage() {
       />
 
       <div className="relative w-full max-w-md">
-        {/* Brand mark */}
         <div className="mb-8 text-center">
-
           <h1 className="mt-4 font-serif text-2xl tracking-tight text-[#faf6ec]">
             saccofx pro.
           </h1>
@@ -63,8 +64,7 @@ export default function LoginPage() {
             Sign in to your SACCO account
           </p>
         </div>
-       
-        {/* Card with perforated left edge, passbook motif */}
+
         <div className="relative overflow-hidden rounded-lg bg-[#faf6ec] shadow-2xl">
           <div
             className="absolute left-0 top-0 h-full w-3 bg-[#eee7d6]"
@@ -76,14 +76,12 @@ export default function LoginPage() {
             }}
           />
 
-          <form onSubmit={handleSubmit} className="px-4 md:px-8 pl-5 py-7 ">
+          <form onSubmit={handleSubmit} className="px-4 md:px-8 pl-5 py-7">
             {error && (
               <div className="mb-5 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
-
-
 
             <div className="space-y-5">
               <div>
@@ -159,21 +157,16 @@ export default function LoginPage() {
                 {loading ? "Signing in…" : "Sign in"}
               </button>
             </div>
-
-            {/* <p className="mt-6 text-center text-sm text-[#1c2b22]/60">
-              Not a member yet?{" "}
-              <a href="/register" className="text-[#c9a24b] hover:underline">
-                Join the SACCO
-              </a>
-            </p> */}
           </form>
         </div>
 
         <p className="mt-6 text-center text-xs text-[#faf6ec]/40">
           Regulated under SASRA.
         </p>
-        <p className="mt-2 text-center text-xs text-[#faf6ec]/40 " >
-          <a href="https://wa.me/254769869064">Powered by <span className="underline underline-offset-4">Pacheko Technologies.</span></a>
+        <p className="mt-2 text-center text-xs text-[#faf6ec]/40">
+          <a href="https://wa.me/254769869064">
+            Powered by <span className="underline underline-offset-4">Pacheko Technologies.</span>
+          </a>
         </p>
       </div>
     </div>

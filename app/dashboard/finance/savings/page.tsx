@@ -37,11 +37,11 @@ export default function Savings() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
-  // Fetch full member list once on mount
+  // h full member list once on mount
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/savings");
+        const res = await fetch("/api/v1/savings");
         if (!res.ok) throw new Error("Failed to load accounts");
         const data = await res.json();
         setAllMembers(data.members);

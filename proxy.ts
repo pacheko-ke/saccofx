@@ -23,7 +23,6 @@ export async function proxy(req: NextRequest) {
       return response;
     }
   }
-console.log("successsss")
   return NextResponse.next();
 }
 
