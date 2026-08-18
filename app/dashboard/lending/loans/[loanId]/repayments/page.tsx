@@ -132,9 +132,9 @@ export default function LoanRepaymentsPage() {
 
             try {
                 const [loanRes, scheduleRes, repayRes] = await Promise.all([
-                    fetch(`/api/loans/${loanId}`),
-                    fetch(`/api/loans/${loanId}/schedule`),
-                    fetch(`/api/loans/${loanId}/repayments`),
+                    fetch(`/api/v1/loans/${loanId}`),
+                    fetch(`/api/v1/loans/${loanId}/schedule`),
+                    fetch(`/api/v1/loans/${loanId}/repayments`),
                 ]);
               
 

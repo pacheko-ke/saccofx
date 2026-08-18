@@ -268,7 +268,7 @@ function BulkImportForm({ onBack }: { onBack: () => void }) {
     setSubmitError("");
     try {
       // Replace with your actual bulk-import API route.
-      const res = await fetch("/api/members/bulk", {
+      const res = await fetch("/api/v1/members/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ members: validRows.map((r) => r.data) }),
@@ -508,7 +508,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const res = await fetch("/api/members", {
+      const res = await fetch("/api/v1/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

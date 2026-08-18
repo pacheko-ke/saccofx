@@ -31,7 +31,7 @@ export default function MemberCardsPage() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/members/cards?status=active");
+        const res = await fetch("/api/v1/members/cards?status=active");
         const data = await res.json();
         if (!cancelled) setMembers(data.members ?? []);
       } catch (err) {

@@ -38,7 +38,7 @@ export default function MembersPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/members");
+        const res = await fetch("/api/v1/members");
         if (!res.ok) throw new Error("Failed to load members");
         const data = await res.json();
         setAllMembers(data.members);

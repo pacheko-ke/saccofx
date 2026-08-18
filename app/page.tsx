@@ -57,8 +57,8 @@ const STEPS = [
 
 const SECURITY_FEATURES = [
   {
-    title: "Tenant isolation at the database layer",
-    body: "Each SACCO's records sit behind Postgres row-level security, not just an application filter. A query scoped to the wrong tenant isn't hidden — it's structurally impossible.",
+    title: "Members isolation at the database layer",
+    body: "Each SACCO's records sit behind Postgres row-level security, not just an application filter. A query scoped to the wrong Members isn't hidden — it's structurally impossible.",
   },
   {
     title: "Signed, verified sessions",
@@ -180,7 +180,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                 We'll be in touch shortly.
               </h2>
               <p className="mt-3 text-[14.5px] leading-relaxed text-[#3D4F47]">
-                A member of the SaccoFX Pro team will reach out within one business day to
+                A member of the saccofx pro team will reach out within one business day to
                 schedule your walkthrough.
               </p>
               <button
@@ -204,7 +204,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                 className="mt-2 text-[22px] text-[#0F2F26]"
                 style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
               >
-                See your SACCO's books in SaccoFX Pro.
+                See your SACCO's books in saccofx pro.
               </h2>
               <p className="mt-2 text-[14px] leading-relaxed text-[#3D4F47]">
                 A 30-minute walkthrough with your own member and loan data. No obligation.
@@ -301,7 +301,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-[#D8CFBA]/70 bg-[#F6F3EC]/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="truncate text-[15px] font-semibold tracking-tight">SaccoFX Pro</span>
+            <span className="truncate text-[15px] font-semibold tracking-tight">saccofx pro</span>
           </div>
           <nav className="hidden items-center gap-8 text-[14px] text-[#3D4F47] md:flex">
             <a href="#features" className="hover:text-[#0F2F26]">Platform</a>
@@ -344,7 +344,7 @@ export default function Home() {
               One ledger for every share, saving and loan.
             </h1>
             <p className="mt-5 max-w-md text-[16px] leading-relaxed text-[#3D4F47] sm:mt-6 sm:text-[17px]">
-              SaccoFX Pro is core banking software for savings and credit cooperatives —
+              saccofx pro is core banking software for savings and credit cooperatives —
               member accounts, loans and M-Pesa payments, kept in a single balanced book.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4 sm:mt-9">
@@ -363,7 +363,7 @@ export default function Home() {
               </a>
             </div>
             <p className="mt-8 text-[12px] text-[#6B7F76] sm:text-[13px]" style={{ fontFamily: "var(--font-mono)" }}>
-              SASRA-aligned reporting · Daraja &amp; PesaLink built in · Row-level tenant isolation
+              SASRA-aligned reporting · Daraja &amp; PesaLink built in · Row-level Members isolation
             </p>
           </div>
 
@@ -562,7 +562,7 @@ export default function Home() {
               className="text-[23px] text-[#F6F3EC] sm:text-[26px] md:text-[30px]"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
             >
-              See your SACCO&apos;s books in SaccoFX Pro.
+              See your SACCO&apos;s books in saccofx pro.
             </h2>
             <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-[#B9CBC2] sm:text-[15px]">
               A 30-minute walkthrough with your own member and loan data, no obligation.
@@ -581,8 +581,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-[#0B241C] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 text-[13px] text-[#7C9186] sm:flex-row sm:px-6">
-          <span>© {new Date().getFullYear()} SaccoFX Pro</span>
-          <span style={{ fontFamily: "var(--font-mono)" }}>Saccofx pro</span>
+          <span>© {new Date().getFullYear()} saccofx pro</span>
+          <span style={{ fontFamily: "var(--font-mono)" }}>saccofx pro</span>
         </div>
       </footer>
 

@@ -79,7 +79,7 @@ export default function TellerDepositsPage() {
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/members/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/v1/members/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
         setResults(data.members ?? []);
       } catch (err) {
@@ -96,7 +96,7 @@ export default function TellerDepositsPage() {
 
   async function loadTodayDeposits() {
     try {
-      const res = await fetch("/api/teller/deposits");
+      const res = await fetch("/api/v1/teller/deposits");
       const data = await res.json();
       setTodayDeposits(data.deposits ?? []);
     } catch (err) {
@@ -143,7 +143,7 @@ export default function TellerDepositsPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/teller/deposits", {
+      const res = await fetch("/api/v1//teller/deposits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

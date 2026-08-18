@@ -59,7 +59,7 @@ export default function GeneralLedgerPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/chart-of-accounts");
+        const res = await fetch("/api/v1/chart-of-accounts");
         if (!res.ok) return;
         const data = await res.json();
         setAccounts(data.accounts ?? []);
@@ -86,7 +86,7 @@ export default function GeneralLedgerPage() {
         if (search) params.set("search", search);
         params.set("page", String(page));
 
-        const res = await fetch(`/api/general-ledger?${params.toString()}`);
+        const res = await fetch(`/api/v1/general-ledger?${params.toString()}`);
         if (!res.ok) throw new Error("Failed to load general ledger");
         const data = await res.json();
 
