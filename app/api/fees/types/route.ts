@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // const total = totalResult[0].count;
 
-    return NextResponse.json({ fees });
+    return NextResponse.json( {fees} );
   } catch (error) {
     console.log("Failed to fetch loans:", error);
     return NextResponse.json(
