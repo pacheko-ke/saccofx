@@ -209,7 +209,8 @@ export async function GET(req: NextRequest) {
         fullName: `${profile.first_name} ${profile.last_name}`,
         memberSince: profile.created_at,
         savingsBalance,
-        shareCapital: num(balances.share_capital),
+        // update per share *100 amount with sacco config from tenant db
+        shareCapital: num(balances.share_capital*100),
         activeLoanBalance: num(balances.active_loan_balance),
         nextLoanRepayment: nextRepayment,
         savingsChangePct,
