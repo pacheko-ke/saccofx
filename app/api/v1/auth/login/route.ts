@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
         u.user_id,
         u.username,
         u.password_hash,
-        u.tenant_id,
-        u.role,
-        COALESCE(m.status, u.status, 'active') AS user_status,
+        
+       
+        COALESCE(m.status, 'active') AS user_status,
         m.first_name,
         m.last_name,
         m.id_number,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
        WHERE lower(u.username) = $1
           OR lower(m.phone_primary) = $1
           OR lower(m.email) = $1
-          OR lower(m.member_id) = $1
+          OR lower(m.member_id::text) = $1
           OR lower(m.id_number) = $1
        LIMIT 1`,
       [normalizedIdentifier]
