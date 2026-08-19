@@ -6,7 +6,6 @@ import {
   Wallet,
   Landmark,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   ShieldAlert,
@@ -83,63 +82,14 @@ interface PortfolioSlice {
   value: number;
 }
 
-/* ────────────────────────────────────────────────────────────
-   Demo fallback data — used only if /api/v1/dashboard is unreachable
-   ──────────────────────────────────────────────────────────── */
-
-const DEMO_KPIS: Kpi[] = [
-  { label: "Total Savings", value: "KES 99.98M", change: "+0.9%", trend: "up", icon: "PiggyBank" },
-  { label: "Share Capital", value: "KES 48.29M", change: "+12.4%", trend: "up", icon: "Wallet" },
-  { label: "Active Members", value: "834", change: "+4.2%", trend: "up", icon: "Users" },
-  { label: "Active Loans", value: "312", change: "-2.1%", trend: "down", icon: "Landmark" },
-  { label: "Portfolio at Risk", value: "6.8%", change: "+1.1pp", trend: "down", sub: "PAR > 30 days", icon: "ShieldAlert" },
-  { label: "Disbursed (MTD)", value: "KES 5.62M", change: "+18.0%", trend: "up", icon: "TrendingUp" },
-];
-
-const DEMO_ACTIVITY: ActivityItem[] = [
-  { user: "Mary", action: "approved loan LN-2026-00842", time: "2m ago" },
-  { user: "Samuel", action: "registered a new member", time: "18m ago" },
-  { user: "Geoffrey", action: "declined loan application LN-2026-00839", time: "1h ago" },
-  { user: "Faith", action: "posted a repayment via M-Pesa", time: "2h ago" },
-  { user: "John", action: "reversed a duplicate journal entry", time: "3h ago" },
-];
-
-const DEMO_MEMBERS: MemberRow[] = [
-  { id: "SFX-2311", name: "Patrick Mutua", amount: "KES 1,240", status: "Active" },
-  { id: "SFX-2310", name: "Joshua Kariuki", amount: "KES 890", status: "Pending" },
-  { id: "SFX-2309", name: "Janet Wambui", amount: "KES 2,150", status: "Active" },
-  { id: "SFX-2308", name: "Maria Nafula", amount: "KES 430", status: "Active" },
-];
-
-const DEMO_SAVINGS_TREND: SavingsPoint[] = [
-  { month: "Feb", savings: 82.1, shareCapital: 39.4 },
-  { month: "Mar", savings: 85.6, shareCapital: 41.0 },
-  { month: "Apr", savings: 88.9, shareCapital: 42.6 },
-  { month: "May", savings: 91.4, shareCapital: 44.1 },
-  { month: "Jun", savings: 95.2, shareCapital: 46.0 },
-  { month: "Jul", savings: 97.8, shareCapital: 47.3 },
-  { month: "Aug", savings: 99.98, shareCapital: 48.29 },
-];
-
-const DEMO_CASHFLOW: CashflowPoint[] = [
-  { month: "Feb", deposits: 9.8, withdrawals: 6.1 },
-  { month: "Mar", deposits: 10.4, withdrawals: 6.9 },
-  { month: "Apr", deposits: 11.1, withdrawals: 7.4 },
-  { month: "May", deposits: 10.7, withdrawals: 7.0 },
-  { month: "Jun", deposits: 12.3, withdrawals: 7.8 },
-  { month: "Jul", deposits: 11.9, withdrawals: 8.2 },
-  { month: "Aug", deposits: 12.6, withdrawals: 7.6 },
-];
-
-const DEMO_PORTFOLIO: PortfolioSlice[] = [
-  { name: "Performing", value: 249 },
-  { name: "Watch", value: 34 },
-  { name: "Substandard", value: 15 },
-  { name: "Doubtful", value: 9 },
-  { name: "Loss", value: 5 },
-];
-
-const PORTFOLIO_COLORS = ["#5c7a5f", "#c9a24b", "#b8834a", "#b8543a", "#7a2e1c"];
+interface DashboardData {
+  kpis: Kpi[];
+  activity: ActivityItem[];
+  members: MemberRow[];
+  savingsTrend: SavingsPoint[];
+  cashflow: CashflowPoint[];
+  portfolio: PortfolioSlice[];
+}
 
 const STATUS_STYLE: Record<MemberRow["status"], string> = {
   Active: "bg-[#dfe9dd] text-[#1c2b22] border-[#5c7a5f]/50",
@@ -147,38 +97,41 @@ const STATUS_STYLE: Record<MemberRow["status"], string> = {
   Suspended: "bg-[#efd9d4] text-[#7a2e1c] border-[#b8543a]/50",
 };
 
+const PORTFOLIO_COLORS = ["#5c7a5f", "#c9a24b", "#b8834a", "#b8543a", "#7a2e1c"];
+
 /* ────────────────────────────────────────────────────────────
    Page
    ──────────────────────────────────────────────────────────── */
 
 export default function Dashboard() {
-  const [kpis, setKpis] = useState<Kpi[]>(DEMO_KPIS);
-  const [activity, setActivity] = useState<ActivityItem[]>(DEMO_ACTIVITY);
-  const [members, setMembers] = useState<MemberRow[]>(DEMO_MEMBERS);
-  const [savingsTrend, setSavingsTrend] = useState<SavingsPoint[]>(DEMO_SAVINGS_TREND);
-  const [cashflow, setCashflow] = useState<CashflowPoint[]>(DEMO_CASHFLOW);
-  const [portfolio, setPortfolio] = useState<PortfolioSlice[]>(DEMO_PORTFOLIO);
-  const [usingDemoData, setUsingDemoData] = useState(false);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
+      setLoading(true);
+      setError(null);
+
       try {
         const res = await fetch("/api/v1/dashboard");
-        if (!res.ok) throw new Error("Dashboard API unavailable");
-        const data = await res.json();
-        if (!cancelled) {
-          setKpis(data.kpis);
-          setActivity(data.activity);
-          setMembers(data.members);
-          setSavingsTrend(data.savingsTrend);
-          setCashflow(data.cashflow);
-          setPortfolio(data.portfolio);
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? `Dashboard API returned ${res.status}`);
         }
-      } catch {
-        if (!cancelled) setUsingDemoData(true);
+
+        const json = (await res.json()) as DashboardData;
+
+        if (!cancelled) {
+          setData(json);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -190,7 +143,29 @@ export default function Dashboard() {
     };
   }, []);
 
+  const portfolio = data?.portfolio ?? [];
   const totalLoans = useMemo(() => portfolio.reduce((s, p) => s + p.value, 0), [portfolio]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#faf6ec] font-sans text-[#1c2b22]">
+        <p className="text-sm text-[#1c2b22]/60">Loading dashboard…</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#faf6ec] px-6 font-sans text-[#1c2b22]">
+        <div className="max-w-md rounded-sm border border-[#b8543a]/40 bg-[#efd9d4]/50 px-5 py-4 text-sm text-[#7a2e1c]">
+          <p className="font-medium">Couldn&apos;t load the dashboard.</p>
+          <p className="mt-1 text-[#7a2e1c]/80">{error ?? "Unknown error."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { kpis, activity, members, savingsTrend, cashflow } = data;
 
   return (
     <div className="w-full min-h-screen pt-4 md:pl-0 mx-auto bg-[#faf6ec] font-sans text-[#1c2b22]">
@@ -205,13 +180,6 @@ export default function Dashboard() {
             A snapshot of your SACCO's savings, loans, and membership activity.
           </p>
         </header>
-
-        {usingDemoData && (
-          <div className=" mb-6 rounded-sm border border-[#c9a24b]/50 bg-[#f3e6c4]/50 px-4 py-2.5 text-sm text-[#7a5a12]">
-            Couldn't reach <code className="font-mono">/api/v1/dashboard</code>.
-            Connect the reporting endpoint to see live figures.
-          </div>
-        )}
 
         {/* KPI cards */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
@@ -379,25 +347,29 @@ export default function Dashboard() {
           {/* Recent activity */}
           <div className="rounded-sm border border-[#c9a24b]/30 bg-white p-5">
             <h2 className="mb-4 font-serif text-lg text-[#1c2b22]">Recent Activity</h2>
-            <ul className="space-y-4">
-              {activity.map((item, i) => (
-                <li key={i} className="flex gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c9a24b]/40 bg-[#eee7d6] font-serif text-xs text-[#1c2b22]">
-                    {item.user
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm text-[#1c2b22]">
-                      <span className="font-medium">{item.user}</span>{" "}
-                      <span className="text-[#1c2b22]/70">{item.action}</span>
-                    </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-[#1c2b22]/45">{item.time}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {activity.length === 0 ? (
+              <p className="text-sm text-[#1c2b22]/50">No recent activity.</p>
+            ) : (
+              <ul className="space-y-4">
+                {activity.map((item, i) => (
+                  <li key={i} className="flex gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c9a24b]/40 bg-[#eee7d6] font-serif text-xs text-[#1c2b22]">
+                      {item.user
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm text-[#1c2b22]">
+                        <span className="font-medium">{item.user}</span>{" "}
+                        <span className="text-[#1c2b22]/70">{item.action}</span>
+                      </p>
+                      <p className="mt-0.5 font-mono text-[11px] text-[#1c2b22]/45">{item.time}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -421,20 +393,28 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {members.map((m) => (
-                  <tr key={m.id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
-                    <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]/60">{m.id}</td>
-                    <td className="px-3 py-3 text-[#1c2b22]">{m.name}</td>
-                    <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]">{m.amount}</td>
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${STATUS_STYLE[m.status]}`}
-                      >
-                        {m.status}
-                      </span>
+                {members.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-sm text-[#1c2b22]/50">
+                      No members yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  members.map((m) => (
+                    <tr key={m.id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
+                      <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]/60">{m.id}</td>
+                      <td className="px-3 py-3 text-[#1c2b22]">{m.name}</td>
+                      <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]">{m.amount}</td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${STATUS_STYLE[m.status]}`}
+                        >
+                          {m.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

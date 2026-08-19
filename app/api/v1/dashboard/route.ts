@@ -18,18 +18,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Session expired" }, { status: 401 });
   }
 
-  const tenantId = String(payload.tenantId ?? "");
-  if (!UUID_RE.test(tenantId)) {
-    return NextResponse.json({ error: "Invalid tenant" }, { status: 400 });
+  const userId = String(payload.userId ?? "");
+  if (!UUID_RE.test(userId)) {
+    return NextResponse.json({ error: "Invalid user" }, { status: 400 });
   }
 
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-    // SET LOCAL can't take $1 placeholders — safe here only because tenantId
+    // SET LOCAL can't take $1 placeholders — safe here only because userId
     // was validated against UUID_RE above.
-    await client.query(`SET LOCAL app.current_tenant = '${tenantId}'`);
+    await client.query(`SET LOCAL app.current_user_id = '${userId}'`);
 
     const [
       totalsResult,
@@ -44,16 +44,16 @@ export async function GET(req: NextRequest) {
       client.query(`
         SELECT
           (SELECT COALESCE(SUM(balance), 0) FROM savings_accounts WHERE status = 'active') AS total_savings,
-          (SELECT COALESCE(SUM(balance), 0) FROM share_accounts WHERE status = 'active') AS total_shares,
+          (SELECT COALESCE(SUM(shares_count), 0) FROM share_transactions) AS total_shares,
           (SELECT COUNT(*) FROM members WHERE status = 'active') AS active_members,
-          (SELECT COUNT(*) FROM loan_accounts WHERE status = 'active') AS active_loans,
+          (SELECT COUNT(*) FROM loans WHERE status = 'active') AS active_loans,
           (SELECT COALESCE(SUM(balance), 0) FROM savings_accounts
-            WHERE status = 'active' AND created_at < date_trunc('month', now())) AS prev_savings,
-          (SELECT COALESCE(SUM(balance), 0) FROM share_accounts
-            WHERE status = 'active' AND created_at < date_trunc('month', now())) AS prev_shares,
+            WHERE created_at < date_trunc('month', now())) AS prev_savings,
+          (SELECT COALESCE(SUM(shares_count), 0) FROM share_transactions
+            WHERE created_at < date_trunc('month', now())) AS prev_shares,
           (SELECT COUNT(*) FROM members
             WHERE status = 'active' AND created_at < date_trunc('month', now())) AS prev_members,
-          (SELECT COUNT(*) FROM loan_accounts
+          (SELECT COUNT(*) FROM loans
             WHERE status = 'active' AND disbursed_at < date_trunc('month', now())) AS prev_loans
       `),
 
@@ -64,8 +64,8 @@ export async function GET(req: NextRequest) {
           SELECT
             ls.loan_id,
             MAX(GREATEST(CURRENT_DATE - ls.due_date, 0)) AS days_overdue
-          FROM loan_schedule ls
-          WHERE ls.paid = false AND ls.due_date < CURRENT_DATE
+          FROM loan_repayment_schedule ls
+          WHERE ls.is_paid = false AND ls.due_date < CURRENT_DATE
           GROUP BY ls.loan_id
         )
         SELECT
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
             ELSE 'loss'
           END AS bucket,
           COUNT(*) AS loan_count
-        FROM loan_accounts la
+        FROM loans la
         LEFT JOIN loan_overdue lo ON lo.loan_id = la.loan_id
         WHERE la.status = 'active'
         GROUP BY bucket
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       // ── Disbursed month-to-date ─────────────────────────────
       client.query(`
         SELECT COALESCE(SUM(principal_amount), 0) AS disbursed_mtd
-        FROM loan_accounts
+        FROM loans
         WHERE disbursed_at >= date_trunc('month', now())
       `),
 
@@ -102,13 +102,13 @@ export async function GET(req: NextRequest) {
           interval '1 month'
         ) AS month
         LEFT JOIN (
-          SELECT date_trunc('month', transaction_date) AS m, SUM(amount) AS total
-          FROM savings_transactions
-          WHERE transaction_type = 'deposit'
+          SELECT date_trunc('month', tx_date) AS m, SUM(amount) AS total
+          FROM transactions
+          WHERE tx_type = 'deposit'
           GROUP BY 1
         ) sav ON sav.m = month
         LEFT JOIN (
-          SELECT date_trunc('month', transaction_date) AS m, SUM(amount) AS total
+          SELECT date_trunc('month', tx_date) AS m, SUM(amount) AS total
           FROM share_transactions
           GROUP BY 1
         ) sh ON sh.m = month
@@ -118,22 +118,22 @@ export async function GET(req: NextRequest) {
       // ── 7-month deposits vs withdrawals ──────────────────────
       client.query(`
         SELECT
-          to_char(date_trunc('month', transaction_date), 'Mon') AS month,
-          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'deposit'), 0) AS deposits,
-          COALESCE(SUM(amount) FILTER (WHERE transaction_type = 'withdrawal'), 0) AS withdrawals
-        FROM savings_transactions
-        WHERE transaction_date >= date_trunc('month', now()) - interval '6 months'
-        GROUP BY 1, date_trunc('month', transaction_date)
-        ORDER BY date_trunc('month', transaction_date)
+          to_char(date_trunc('month', tx_date), 'Mon') AS month,
+          COALESCE(SUM(amount) FILTER (WHERE tx_type = 'deposit'), 0) AS deposits,
+          COALESCE(SUM(amount) FILTER (WHERE tx_type = 'withdrawal'), 0) AS withdrawals
+        FROM transactions
+        WHERE tx_date >= date_trunc('month', now()) - interval '6 months'
+        GROUP BY 1, date_trunc('month', tx_date)
+        ORDER BY date_trunc('month', tx_date)
       `),
 
       // ── Recent activity (audit log) ──────────────────────────
       client.query(`
         SELECT
           u.username AS user_name,
-          al.action_description AS action,
+          al.action AS action,
           al.created_at AS time
-        FROM audit_log al
+        FROM audit_logs al
         JOIN users u ON u.user_id = al.user_id
         ORDER BY al.created_at DESC
         LIMIT 5
