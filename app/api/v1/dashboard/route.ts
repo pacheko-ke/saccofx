@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
           (SELECT COALESCE(SUM(balance), 0) FROM savings_accounts WHERE status = 'active') AS total_savings,
           (SELECT COALESCE(SUM(shares_count), 0) FROM share_transactions) AS total_shares,
           (SELECT COUNT(*) FROM members WHERE status = 'active') AS active_members,
-          (SELECT COUNT(*) FROM loans WHERE status = 'active') AS active_loans,
+          (SELECT COUNT(*) FROM loans WHERE status != 'closed') AS active_loans,
           (SELECT COALESCE(SUM(balance), 0) FROM savings_accounts
             WHERE created_at < date_trunc('month', now())) AS prev_savings,
           (SELECT COALESCE(SUM(shares_count), 0) FROM share_transactions
@@ -184,7 +184,8 @@ export async function GET(req: NextRequest) {
       },
       {
         label: "Share Capital",
-        value: `KES ${(totalShares / 1_000_000).toFixed(2)}M`,
+        // value per share will be obtained from user config
+        value: `KES ${(totalShares * 100 / 1_000_000).toFixed(2)}M`,
         change: pctChange(totalShares, num(t.prev_shares)),
         trend: totalShares >= num(t.prev_shares) ? "up" : "down",
         icon: "Wallet",

@@ -1,601 +1,551 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ShieldCheck,
+  ShieldAlert,
+  KeyRound,
+  Monitor,
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  LogIn,
+  LogOut,
+  Pencil,
+  Trash2,
+  PlusCircle,
+  Eye,
+  Settings,
+  AlertTriangle,
+} from "lucide-react";
 
-type FormData = {
-  // Step 1: Personal details
-  fullName: string;
-  idNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
+/* ────────────────────────────────────────────────────────────
+   Types
+   ──────────────────────────────────────────────────────────── */
 
-  // Step 2: Contact & address
-  phone: string;
-  email: string;
-  physicalAddress: string;
-  county: string;
+type AuditOutcome = "success" | "failed" | "denied";
 
-  // Step 3: Next of kin
-  kinFullName: string;
-  kinRelationship: string;
-  kinPhone: string;
+type AuditActionKind =
+  | "login"
+  | "logout"
+  | "create"
+  | "update"
+  | "delete"
+  | "view"
+  | "config";
 
-  // Step 4: Membership & shares
-  memberType: string;
-  monthlyContribution: string;
-  numberOfShares: string;
-  incomeSource: string;
+interface AuditEntry {
+  id: string;
+  timestamp: string; // ISO
+  actorName: string;
+  actorRole: string;
+  action: string; // human-readable, e.g. "Approved loan LN-2026-00842"
+  actionKind: AuditActionKind;
+  entity: string; // e.g. "Loan Account" / "Member" / "SACCO Settings"
+  ipAddress: string;
+  outcome: AuditOutcome;
+}
 
-  // Step 5: Confirmation
-  termsAccepted: boolean;
+interface SecurityOverview {
+  failedLogins24h: number;
+  failedLoginsChangePct: number;
+  activeSessions: number;
+  adminActions7d: number;
+  elevatedRoleUsers: number;
+  lastExportAt: string | null;
+}
+
+interface AuditLogResponse {
+  overview: SecurityOverview;
+  entries: AuditEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+const ACTION_ICONS: Record<AuditActionKind, typeof LogIn> = {
+  login: LogIn,
+  logout: LogOut,
+  create: PlusCircle,
+  update: Pencil,
+  delete: Trash2,
+  view: Eye,
+  config: Settings,
 };
 
-const initialFormData: FormData = {
-  fullName: "",
-  idNumber: "",
-  dateOfBirth: "",
-  gender: "",
-  maritalStatus: "",
-  phone: "",
-  email: "",
-  physicalAddress: "",
-  county: "",
-  kinFullName: "",
-  kinRelationship: "",
-  kinPhone: "",
-  memberType: "individual",
-  monthlyContribution: "",
-  numberOfShares: "",
-  incomeSource: "",
-  termsAccepted: false,
+const OUTCOME_STYLE: Record<AuditOutcome, string> = {
+  success: "bg-[#dfe9dd] text-[#1c2b22] border-[#5c7a5f]/50",
+  failed: "bg-[#efd9d4] text-[#7a2e1c] border-[#b8543a]/50",
+  denied: "bg-[#f3e6c4] text-[#7a5a12] border-[#c9a24b]/60",
 };
 
-const STEPS = [
-  { label: "Personal Details", ledger: "01" },
-  { label: "Contact & Address", ledger: "02" },
-  { label: "Next of Kin", ledger: "03" },
-  { label: "Membership & Shares", ledger: "04" },
-  { label: "Review & Submit", ledger: "05" },
+const OUTCOME_LABEL: Record<AuditOutcome, string> = {
+  success: "Success",
+  failed: "Failed",
+  denied: "Denied",
+};
+
+const ACTION_KIND_OPTIONS: { value: AuditActionKind | "all"; label: string }[] = [
+  { value: "all", label: "All actions" },
+  { value: "login", label: "Login" },
+  { value: "logout", label: "Logout" },
+  { value: "create", label: "Create" },
+  { value: "update", label: "Update" },
+  { value: "delete", label: "Delete" },
+  { value: "view", label: "View" },
+  { value: "config", label: "Config change" },
 ];
 
-const inputClasses =
-  "w-full rounded-md border border-stone-300 bg-white px-3.5 py-2.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 transition-colors";
+const OUTCOME_OPTIONS: { value: AuditOutcome | "all"; label: string }[] = [
+  { value: "all", label: "All outcomes" },
+  { value: "success", label: "Success" },
+  { value: "failed", label: "Failed" },
+  { value: "denied", label: "Denied" },
+];
 
-const labelClasses = "mb-1.5 block text-[13px] font-medium text-stone-700";
+const PAGE_SIZE = 20;
 
-export default function MemberRegistrationForm() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+/* ────────────────────────────────────────────────────────────
+   Page
+   ──────────────────────────────────────────────────────────── */
 
-  const isLastStep = step === STEPS.length - 1;
+export default function SecurityAuditPage() {
+  const [overview, setOverview] = useState<SecurityOverview | null>(null);
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
 
-  function update<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
-  }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
-  function validateStep(current: number): boolean {
-    const next: Partial<Record<keyof FormData, string>> = {};
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [actionKind, setActionKind] = useState<AuditActionKind | "all">("all");
+  const [outcome, setOutcome] = useState<AuditOutcome | "all">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-    if (current === 0) {
-      if (!formData.fullName.trim()) next.fullName = "Full name is required";
-      if (!formData.idNumber.trim()) next.idNumber = "National ID number is required";
-      else if (!/^\d{6,10}$/.test(formData.idNumber.trim()))
-        next.idNumber = "Enter a valid ID number";
-      if (!formData.dateOfBirth) next.dateOfBirth = "Date of birth is required";
-      if (!formData.gender) next.gender = "Select a gender";
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce free-text search input -> committed search term
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput]);
+
+  // Reset to page 1 whenever a filter (other than search, handled above) changes
+  useEffect(() => {
+    setPage(1);
+  }, [actionKind, outcome, dateFrom, dateTo]);
+
+  const buildQuery = useCallback(
+    (targetPage: number) => {
+      const params = new URLSearchParams();
+      params.set("page", String(targetPage));
+      params.set("pageSize", String(PAGE_SIZE));
+      if (search) params.set("q", search);
+      if (actionKind !== "all") params.set("actionKind", actionKind);
+      if (outcome !== "all") params.set("outcome", outcome);
+      if (dateFrom) params.set("from", dateFrom);
+      if (dateTo) params.set("to", dateTo);
+      return params.toString();
+    },
+    [search, actionKind, outcome, dateFrom, dateTo]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch(`/api/v1/security/audit-log?${buildQuery(page)}`);
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? `Request failed with status ${res.status}`);
+        }
+
+        const json = (await res.json()) as AuditLogResponse;
+
+        if (!cancelled) {
+          setOverview(json.overview);
+          setEntries(json.entries);
+          setTotal(json.total);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load audit log");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
 
-    if (current === 1) {
-      if (!formData.phone.trim()) next.phone = "Phone number is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.phone.trim()))
-        next.phone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-      if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email))
-        next.email = "Enter a valid email address";
-      if (!formData.physicalAddress.trim()) next.physicalAddress = "Address is required";
-      if (!formData.county.trim()) next.county = "County is required";
-    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [buildQuery, page]);
 
-    if (current === 2) {
-      if (!formData.kinFullName.trim()) next.kinFullName = "Next of kin name is required";
-      if (!formData.kinRelationship.trim()) next.kinRelationship = "Relationship is required";
-      if (!formData.kinPhone.trim()) next.kinPhone = "Next of kin phone is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.kinPhone.trim()))
-        next.kinPhone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-    }
-
-    if (current === 3) {
-      if (!formData.monthlyContribution || Number(formData.monthlyContribution) <= 0)
-        next.monthlyContribution = "Enter a monthly contribution amount";
-      if (!formData.numberOfShares || Number(formData.numberOfShares) <= 0)
-        next.numberOfShares = "Enter number of shares to purchase";
-      if (!formData.incomeSource.trim()) next.incomeSource = "Source of income is required";
-    }
-
-    if (current === 4) {
-      if (!formData.termsAccepted) next.termsAccepted = "You must accept the membership terms";
-    }
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
-  function goNext() {
-    if (!validateStep(step)) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }
-
-  function goBack() {
-    setErrors({});
-    setStep((s) => Math.max(s - 1, 0));
-  }
-
-  async function handleSubmit() {
-    if (!validateStep(4)) return;
-    setSubmitting(true);
-    setSubmitError("");
+  async function handleExport() {
+    setExporting(true);
     try {
-      // Replace with your actual API route.
-      const res = await fetch("/api/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error("Failed to submit application");
-      setSubmitted(true);
-    } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
+      const res = await fetch(`/api/v1/security/audit-log/export?${buildQuery(1)}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `saccofx-audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Couldn't export the audit log. Try again.");
     } finally {
-      setSubmitting(false);
+      setExporting(false);
     }
   }
 
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-xl rounded-lg border border-stone-200 bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-800 text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 className="font-serif text-2xl text-stone-900">Application received</h2>
-        <p className="mt-2 text-[15px] text-stone-600">
-          {formData.fullName.split(" ")[0] || "Your"} application to join has been recorded.
-          A membership officer will verify your details and confirm your share allocation.
-        </p>
-        <button
-          onClick={() => {
-            setFormData(initialFormData);
-            setStep(0);
-            setSubmitted(false);
-          }}
-          className="mt-6 rounded-md border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-        >
-          Register another member
-        </button>
-      </div>
-    );
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const hasActiveFilters =
+    search !== "" || actionKind !== "all" || outcome !== "all" || dateFrom !== "" || dateTo !== "";
+
+  function clearFilters() {
+    setSearchInput("");
+    setSearch("");
+    setActionKind("all");
+    setOutcome("all");
+    setDateFrom("");
+    setDateTo("");
   }
 
   return (
-    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
-      {/* Header */}
-      <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
-       
-        <h1 className="mt-1 text-xl text-orange-500 sm:text-2xl">Add member</h1>
-      </div>
+    <div className="w-full min-h-screen pt-4 mx-auto bg-[#faf6ec] font-sans text-[#1c2b22]">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        {/* Header */}
+        <header className="mb-8 border-b border-[#c9a24b]/40 pb-6">
+          <p className="mb-1 text-xs font-medium uppercase tracking-[0.18em] text-[#c9a24b]">
+            Compliance
+          </p>
+          <h1 className="font-serif text-3xl text-[#1c2b22]">Security &amp; Audit</h1>
+          <p className="mt-1 text-sm text-[#1c2b22]/60">
+            Every login, change, and access event across your SACCO, kept for SASRA review.
+          </p>
+        </header>
 
-      {/* Ledger-style progress rail */}
-      <div className="flex border-b border-stone-200 bg-stone-50 px-2 sm:px-4">
-        {STEPS.map((s, i) => {
-          const state = i < step ? "done" : i === step ? "active" : "upcoming";
-          return (
-            <div
-              key={s.label}
-              className={`flex flex-1 flex-col items-center gap-1.5 border-t-2 px-1 py-3 text-center ${
-                state === "active"
-                  ? "border-emerald-800"
-                  : state === "done"
-                  ? "border-emerald-800/40"
-                  : "border-transparent"
-              }`}
-            >
-              <span
-                className={`font-mono text-[11px] tabular-nums ${
-                  state === "upcoming" ? "text-stone-400" : "text-emerald-800"
-                }`}
+        {error && (
+          <div className="mb-6 flex items-start gap-2 rounded-sm border border-[#b8543a]/40 bg-[#efd9d4]/50 px-4 py-3 text-sm text-[#7a2e1c]">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Overview cards */}
+        <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <OverviewCard
+            icon={ShieldAlert}
+            label="Failed Logins (24h)"
+            value={overview ? String(overview.failedLogins24h) : "—"}
+            tone={overview && overview.failedLogins24h > 0 ? "warn" : "neutral"}
+            sub={
+              overview
+                ? `${overview.failedLoginsChangePct >= 0 ? "+" : ""}${overview.failedLoginsChangePct.toFixed(1)}% vs prior 24h`
+                : undefined
+            }
+          />
+          <OverviewCard
+            icon={Monitor}
+            label="Active Sessions"
+            value={overview ? String(overview.activeSessions) : "—"}
+            tone="neutral"
+          />
+          <OverviewCard
+            icon={ShieldCheck}
+            label="Admin Actions (7d)"
+            value={overview ? String(overview.adminActions7d) : "—"}
+            tone="neutral"
+          />
+          <OverviewCard
+            icon={KeyRound}
+            label="Elevated-Role Users"
+            value={overview ? String(overview.elevatedRoleUsers) : "—"}
+            tone="neutral"
+            sub="Admin / Super Admin"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 rounded-sm border border-[#c9a24b]/30 bg-white p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[220px] flex-1">
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
+                Search
+              </label>
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#1c2b22]/35"
+                />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="User, action, or entity…"
+                  className="w-full rounded-md border border-[#1c2b22]/15 bg-white py-2 pl-8 pr-3 text-sm text-[#1c2b22] placeholder:text-[#1c2b22]/30 focus:border-[#c9a24b] focus:outline-none focus:ring-1 focus:ring-[#c9a24b]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
+                Action
+              </label>
+              <select
+                value={actionKind}
+                onChange={(e) => setActionKind(e.target.value as AuditActionKind | "all")}
+                className="rounded-md border border-[#1c2b22]/15 bg-white px-3 py-2 text-sm text-[#1c2b22] focus:border-[#c9a24b] focus:outline-none focus:ring-1 focus:ring-[#c9a24b]"
               >
-                {s.ledger}
-              </span>
-              <span
-                className={`hidden text-[11px] font-medium leading-tight sm:block ${
-                  state === "upcoming" ? "text-stone-400" : "text-stone-800"
-                }`}
-              >
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Body */}
-      <div className="px-6 py-7 sm:px-8">
-        <p className="mb-6 font-serif text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
-
-        {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                placeholder="As it appears on your national ID"
-              />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>National ID number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.idNumber}
-                  onChange={(e) => update("idNumber", e.target.value)}
-                  placeholder="e.g. 12345678"
-                  inputMode="numeric"
-                />
-                {errors.idNumber && <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Date of birth</label>
-                <input
-                  type="date"
-                  className={inputClasses}
-                  value={formData.dateOfBirth}
-                  onChange={(e) => update("dateOfBirth", e.target.value)}
-                />
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Gender</label>
-                <select
-                  className={inputClasses}
-                  value={formData.gender}
-                  onChange={(e) => update("gender", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="other">Prefer not to say</option>
-                </select>
-                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Marital status</label>
-                <select
-                  className={inputClasses}
-                  value={formData.maritalStatus}
-                  onChange={(e) => update("maritalStatus", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="single">Single</option>
-                  <option value="married">Married</option>
-                  <option value="widowed">Widowed</option>
-                  <option value="divorced">Divorced</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Email (optional)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="you@example.com"
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Physical address</label>
-              <input
-                className={inputClasses}
-                value={formData.physicalAddress}
-                onChange={(e) => update("physicalAddress", e.target.value)}
-                placeholder="Estate, street, house number"
-              />
-              {errors.physicalAddress && (
-                <p className="mt-1 text-xs text-red-600">{errors.physicalAddress}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClasses}>County</label>
-              <input
-                className={inputClasses}
-                value={formData.county}
-                onChange={(e) => update("county", e.target.value)}
-                placeholder="e.g. Nairobi"
-              />
-              {errors.county && <p className="mt-1 text-xs text-red-600">{errors.county}</p>}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-            <p className="text-sm text-stone-500">
-              Your next of kin will be the designated beneficiary on your account.
-            </p>
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.kinFullName}
-                onChange={(e) => update("kinFullName", e.target.value)}
-              />
-              {errors.kinFullName && (
-                <p className="mt-1 text-xs text-red-600">{errors.kinFullName}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Relationship</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinRelationship}
-                  onChange={(e) => update("kinRelationship", e.target.value)}
-                  placeholder="e.g. Spouse, Sibling"
-                />
-                {errors.kinRelationship && (
-                  <p className="mt-1 text-xs text-red-600">{errors.kinRelationship}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinPhone}
-                  onChange={(e) => update("kinPhone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.kinPhone && <p className="mt-1 text-xs text-red-600">{errors.kinPhone}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Membership type</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "individual", label: "Individual" },
-                  { value: "group", label: "Group / Chama" },
-                ].map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => update("memberType", opt.value)}
-                    className={`rounded-md border px-4 py-3 text-left text-sm font-medium transition-colors ${
-                      formData.memberType === opt.value
-                        ? "border-emerald-800 bg-emerald-50 text-emerald-900"
-                        : "border-stone-300 text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
+                {ACTION_KIND_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
                     {opt.label}
-                  </button>
+                  </option>
                 ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Monthly contribution (KES)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.monthlyContribution}
-                  onChange={(e) => update("monthlyContribution", e.target.value)}
-                  placeholder="e.g. 2000"
-                  inputMode="numeric"
-                />
-                {errors.monthlyContribution && (
-                  <p className="mt-1 text-xs text-red-600">{errors.monthlyContribution}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Number of shares</label>
-                <input
-                  className={inputClasses}
-                  value={formData.numberOfShares}
-                  onChange={(e) => update("numberOfShares", e.target.value)}
-                  placeholder="e.g. 20"
-                  inputMode="numeric"
-                />
-                {errors.numberOfShares && (
-                  <p className="mt-1 text-xs text-red-600">{errors.numberOfShares}</p>
-                )}
-              </div>
+              </select>
             </div>
 
             <div>
-              <label className={labelClasses}>Main source of income</label>
-              <input
-                className={inputClasses}
-                value={formData.incomeSource}
-                onChange={(e) => update("incomeSource", e.target.value)}
-                placeholder="e.g. Employment, business, farming"
-              />
-              {errors.incomeSource && (
-                <p className="mt-1 text-xs text-red-600">{errors.incomeSource}</p>
-              )}
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
+                Outcome
+              </label>
+              <select
+                value={outcome}
+                onChange={(e) => setOutcome(e.target.value as AuditOutcome | "all")}
+                className="rounded-md border border-[#1c2b22]/15 bg-white px-3 py-2 text-sm text-[#1c2b22] focus:border-[#c9a24b] focus:outline-none focus:ring-1 focus:ring-[#c9a24b]"
+              >
+                {OUTCOME_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-        )}
 
-        {step === 4 && (
-          <div className="space-y-6">
-            <div className="rounded-md border border-stone-200 divide-y divide-stone-200 overflow-hidden">
-              <ReviewSection
-                title="Personal details"
-                rows={[
-                  ["Full name", formData.fullName],
-                  ["ID number", formData.idNumber],
-                  ["Date of birth", formData.dateOfBirth],
-                  ["Gender", formData.gender],
-                ]}
-                onEdit={() => setStep(0)}
-              />
-              <ReviewSection
-                title="Contact & address"
-                rows={[
-                  ["Phone", formData.phone],
-                  ["Email", formData.email || "—"],
-                  ["Address", formData.physicalAddress],
-                  ["County", formData.county],
-                ]}
-                onEdit={() => setStep(1)}
-              />
-              <ReviewSection
-                title="Next of kin"
-                rows={[
-                  ["Name", formData.kinFullName],
-                  ["Relationship", formData.kinRelationship],
-                  ["Phone", formData.kinPhone],
-                ]}
-                onEdit={() => setStep(2)}
-              />
-              <ReviewSection
-                title="Membership & shares"
-                rows={[
-                  ["Type", formData.memberType],
-                  ["Monthly contribution", `KES ${formData.monthlyContribution || "0"}`],
-                  ["Shares", formData.numberOfShares],
-                  ["Income source", formData.incomeSource],
-                ]}
-                onEdit={() => setStep(3)}
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
+                From
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="rounded-md border border-[#1c2b22]/15 bg-white px-3 py-2 text-sm text-[#1c2b22] focus:border-[#c9a24b] focus:outline-none focus:ring-1 focus:ring-[#c9a24b]"
               />
             </div>
 
-            <label className="flex items-start gap-2.5 text-sm text-stone-700">
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-[#1c2b22]/55">
+                To
+              </label>
               <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-800 focus:ring-emerald-800/30"
-                checked={formData.termsAccepted}
-                onChange={(e) => update("termsAccepted", e.target.checked)}
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="rounded-md border border-[#1c2b22]/15 bg-white px-3 py-2 text-sm text-[#1c2b22] focus:border-[#c9a24b] focus:outline-none focus:ring-1 focus:ring-[#c9a24b]"
               />
-              <span>
-                I confirm the information provided is accurate and I agree to the Sacco's
-                membership terms and bylaws.
-              </span>
-            </label>
-            {errors.termsAccepted && (
-              <p className="text-xs text-red-600">{errors.termsAccepted}</p>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="rounded-md px-3 py-2 text-xs font-medium text-[#1c2b22]/60 underline underline-offset-4 hover:text-[#1c2b22]"
+              >
+                Clear filters
+              </button>
             )}
 
-            {submitError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>
-            )}
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="ml-auto flex items-center gap-2 rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] transition-colors hover:bg-[#1c2b22]/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download size={14} />
+              {exporting ? "Exporting…" : "Export CSV"}
+            </button>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Footer nav */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-6 py-4 sm:px-8">
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={step === 0}
-          className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-0"
-        >
-          Back
-        </button>
-        {!isLastStep ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-60 transition-colors"
-          >
-            {submitting ? "Submitting…" : "Submit application"}
-          </button>
+        {/* Audit log table */}
+        <div className="rounded-sm border border-[#c9a24b]/30 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
+                  {["Timestamp", "User", "Action", "Entity", "IP Address", "Outcome"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left font-serif text-[13px] font-normal tracking-wide text-[#1c2b22]/70"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-[#1c2b22]/45">
+                      Loading audit trail…
+                    </td>
+                  </tr>
+                ) : entries.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-[#1c2b22]/45">
+                      {hasActiveFilters
+                        ? "No events match these filters. Try widening the date range or clearing a filter."
+                        : "No audit events recorded yet."}
+                    </td>
+                  </tr>
+                ) : (
+                  entries.map((entry) => {
+                    const ActionIcon = ACTION_ICONS[entry.actionKind] ?? Eye;
+                    return (
+                      <tr
+                        key={entry.id}
+                        className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]"
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-[12px] text-[#1c2b22]/60">
+                          {formatTimestamp(entry.timestamp)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-[#1c2b22]">{entry.actorName}</div>
+                          <div className="text-[11px] text-[#1c2b22]/45">{entry.actorRole}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <ActionIcon size={14} className="shrink-0 text-[#1c2b22]/40" />
+                            <span className="text-[#1c2b22]">{entry.action}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-[#1c2b22]/70">{entry.entity}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-[12px] text-[#1c2b22]/55">
+                          {entry.ipAddress}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${OUTCOME_STYLE[entry.outcome]}`}
+                          >
+                            {OUTCOME_LABEL[entry.outcome]}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {!loading && entries.length > 0 && (
+            <div className="flex items-center justify-between border-t border-[#c9a24b]/20 px-4 py-3">
+              <p className="text-xs text-[#1c2b22]/50">
+                Showing{" "}
+                <span className="font-mono">{(page - 1) * PAGE_SIZE + 1}</span>–
+                <span className="font-mono">{Math.min(page * PAGE_SIZE, total)}</span> of{" "}
+                <span className="font-mono">{total}</span> events
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="flex items-center gap-1 rounded-md border border-[#1c2b22]/15 px-2.5 py-1.5 text-xs text-[#1c2b22]/70 hover:bg-[#eee7d6] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft size={14} />
+                  Prev
+                </button>
+                <span className="font-mono text-xs text-[#1c2b22]/60">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="flex items-center gap-1 rounded-md border border-[#1c2b22]/15 px-2.5 py-1.5 text-xs text-[#1c2b22]/70 hover:bg-[#eee7d6] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {overview?.lastExportAt && (
+          <p className="mt-4 text-center text-xs text-[#1c2b22]/40">
+            Last exported {formatTimestamp(overview.lastExportAt)}
+          </p>
         )}
       </div>
     </div>
   );
 }
 
-function ReviewSection({
-  title,
-  rows,
-  onEdit,
+/* ────────────────────────────────────────────────────────────
+   Sub-components & helpers
+   ──────────────────────────────────────────────────────────── */
+
+function OverviewCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  tone,
 }: {
-  title: string;
-  rows: [string, string][];
-  onEdit: () => void;
+  icon: typeof ShieldCheck;
+  label: string;
+  value: string;
+  sub?: string;
+  tone: "neutral" | "warn";
 }) {
   return (
-    <div className="px-4 py-3.5">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-          {title}
-        </p>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="text-xs font-medium text-emerald-800 hover:underline"
+    <div className="rounded-sm border border-[#c9a24b]/30 bg-[#eee7d6] p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wide text-[#1c2b22]/55">{label}</span>
+        <div
+          className={`rounded-sm border p-1.5 ${
+            tone === "warn"
+              ? "border-[#b8543a]/40 bg-[#efd9d4]"
+              : "border-[#c9a24b]/30 bg-[#faf6ec]"
+          }`}
         >
-          Edit
-        </button>
+          <Icon size={14} className={tone === "warn" ? "text-[#7a2e1c]" : "text-[#1c2b22]/60"} />
+        </div>
       </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-stone-500">{label}</dt>
-            <dd className="text-stone-900">{value || "—"}</dd>
-          </div>
-        ))}
-      </dl>
+      <span className="font-mono text-xl leading-none text-[#1c2b22]">{value}</span>
+      {sub && <p className="mt-1 text-[11px] text-[#1c2b22]/45">{sub}</p>}
     </div>
   );
+}
+
+function formatTimestamp(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("en-KE", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
