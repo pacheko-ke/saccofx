@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       // ── Member profile ──────────────────────────────────────
       client.query(
-        `SELECT member_id, first_name, last_name, created_at
+        `SELECT member_id as memberNumber,member_number, first_name, last_name, created_at
          FROM members
          WHERE member_id = $1
          LIMIT 1`,
@@ -205,6 +205,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       summary: {
         memberId: profile.member_id,
+        memberNumber: profile.member_number,
         fullName: `${profile.first_name} ${profile.last_name}`,
         memberSince: profile.created_at,
         savingsBalance,

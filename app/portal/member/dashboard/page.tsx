@@ -30,6 +30,7 @@ import {
 
 interface MemberSummary {
   memberId: string;
+  memberNumber: string;
   fullName: string;
   memberSince: string; // ISO date
   savingsBalance: number;
@@ -160,7 +161,7 @@ export default function MemberDashboard() {
             Welcome back, {summary.fullName.split(" ")[0]}
           </h1>
           <p className="mt-1 text-sm text-[#1c2b22]/60">
-            Member No. <span className="font-mono">{summary.memberId}</span> · Member since{" "}
+            Member No. <span className="font-mono">{summary.memberNumber}</span> · Member since{" "}
             {formatDate(summary.memberSince)}
           </p>
         </header>
@@ -200,7 +201,7 @@ export default function MemberDashboard() {
         {/* Quick actions */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <QuickAction icon={CreditCard} label="Make Deposit" href="/member/deposit" />
-          <QuickAction icon={Send} label="Apply for Loan" href="/member/loans/apply" />
+          <QuickAction icon={Send} label="Apply for Loan" href="/portal/member/loans/application/new" />
           <QuickAction icon={FileText} label="Statements" href="/member/statements" />
           <QuickAction icon={Download} label="Print Passbook" href="/member/passbook" />
         </div>
