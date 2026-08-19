@@ -169,7 +169,7 @@ export default function SecurityAuditPage() {
       setError(null);
 
       try {
-        const res = await fetch(`/api/v1/security/audit-log?${buildQuery(page)}`);
+        const res = await fetch(`/api/v1/audit/view?${buildQuery(page)}`);
 
         if (!res.ok) {
           const body = await res.json().catch(() => null);
@@ -201,7 +201,7 @@ export default function SecurityAuditPage() {
   async function handleExport() {
     setExporting(true);
     try {
-      const res = await fetch(`/api/v1/security/audit-log/export?${buildQuery(1)}`);
+      const res = await fetch(`/api/v1/audit/export?${buildQuery(1)}`);
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
