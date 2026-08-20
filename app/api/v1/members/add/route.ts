@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { Pool } from "@neondatabase/serverless";
-import { verifyAuthToken } from "@/lib/auth/jwt";
+import { verifyAuthToken } from "@/app/lib/auth";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PHONE_RE = /^(?:\+254|0)\d{9}$/;
@@ -11,7 +11,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export async function POST(req: NextRequest) {
   // --- Auth ------------------------------------------------------------
   const cookieStore = await cookies();
-  const token = cookieStore.get("sfx_session")?.value;
+  const token = cookieStore.get("auth_token")?.value;
   if (!token) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }

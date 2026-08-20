@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   // member can never fetch another member's balances by editing the URL.
   // scope to member_portal_user
 
-  if (payload.role !== "admin") {
+  if (payload.role !== "member_portal_user") {
     return NextResponse.json(
       { error: "This endpoint is for member accounts only" },
       { status: 403 }

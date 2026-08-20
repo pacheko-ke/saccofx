@@ -7,6 +7,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+
 export async function GET(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value;
   if (!token) {

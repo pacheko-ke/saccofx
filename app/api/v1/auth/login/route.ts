@@ -50,16 +50,17 @@ export async function POST(req: NextRequest) {
     const result = await client.query(
       `SELECT
         u.user_id,
+        r.role_id,
+        r.role_name,
         u.username,
         u.password_hash,
-        
-       
         COALESCE(m.status, 'active') AS user_status,
         m.first_name,
         m.last_name,
         m.id_number,
         m.member_id
        FROM users u 
+       LEFT JOIN roles r ON r.role_id=u.role_id
        LEFT JOIN members m ON m.member_id = u.member_id
        WHERE lower(u.username) = $1
           OR lower(m.phone_primary) = $1
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const activeRole = user.role || "admin";
+    const activeRole = user.role_name;
     const tokenDuration = remember ? "30d" : "1d";
 
     // 4. Ensure non-null values for JWTPayload
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
     );
 
     const redirectTo =
-      activeRole === "member" ? "/member/dashboard" : "/dashboard";
+      activeRole === "member_portal_user" ? "/portal/member/dashboard" : "/dashboard";
 
     const response = NextResponse.json({
       redirectTo,

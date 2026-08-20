@@ -1,5 +1,5 @@
 
-
+// format date picker to allow only 18 years +
 
 export function formatDatePicker():string{
     const minimumAge = 18;
