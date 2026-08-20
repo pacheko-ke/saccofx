@@ -333,7 +333,7 @@ export default function MemberDashboard() {
                       <td className="whitespace-nowrap px-3 py-3 font-mono text-[12px] text-[#1c2b22]/60">
                         {formatDate(tx.date)}
                       </td>
-                      <td className="px-3 py-3 text-[#1c2b22]">{tx.narrative}</td>
+                      <td className="px-3 py-3 text-[#1c2b22]">{tx.description}</td>
                       <td className="px-3 py-3 text-[#1c2b22]/70">{TRANSACTION_LABEL[tx.type]}</td>
                       <td
                         className={`px-3 py-3 font-mono text-[13px] ${
