@@ -202,8 +202,8 @@ export default function MemberDashboard() {
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <QuickAction icon={CreditCard} label="Make Deposit" href="/portal/member/payment" />
           <QuickAction icon={Send} label="Apply for Loan" href="/portal/member/loans/application/new" />
-          <QuickAction icon={FileText} label="Statements" href="/member/statements" />
-          <QuickAction icon={Download} label="Print Passbook" href="/member/passbook" />
+          <QuickAction icon={FileText} label="Statements" href="/portal/member/statement" />
+          <QuickAction icon={Download} label="Loan Calculator" href="/member/passbook" />
         </div>
 
         {/* Savings trend + loans */}
