@@ -47,15 +47,15 @@ export async function GET() {
     await client.query("BEGIN");
     await client.query(`SET LOCAL app.current_tenant = '${tenantId}'`);
 
-    // ASSUMPTION: a unified `member_accounts` table covers savings, share
+    // ASSUMPTION: a unified `savings_accounts` table covers savings, share
     // capital, and loan accounts. Adjust the query/columns to your real
     // schema if loans live in a separate accounts table.
     const result = await client.query(
-      `SELECT savings_account_id,sp.product_name,  account_number, status, opened_at
+      `SELECT sa.savings_account_id,sp.product_name,  sa.account_number, sa.status, sa.opened_at
        FROM savings_accounts sa
        LEFT JOIN savings_products sp ON sp.savings_product_id=sa.savings_product_id
        WHERE tenant_id = $1 AND member_id = $2 AND status IN ('active', 'dormant')
-       ORDER BY sp.product_name, opened_at`,
+       ORDER BY sp.product_name, sa.opened_at`,
       [tenantId, memberId]
     );
 
@@ -107,12 +107,13 @@ export async function POST(req: NextRequest) {
     // real guard against a member fetching someone else's statement; RLS is
     // defense in depth on top of it.
     const accountResult = await client.query(
-      `SELECT ma.id, ma.account_type, ma.account_number, m.full_name, m.member_number, m.id_number,
-              t.name AS sacco_name, t.sasra_reg_no
-       FROM member_accounts ma
-       JOIN members m ON m.id = ma.member_id
-       JOIN tenants t ON t.id = ma.tenant_id
-       WHERE ma.id = $1 AND ma.tenant_id = $2 AND ma.member_id = $3`,
+      `SELECT sa.savings_account_id, sp.product_name, sa.account_number, m.first_name,m.last_name, m.member_number, m.id_number,
+              t.tenant_name AS sacco_name
+       FROM savings_accounts sa
+       INNER JOIN savings_products sp ON sp.savings_product_id=sa.savings_product_id
+       JOIN members m ON m.member_id = sa.member_id
+       JOIN tenant t ON t.tenant_id = sa.tenant_id
+       WHERE sa.savings_account_id = $1 AND sa.tenant_id = $2 AND sa.member_id = $3`,
       [accountId, tenantId, memberId]
     );
 
@@ -124,20 +125,21 @@ export async function POST(req: NextRequest) {
 
     // Opening balance = balance_after of the last transaction before the period start
     const openingResult = await client.query(
-      `SELECT balance_after
-       FROM account_transactions
-       WHERE tenant_id = $1 AND account_id = $2 AND tx_date < $3
-       ORDER BY tx_date DESC, id DESC
+      `SELECT amount
+       FROM transactions tx
+       INNER JOIN savings_accounts sa ON sa.savings_account_id=tx.savings_account_id
+       WHERE tx.tenant_id = $1 AND sa.savings_account_id = $2 AND tx_date < $3
+       ORDER BY tx_date DESC, transaction_id DESC
        LIMIT 1`,
       [tenantId, accountId, startDate]
     );
     const openingBalance = openingResult.rows[0]?.balance_after ? Number(openingResult.rows[0].balance_after) : 0;
 
     const txResult = await client.query(
-      `SELECT tx_date, description, debit, credit, balance_after
-       FROM account_transactions
-       WHERE tenant_id = $1 AND account_id = $2 AND tx_date >= $3 AND tx_date <= $4
-       ORDER BY tx_date ASC, id ASC`,
+      `SELECT tx_date, narrative, amount
+       FROM transactions
+       WHERE tenant_id = $1 AND savings_account_id = $2 AND tx_date >= $3 AND tx_date <= $4
+       ORDER BY tx_date ASC, transaction_id ASC`,
       [tenantId, accountId, startDate, endDate]
     );
 
@@ -165,7 +167,7 @@ export async function POST(req: NextRequest) {
           idNumber: account.id_number,
         },
         account: {
-          accountType: account.account_type,
+          accountType: account.product_name,
           accountNumber: account.account_number,
         },
         period: { startDate, endDate },

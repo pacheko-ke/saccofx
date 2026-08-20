@@ -1,32 +1,94 @@
+import fs from "fs";
 import path from "path";
 import { Document, Page, Text, View, Font, StyleSheet } from "@react-pdf/renderer";
 
-// Reuses the same local .ttf convention as the loan statement generator —
-// fonts must exist under /public/fonts/.
+// --- Font loading, with a fallback so a missing .ttf doesn't crash PDF
+// generation for every dev who clones the repo without the font files. ---
+
 const fontDir = path.join(process.cwd(), "public", "fonts");
 
-Font.register({
-  family: "PlexSans",
-  fonts: [
-    { src: path.join(fontDir, "IBMPlexSans-Regular.ttf") },
-    { src: path.join(fontDir, "IBMPlexSans-Medium.ttf"), fontWeight: 500 },
-    { src: path.join(fontDir, "IBMPlexSans-Bold.ttf"), fontWeight: 700 },
-  ],
-});
-Font.register({
-  family: "PlexMono",
-  fonts: [
-    { src: path.join(fontDir, "IBMPlexMono-Regular.ttf") },
-    { src: path.join(fontDir, "IBMPlexMono-Medium.ttf"), fontWeight: 500 },
-  ],
-});
-Font.register({
-  family: "SourceSerif",
-  fonts: [
-    { src: path.join(fontDir, "SourceSerif4-Regular.ttf") },
-    { src: path.join(fontDir, "SourceSerif4-Bold.ttf"), fontWeight: 700 },
-  ],
-});
+function fontExists(filename: string): boolean {
+  try {
+    return fs.existsSync(path.join(fontDir, filename));
+  } catch {
+    return false;
+  }
+}
+
+const sansAvailable =
+  fontExists("IBMPlexSans-Regular.ttf") &&
+  fontExists("IBMPlexSans-Medium.ttf") &&
+  fontExists("IBMPlexSans-Bold.ttf");
+
+const monoAvailable = fontExists("IBMPlexMono-Regular.ttf") && fontExists("IBMPlexMono-Medium.ttf");
+
+const serifAvailable = fontExists("SourceSerif4-Regular.ttf") && fontExists("SourceSerif4-Bold.ttf");
+
+if (sansAvailable) {
+  Font.register({
+    family: "PlexSans",
+    fonts: [
+      { src: path.join(fontDir, "IBMPlexSans-Regular.ttf") },
+      { src: path.join(fontDir, "IBMPlexSans-Medium.ttf"), fontWeight: 500 },
+      { src: path.join(fontDir, "IBMPlexSans-Bold.ttf"), fontWeight: 700 },
+    ],
+  });
+} else {
+  console.warn(
+    "[MemberStatementDocument] IBM Plex Sans .ttf files not found in public/fonts — falling back to Helvetica for statement PDFs."
+  );
+}
+
+if (monoAvailable) {
+  Font.register({
+    family: "PlexMono",
+    fonts: [
+      { src: path.join(fontDir, "IBMPlexMono-Regular.ttf") },
+      { src: path.join(fontDir, "IBMPlexMono-Medium.ttf"), fontWeight: 500 },
+    ],
+  });
+} else {
+  console.warn(
+    "[MemberStatementDocument] IBM Plex Mono .ttf files not found in public/fonts — falling back to Courier for statement PDFs."
+  );
+}
+
+if (serifAvailable) {
+  Font.register({
+    family: "SourceSerif",
+    fonts: [
+      { src: path.join(fontDir, "SourceSerif4-Regular.ttf") },
+      { src: path.join(fontDir, "SourceSerif4-Bold.ttf"), fontWeight: 700 },
+    ],
+  });
+} else {
+  console.warn(
+    "[MemberStatementDocument] Source Serif 4 .ttf files not found in public/fonts — falling back to Times-Roman for statement PDFs."
+  );
+}
+
+// Small helpers so the rest of the file can keep saying "give me bold sans"
+// without caring whether that resolves to a registered custom font (which
+// uses fontWeight) or a react-pdf built-in (which needs a distinct family
+// name per weight instead).
+function sansStyle(weight: "regular" | "medium" | "bold" = "regular") {
+  if (sansAvailable) {
+    return { fontFamily: "PlexSans", fontWeight: weight === "regular" ? 400 : weight === "medium" ? 500 : 700 };
+  }
+  return { fontFamily: weight === "bold" ? "Helvetica-Bold" : "Helvetica" };
+}
+function monoStyle(weight: "regular" | "medium" = "regular") {
+  if (monoAvailable) {
+    return { fontFamily: "PlexMono", fontWeight: weight === "regular" ? 400 : 500 };
+  }
+  return { fontFamily: "Courier" };
+}
+function serifStyle(weight: "regular" | "bold" = "regular") {
+  if (serifAvailable) {
+    return { fontFamily: "SourceSerif", fontWeight: weight === "regular" ? 400 : 700 };
+  }
+  return { fontFamily: weight === "bold" ? "Times-Bold" : "Times-Roman" };
+}
 
 const INK = "#1c2b22";
 const CREAM = "#faf6ec";
@@ -38,7 +100,7 @@ const styles = StyleSheet.create({
   page: {
     backgroundColor: CREAM,
     color: INK,
-    fontFamily: "PlexSans",
+    ...sansStyle("regular"),
     fontSize: 9,
     paddingTop: 36,
     paddingBottom: 48,
@@ -54,8 +116,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   saccoName: {
-    fontFamily: "SourceSerif",
-    fontWeight: 700,
+    ...serifStyle("bold"),
     fontSize: 16,
     color: INK,
   },
@@ -65,7 +126,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statementLabel: {
-    fontFamily: "SourceSerif",
+    ...serifStyle("regular"),
     fontSize: 13,
     color: INK,
     textAlign: "right",
@@ -98,7 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   infoValue: {
-    fontFamily: "PlexMono",
+    ...monoStyle("regular"),
     fontSize: 9.5,
     color: INK,
   },
@@ -113,9 +174,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   tableHeaderCell: {
+    ...sansStyle("bold"),
     color: CREAM,
     fontSize: 7.5,
-    fontWeight: 700,
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
@@ -131,9 +192,9 @@ const styles = StyleSheet.create({
   },
   cellDate: { width: "13%", fontSize: 8 },
   cellDesc: { width: "39%", fontSize: 8 },
-  cellDebit: { width: "16%", fontSize: 8, fontFamily: "PlexMono", textAlign: "right" },
-  cellCredit: { width: "16%", fontSize: 8, fontFamily: "PlexMono", textAlign: "right" },
-  cellBalance: { width: "16%", fontSize: 8, fontFamily: "PlexMono", textAlign: "right", fontWeight: 500 },
+  cellDebit: { width: "16%", fontSize: 8, ...monoStyle("regular"), textAlign: "right" },
+  cellCredit: { width: "16%", fontSize: 8, ...monoStyle("regular"), textAlign: "right" },
+  cellBalance: { width: "16%", fontSize: 8, ...monoStyle("medium"), textAlign: "right" },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -156,8 +217,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   summaryLabel: { fontSize: 8.5, color: MUTED },
-  summaryValue: { fontSize: 9.5, fontFamily: "PlexMono", color: INK },
-  summaryValueClosing: { fontSize: 10.5, fontFamily: "PlexMono", fontWeight: 700, color: INK },
+  summaryValue: { fontSize: 9.5, ...monoStyle("regular"), color: INK },
+  summaryValueClosing: { fontSize: 10.5, ...monoStyle("medium"), color: INK },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -195,7 +256,10 @@ export interface MemberStatementProps {
     idNumber: string;
   };
   account: {
-    accountType: "savings" | "shares" | "loan";
+    // Free-text product label (e.g. "Regular Savings", "Share Capital",
+    // "Development Loan") rather than a fixed enum, since SACCOs define
+    // their own product names.
+    accountType: string;
     accountNumber: string;
   };
   period: { startDate: string; endDate: string };
@@ -214,12 +278,6 @@ function formatKES(amount: number) {
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" });
 }
-
-const ACCOUNT_LABELS: Record<MemberStatementProps["account"]["accountType"], string> = {
-  savings: "Savings Account",
-  shares: "Share Capital Account",
-  loan: "Loan Account",
-};
 
 export function MemberStatementDocument(props: MemberStatementProps) {
   const {
@@ -245,7 +303,7 @@ export function MemberStatementDocument(props: MemberStatementProps) {
             {saccoRegNo && <Text style={styles.saccoMeta}>SASRA Reg. No. {saccoRegNo}</Text>}
           </View>
           <View>
-            <Text style={styles.statementLabel}>{ACCOUNT_LABELS[account.accountType]} Statement</Text>
+            <Text style={styles.statementLabel}>{account.accountType} Statement</Text>
             <Text style={styles.statementMeta}>
               {formatDate(period.startDate)} — {formatDate(period.endDate)}
             </Text>

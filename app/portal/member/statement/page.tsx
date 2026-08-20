@@ -5,8 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 type AccountType = "savings" | "shares" | "loan";
 
 interface MemberAccount {
-  id: string;
-  account_type: AccountType;
+  savings_account_number: string;
+  product_name: AccountType;
+  savings_account_id: String;
   account_number: string;
   status: string;
   opened_at: string;
@@ -105,7 +106,7 @@ export default function MemberStatementsPage() {
     return computeRange(preset);
   }, [preset, customStart, customEnd]);
 
-  const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
+  const selectedAccount = accounts.find((a) => a.savings_account_number === selectedAccountId);
   const rangeValid =
     effectiveRange.start && effectiveRange.end && effectiveRange.start <= effectiveRange.end;
 
@@ -170,17 +171,17 @@ export default function MemberStatementsPage() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {accounts.map((acc) => (
                   <button
-                    key={acc.id}
+                    key={acc.account_number}
                     type="button"
-                    onClick={() => setSelectedAccountId(acc.id)}
+                    onClick={() => setSelectedAccountId(acc.savings_account_id)}
                     className={`rounded-md border px-4 py-3 text-left transition-colors ${
-                      selectedAccountId === acc.id
+                      selectedAccountId === acc.account_number
                         ? "border-[#1c2b22] bg-[#e4efe6]"
                         : "border-[#c9a24b]/40 bg-white hover:bg-[#eee7d6]"
                     }`}
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7a5c1e]">
-                      {ACCOUNT_LABELS[acc.account_type]}
+                      {ACCOUNT_LABELS[acc.product_name]}
                     </p>
                     <p className="mt-1 font-mono text-sm text-[#1c2b22]">{acc.account_number}</p>
                   </button>
@@ -251,7 +252,7 @@ export default function MemberStatementsPage() {
               </button>
               {selectedAccount && rangeValid && (
                 <span className="text-xs text-[#4a5c50]">
-                  {ACCOUNT_LABELS[selectedAccount.account_type]} · {effectiveRange.start} to {effectiveRange.end}
+                  {ACCOUNT_LABELS[selectedAccount.product_name]} · {effectiveRange.start} to {effectiveRange.end}
                 </span>
               )}
             </div>
