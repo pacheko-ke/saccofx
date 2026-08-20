@@ -432,9 +432,9 @@ function QuickAction({
   );
 }
 
-function formatKes(amount: number): number {
-  // return `KES ${amount.toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-return amount;
+function formatKes(amount: number): string {
+  return `KES ${amount.toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+// return amount;
 }
 
 function formatDate(iso: string): string {
