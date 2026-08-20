@@ -40,7 +40,7 @@ const FEATURES = [
   {
     label: "Payments",
     title: "M-Pesa and bank rails, native",
-    body: "Daraja STK push, PesaLink and RTGS disbursement handled in-app, with statuses that update the ledger automatically.",
+    body: "Mpesa STK push, PesaLink and RTGS disbursement handled in-app, with statuses that update the ledger automatically.",
   },
   {
     label: "Compliance",
@@ -356,14 +356,14 @@ export default function Home() {
                 Book a demo
               </button>
               <a
-                href="#features"
+                href="/auth/login"
                 className="text-[15px] font-medium text-[#0F2F26] underline decoration-[#B98A3D]/50 decoration-2 underline-offset-4 hover:decoration-[#B98A3D]"
               >
                 See the platform
               </a>
             </div>
             <p className="mt-8 text-[12px] text-[#6B7F76] sm:text-[13px]" style={{ fontFamily: "var(--font-mono)" }}>
-              SASRA-aligned reporting · Daraja &amp; PesaLink built in · Row-level Members isolation
+              SASRA-aligned reporting · Mpesa &amp; PesaLink built in · Row-level Members isolation
             </p>
           </div>
 
@@ -582,7 +582,7 @@ export default function Home() {
       <footer className="bg-[#0B241C] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 text-[13px] text-[#7C9186] sm:flex-row sm:px-6">
           <span>© {new Date().getFullYear()} saccofx pro</span>
-          <span style={{ fontFamily: "var(--font-mono)" }}>saccofx pro</span>
+          <span style={{ fontFamily: "var(--font-mono)" }}>Powered by <a href="https://wa.me/+254769869064" className="underline underline-offset-4">Pacheko Technologies</a></span>
         </div>
       </footer>
 

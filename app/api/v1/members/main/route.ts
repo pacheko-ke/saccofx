@@ -122,7 +122,6 @@ export async function GET(req: NextRequest) {
         `(SELECT
             transaction_id AS id,
             tx_date AS date,
-           
             CASE WHEN tx_type = 'deposit' THEN 'deposit' ELSE 'withdrawal' END AS type,
             CASE WHEN tx_type = 'deposit' THEN amount ELSE -amount END AS amount,
             balance_after
