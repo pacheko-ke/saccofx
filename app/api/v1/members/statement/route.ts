@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

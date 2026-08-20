@@ -433,6 +433,9 @@ function QuickAction({
 }
 
 function formatKes(amount: number): string {
+ if(amount===null){
+  return "_____";
+ }
   return `KES ${amount.toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 // return amount;
 }

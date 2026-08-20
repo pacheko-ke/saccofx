@@ -5,9 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 type AccountType = "savings" | "shares" | "loan";
 
 interface MemberAccount {
-  savings_account_number: string;
+  savings_account_id: string;
   product_name: AccountType;
-  savings_account_id: String;
   account_number: string;
   status: string;
   opened_at: string;
@@ -66,6 +65,7 @@ export default function MemberStatementsPage() {
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  // Canonical selector across this whole component: savings_account_id.
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [preset, setPreset] = useState<PresetRange>("90d");
   const [customStart, setCustomStart] = useState("");
@@ -86,7 +86,9 @@ export default function MemberStatementsPage() {
         const data = await res.json();
         if (!cancelled) {
           setAccounts(data.accounts ?? []);
-          if (data.accounts?.length > 0) setSelectedAccountId(data.accounts[0].id);
+          if (data.accounts?.length > 0) {
+            setSelectedAccountId(data.accounts[0].savings_account_id);
+          }
         }
       } catch (err) {
         if (!cancelled) setLoadError(err instanceof Error ? err.message : "Something went wrong");
@@ -106,7 +108,7 @@ export default function MemberStatementsPage() {
     return computeRange(preset);
   }, [preset, customStart, customEnd]);
 
-  const selectedAccount = accounts.find((a) => a.savings_account_number === selectedAccountId);
+  const selectedAccount = accounts.find((a) => a.savings_account_id === selectedAccountId);
   const rangeValid =
     effectiveRange.start && effectiveRange.end && effectiveRange.start <= effectiveRange.end;
 
@@ -171,11 +173,11 @@ export default function MemberStatementsPage() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {accounts.map((acc) => (
                   <button
-                    key={acc.account_number}
+                    key={acc.savings_account_id}
                     type="button"
                     onClick={() => setSelectedAccountId(acc.savings_account_id)}
                     className={`rounded-md border px-4 py-3 text-left transition-colors ${
-                      selectedAccountId === acc.account_number
+                      selectedAccountId === acc.savings_account_id
                         ? "border-[#1c2b22] bg-[#e4efe6]"
                         : "border-[#c9a24b]/40 bg-white hover:bg-[#eee7d6]"
                     }`}
@@ -252,7 +254,7 @@ export default function MemberStatementsPage() {
               </button>
               {selectedAccount && rangeValid && (
                 <span className="text-xs text-[#4a5c50]">
-                  {ACCOUNT_LABELS[selectedAccount.product_name]} · {effectiveRange.start} to {effectiveRange.end}
+                  {selectedAccount.product_name} · {effectiveRange.start} to {effectiveRange.end}
                 </span>
               )}
             </div>
