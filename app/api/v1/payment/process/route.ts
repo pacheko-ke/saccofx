@@ -97,6 +97,7 @@ export async function POST(req: Request) {
       }
 
       // TODO: Save pending transaction record to your database using stkData.CheckoutRequestID
+      
 
       return NextResponse.json({
         success: true,

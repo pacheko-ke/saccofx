@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { Pool } from "@neondatabase/serverless";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { verifyAuthToken } from "@/lib/auth/jwt";
-import { MemberStatementDocument, type StatementTransaction } from "@/lib/pdf/MemberStatementDocument";
+import { verifyAuthToken } from "@/app/lib/auth";
+import { MemberStatementDocument, type StatementTransaction } from "@/app/lib/statement/statementDocument";
 
 // react-pdf needs Node (fs, local fonts) — not the edge runtime.
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // There is no "accountOwnerId" in the request body anywhere in this file.
 async function authenticateMember() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("sfx_session")?.value;
+  const token = cookieStore.get("auth_token")?.value;
   if (!token) return { error: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
 
   const payload = await verifyAuthToken(token);
@@ -51,10 +51,11 @@ export async function GET() {
     // capital, and loan accounts. Adjust the query/columns to your real
     // schema if loans live in a separate accounts table.
     const result = await client.query(
-      `SELECT id, account_type, account_number, status, opened_at
-       FROM member_accounts
+      `SELECT savings_account_id,sp.product_name,  account_number, status, opened_at
+       FROM savings_accounts sa
+       LEFT JOIN savings_products sp ON sp.savings_product_id=sa.savings_product_id
        WHERE tenant_id = $1 AND member_id = $2 AND status IN ('active', 'dormant')
-       ORDER BY account_type, opened_at`,
+       ORDER BY sp.product_name, opened_at`,
       [tenantId, memberId]
     );
 

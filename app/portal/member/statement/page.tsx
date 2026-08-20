@@ -80,7 +80,7 @@ export default function MemberStatementsPage() {
       setLoadingAccounts(true);
       setLoadError("");
       try {
-        const res = await fetch("/api/v1/member/statements");
+        const res = await fetch("/api/v1/members/statement");
         if (!res.ok) throw new Error("Failed to load your accounts");
         const data = await res.json();
         if (!cancelled) {
@@ -115,7 +115,7 @@ export default function MemberStatementsPage() {
     setGenerating(true);
     setGenError("");
     try {
-      const res = await fetch("/api/v1/member/statements", {
+      const res = await fetch("/api/v1/members/statement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
