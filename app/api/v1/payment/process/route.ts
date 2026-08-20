@@ -41,12 +41,7 @@ function formatPhone(phone: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { memberId, targetId, amount, narration, paymentMethod, details, otpVerified } = body;
-
-    // 1. Basic Validations
-    if (!otpVerified) {
-      return NextResponse.json({ error: "OTP verification required." }, { status: 400 });
-    }
+    const { memberId, targetId, amount, narration, paymentMethod, details} = body;
 
     if (!memberId || !targetId || !amount || amount <= 0) {
       return NextResponse.json({ error: "Missing or invalid payment parameters." }, { status: 400 });
@@ -81,7 +76,7 @@ export async function POST(req: Request) {
       };
 
       const stkRes = await fetch(
-        "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
         {
           method: "POST",
           headers: {

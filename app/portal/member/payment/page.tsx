@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import OtpVerifyModal from "@/app/components/loans/OtpVerifyModal";
 
 const STEPS = ["Payment Details", "Method & Account", "Review", "Confirm & Process"] as const;
 type Step = (typeof STEPS)[number];
@@ -71,8 +70,6 @@ export default function MakePaymentPage() {
 
   // Validation & Submission State
   const [formError, setFormError] = useState<string>("");
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -127,10 +124,9 @@ export default function MakePaymentPage() {
           bankReference: paymentMethod === "bank_transfer" ? bankReference : undefined,
           chequeNumber: paymentMethod === "check" ? chequeNumber : undefined,
         },
-        otpVerified,
       };
 
-      const res = await fetch("/api/payments/process", {
+      const res = await fetch("/api/v1/payment/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -409,50 +405,48 @@ export default function MakePaymentPage() {
             <div>
               {!submitted ? (
                 <>
-                  <h2 className="font-serif text-xl text-[#1c2b22]">Authorize payment</h2>
+                  <h2 className="font-serif text-xl text-[#1c2b22]">Confirm payment</h2>
                   <p className="mt-1 text-sm text-[#4a5c50]">
-                    Complete security verification to execute this transaction.
+                    Confirm your details to trigger the payment process.
                   </p>
 
                   <div className="mt-5 rounded-md bg-[#e4efe6] px-4 py-3 text-sm text-[#1c2b22]">
-                    {otpVerified ? (
-                      <span>✓ Security check passed — authorized to initiate.</span>
+                    {paymentMethod === "mpesa" ? (
+                      <span>
+                        An STK Push prompt will be sent directly to <strong>{mpesaPhoneNumber}</strong>. Please have your phone ready to enter your M-PESA PIN.
+                      </span>
                     ) : (
-                      <span>Confirmation code will be sent to: {CURRENT_MEMBER.phone}</span>
+                      <span>
+                        Click below to record your reference and submit this payment for audit reconciliation.
+                      </span>
                     )}
                   </div>
 
                   {submitError && <p className="mt-3 text-sm text-red-600">{submitError}</p>}
 
-                  {!otpVerified ? (
-                    <button
-                      type="button"
-                      onClick={() => setOtpModalOpen(true)}
-                      className="mt-5 rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
-                    >
-                      Send authorization code
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleFinalPaymentSubmit}
-                      disabled={submitting}
-                      className="mt-5 rounded-md bg-[#c9a24b] px-4 py-2 text-sm font-medium text-[#1c2b22] hover:bg-[#b5903f] disabled:opacity-60"
-                    >
-                      {submitting ? "Processing Payment..." : `Pay KES ${Number(amount).toLocaleString()}`}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleFinalPaymentSubmit}
+                    disabled={submitting}
+                    className="mt-5 rounded-md bg-[#c9a24b] px-4 py-2 text-sm font-medium text-[#1c2b22] hover:bg-[#b5903f] disabled:opacity-60"
+                  >
+                    {submitting 
+                      ? (paymentMethod === "mpesa" ? "Sending STK Push..." : "Processing...") 
+                      : `Pay KES ${Number(amount).toLocaleString()}`}
+                  </button>
                 </>
               ) : (
                 <div className="py-6 text-center">
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#e4efe6] text-2xl text-[#1c2b22]">
                     ✓
                   </div>
-                  <h2 className="font-serif text-xl text-[#1c2b22]">Payment Processed</h2>
-                  <p className="mt-1 text-sm text-[#4a5c50]">
+                  <h2 className="font-serif text-xl text-[#1c2b22]">
+                    {paymentMethod === "mpesa" ? "STK Push Sent!" : "Payment Submitted"}
+                  </h2>
+                  <p className="mt-2 text-sm text-[#4a5c50]">
                     {paymentMethod === "mpesa"
-                      ? "STK prompt sent to your device. Please enter your PIN to complete transaction."
-                      : "Your payment reference has been recorded and submitted for audit reconciliation."}
+                      ? `An STK push request of KES ${Number(amount).toLocaleString()} has been sent to ${mpesaPhoneNumber}. Enter your PIN on your phone to complete the payment.`
+                      : "Your payment details have been recorded and submitted for manual audit reconciliation."}
                   </p>
                   <div className="mt-4 inline-block rounded bg-[#f4eee0] px-3 py-1.5 text-xs font-mono text-[#1c2b22]">
                     Ref: {transactionRef}
@@ -460,7 +454,7 @@ export default function MakePaymentPage() {
                   <div className="mt-6 flex justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => router.push("/dashboard")}
+                      onClick={() => router.push("/portal/member/dashboard")}
                       className="rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
                     >
                       Return to Dashboard
@@ -495,18 +489,6 @@ export default function MakePaymentPage() {
           </div>
         )}
       </div>
-
-      <OtpVerifyModal
-        open={otpModalOpen}
-        purpose="payment_authorization"
-        identifier={CURRENT_MEMBER.phone}
-        title="Authorize Transaction"
-        onClose={() => setOtpModalOpen(false)}
-        onVerified={() => {
-          setOtpVerified(true);
-          setOtpModalOpen(false);
-        }}
-      />
     </div>
   );
 }
