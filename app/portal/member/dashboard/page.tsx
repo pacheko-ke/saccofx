@@ -203,7 +203,7 @@ export default function MemberDashboard() {
           <QuickAction icon={CreditCard} label="Make Deposit" href="/portal/member/payment" />
           <QuickAction icon={Send} label="Apply for Loan" href="/portal/member/loans/application/new" />
           <QuickAction icon={FileText} label="Statements" href="/portal/member/statement" />
-          <QuickAction icon={Download} label="Loan Calculator" href="/member/passbook" />
+          <QuickAction icon={Download} label="Loan Calculator" href="/portal/member/loans/calculator" />
         </div>
 
         {/* Savings trend + loans */}
