@@ -301,7 +301,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-[#D8CFBA]/70 bg-[#F6F3EC]/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="truncate text-[15px] font-semibold tracking-tight">saccofx pro</span>
+            <span className="truncate text-[15px] font-semibold tracking-tight">saccofx <span className="text-orange-400">pro.</span></span>
           </div>
           <nav className="hidden items-center gap-8 text-[14px] text-[#3D4F47] md:flex">
             <a href="#features" className="hover:text-[#0F2F26]">Platform</a>
