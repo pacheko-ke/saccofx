@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         r.role_id,
         r.role_name,
         u.username,
+        u.tenant_id,
         u.password_hash,
         COALESCE(m.status, 'active') AS user_status,
         m.first_name,
@@ -109,10 +110,10 @@ export async function POST(req: NextRequest) {
     const token = await createAuthToken(
       {
         userId: String(user.user_id),
-        tenantId: String(user.tenant_id ?? ""),
+        tenantId: String(user.tenant_id),
         role: activeRole,
-        id_number: user.id_number ?? "",
-        memberId: user.member_id ?? undefined,
+        id_number: user.id_number,
+        memberId: user.member_id,
       },
       tokenDuration
     );
