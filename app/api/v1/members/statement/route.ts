@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     // defense in depth on top of it.
     const accountResult = await client.query(
       `SELECT sa.savings_account_id, sp.product_name, sa.account_number, m.first_name,m.last_name, m.member_number, m.id_number,
-              t.tenant_name AS sacco_name
+              t.tenant_name AS sacco_name,t.sasra_reg_no
        FROM savings_accounts sa
        INNER JOIN savings_products sp ON sp.savings_product_id=sa.savings_product_id
        JOIN members m ON m.member_id = sa.member_id
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
        LIMIT 1`,
       [tenantId, accountId, startDate]
     );
-    const openingBalance = openingResult.rows[0]?.balance_after ? Number(openingResult.rows[0].balance_after) : 0;
+    const openingBalance = openingResult.rows[0]?.amount ? Number(openingResult.rows[0].amount) : 0;
 
     const txResult = await client.query(
       `SELECT tx_date, narrative, amount
@@ -145,10 +145,10 @@ export async function POST(req: NextRequest) {
 
     const transactions: StatementTransaction[] = txResult.rows.map((r) => ({
       date: r.tx_date,
-      description: r.description ?? "",
+      description: r.narrative ?? "",
       debit: r.debit ? Number(r.debit) : null,
       credit: r.credit ? Number(r.credit) : null,
-      balanceAfter: Number(r.balance_after),
+      balanceAfter: Number(r.amount),
     }));
 
     const totalDebits = transactions.reduce((sum, t) => sum + (t.debit ?? 0), 0);
@@ -162,7 +162,10 @@ export async function POST(req: NextRequest) {
         saccoName: account.sacco_name ?? "SaccoFX",
         saccoRegNo: account.sasra_reg_no ?? undefined,
         member: {
-          fullName: account.full_name,
+
+          firstName: account.first_name,
+          lastName: account.last_name,
+
           memberNumber: account.member_number,
           idNumber: account.id_number,
         },

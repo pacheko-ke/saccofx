@@ -251,7 +251,8 @@ export interface MemberStatementProps {
   saccoName: string;
   saccoRegNo?: string;
   member: {
-    fullName: string;
+    firstName: string;
+    lastName: string;
     memberNumber: string;
     idNumber: string;
   };
@@ -313,7 +314,7 @@ export function MemberStatementDocument(props: MemberStatementProps) {
         <View style={styles.infoGrid}>
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Member</Text>
-            <Text style={styles.infoValue}>{member.fullName}</Text>
+            <Text style={styles.infoValue}>{`${member.firstName} ${member.lastName}`}</Text>
           </View>
           <View style={styles.infoCol}>
             <Text style={styles.infoLabel}>Member No.</Text>
