@@ -133,8 +133,8 @@ export default function LoanCalculatorPage() {
   }, [schedule]);
 
   return (
-    <div className="mx-4 mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
-      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8 print:hidden">
+    <div className="mx-2 md:w-1/2 md:mx-auto mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
+      <div className="border-b border-[#c9a24b]/30 px-2 py-5 sm:px-8 print:hidden">
         <h1 className="font-serif text-xl text-[#1c2b22] sm:text-2xl">Loan calculator</h1>
         <p className="mt-1 text-sm text-[#4a5c50]">
           Estimate your monthly installment and full repayment schedule before applying. Actual terms depend on the
@@ -142,9 +142,9 @@ export default function LoanCalculatorPage() {
         </p>
       </div>
 
-      <div className="px-6 py-7 sm:px-8">
+      <div className="px-2 py-7 sm:px-8">
         {/* Inputs */}
-        <div className="rounded-md border border-[#c9a24b]/30 bg-white p-5 print:hidden">
+        <div className="rounded-md border border-[#c9a24b]/30 bg-white py-5 px-2 print:hidden">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
               <label className={labelClasses}>Loan amount (KES)</label>
