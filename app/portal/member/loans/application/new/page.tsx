@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import GuarantorStep, { Guarantor } from "@/app/components/loans/GuarantorStep";
 import OtpVerifyModal from "@/app/components/loans/OtpVerifyModal";
 
@@ -15,12 +15,14 @@ interface LoanDetails {
   purpose: string;
 }
 
-const LOAN_PRODUCTS = [
-  { id: "dev-loan", name: "Development Loan" },
-  { id: "emergency-loan", name: "Emergency Loan" },
-  { id: "school-fees-loan", name: "School Fees Loan" },
-  { id: "asset-finance-loan", name: "Asset Finance Loan" },
-];
+interface LoanProduct {
+  loan_product_id: string;
+  product_name: string;
+  min_principal: number;
+  max_principal: number;
+  min_tenure_months: number;
+  max_tenure_months: number;
+}
 
 // TODO: replace with the signed-in member's real details once auth/session is wired in
 const CURRENT_MEMBER = {
@@ -30,17 +32,36 @@ const CURRENT_MEMBER = {
   email: "applicant@example.com",
 };
 
-export default function LoanApplicationPage() {
+// useSearchParams requires a Suspense boundary in the app router, since
+// reading query params opts the page out of static rendering.
+export default function LoanApplicationPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <LoanApplicationPage />
+    </Suspense>
+  );
+}
+
+function LoanApplicationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [stepIndex, setStepIndex] = useState(0);
   const step = STEPS[stepIndex];
 
-  const [loanDetails, setLoanDetails] = useState<LoanDetails>({
-    loanProductId: "",
-    amountRequested: "",
-    termMonths: "",
+  const [products, setProducts] = useState<LoanProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState("");
+
+  // Pre-fill straight from the calculator's query params on first render —
+  // this covers the case where the member arrived via "Apply for this
+  // loan" with amount/termMonths/productId already chosen.
+  const [loanDetails, setLoanDetails] = useState<LoanDetails>(() => ({
+    loanProductId: searchParams.get("productId") ?? "",
+    amountRequested: searchParams.get("amount") ?? "",
+    termMonths: searchParams.get("termMonths") ?? "",
     purpose: "",
-  });
+  }));
   const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
   const [loanDetailsError, setLoanDetailsError] = useState("");
 
@@ -50,6 +71,42 @@ export default function LoanApplicationPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoadingProducts(true);
+      setProductsError("");
+      try {
+        const res = await fetch("/api/v1/members/loans/products");
+        if (!res.ok) throw new Error("Failed to load loan products");
+        const data = await res.json();
+        if (!cancelled) {
+          const list: LoanProduct[] = data.products ?? [];
+          setProducts(list);
+
+          // If the calculator handed off a productId that isn't in the
+          // list (deactivated product, typo, stale link), clear it rather
+          // than silently carrying an invalid selection into submission.
+          const incomingId = searchParams.get("productId");
+          if (incomingId && !list.some((p) => p.loan_product_id === incomingId)) {
+            setLoanDetails((d) => ({ ...d, loanProductId: "" }));
+          }
+        }
+      } catch (err) {
+        if (!cancelled) setProductsError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    }
+
+    loadProducts();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function goNext() {
     if (step === "Loan details") {
       if (!loanDetails.loanProductId) return setLoanDetailsError("Select a loan product.");
@@ -57,6 +114,21 @@ export default function LoanApplicationPage() {
       if (!amount || amount <= 0) return setLoanDetailsError("Enter a valid amount.");
       const term = Number(loanDetails.termMonths);
       if (!term || term <= 0) return setLoanDetailsError("Enter a valid repayment term.");
+
+      const product = products.find((p) => p.loan_product_id === loanDetails.loanProductId);
+      if (product) {
+        if (amount < product.min_principal || amount > product.max_principal) {
+          return setLoanDetailsError(
+            `${product.product_name} allows KES ${product.min_principal.toLocaleString()}–${product.max_principal.toLocaleString()}.`
+          );
+        }
+        if (term < product.min_tenure_months || term > product.max_tenure_months) {
+          return setLoanDetailsError(
+            `${product.product_name} allows a term of ${product.min_tenure_months}–${product.max_tenure_months} months.`
+          );
+        }
+      }
+
       if (!loanDetails.purpose.trim()) return setLoanDetailsError("Tell us the purpose of this loan.");
       setLoanDetailsError("");
     }
@@ -109,7 +181,7 @@ export default function LoanApplicationPage() {
     }
   }
 
-  const selectedProduct = LOAN_PRODUCTS.find((p) => p.id === loanDetails.loanProductId);
+  const selectedProduct = products.find((p) => p.loan_product_id === loanDetails.loanProductId);
 
   return (
     <div className="min-h-screen bg-[#eee7d6] pt-4">
@@ -151,21 +223,33 @@ export default function LoanApplicationPage() {
               <h2 className="font-serif text-xl text-[#1c2b22]">Loan details</h2>
               <p className="mt-1 text-sm text-[#4a5c50]">Tell us what you'd like to borrow.</p>
 
+              {productsError && (
+                <p className="mt-3 rounded-md bg-[#f4dede] px-3 py-2 text-sm text-[#8a2c2c]">{productsError}</p>
+              )}
+
               <div className="mt-5 space-y-4">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-[#4a5c50]">Loan product</label>
                   <select
                     value={loanDetails.loanProductId}
                     onChange={(e) => setLoanDetails((d) => ({ ...d, loanProductId: e.target.value }))}
-                    className="w-full rounded-md border border-[#c9a24b]/40 px-3 py-2 text-sm focus:border-[#1c2b22] focus:outline-none"
+                    disabled={loadingProducts}
+                    className="w-full rounded-md border border-[#c9a24b]/40 px-3 py-2 text-sm focus:border-[#1c2b22] focus:outline-none disabled:opacity-60"
                   >
-                    <option value="">Select a loan product</option>
-                    {LOAN_PRODUCTS.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
+                    <option value="">{loadingProducts ? "Loading products…" : "Select a loan product"}</option>
+                    {products.map((p) => (
+                      <option key={p.loan_product_id} value={p.loan_product_id}>
+                        {p.product_name}
                       </option>
                     ))}
                   </select>
+                  {selectedProduct && (
+                    <p className="mt-1 text-xs text-[#4a5c50]">
+                      KES {selectedProduct.min_principal.toLocaleString()}–
+                      {selectedProduct.max_principal.toLocaleString()} · {selectedProduct.min_tenure_months}–
+                      {selectedProduct.max_tenure_months} months
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -223,7 +307,7 @@ export default function LoanApplicationPage() {
               <dl className="mt-5 space-y-3 text-sm">
                 <div className="flex justify-between border-b border-[#c9a24b]/20 pb-2">
                   <dt className="text-[#4a5c50]">Loan product</dt>
-                  <dd className="font-medium text-[#1c2b22]">{selectedProduct?.name}</dd>
+                  <dd className="font-medium text-[#1c2b22]">{selectedProduct?.product_name}</dd>
                 </div>
                 <div className="flex justify-between border-b border-[#c9a24b]/20 pb-2">
                   <dt className="text-[#4a5c50]">Amount requested</dt>
