@@ -121,6 +121,7 @@ export default function LoanCalculatorPage() {
         const res = await fetch("/api/v1/members/loans/products");
         if (!res.ok) throw new Error("Failed to load loan products");
         const data = await res.json();
+        console.log(data)
         if (cancelled) return;
 
         const list: LoanProduct[] = data.products ?? [];
@@ -208,7 +209,7 @@ export default function LoanCalculatorPage() {
   }
 
   return (
-    <div className="mx-4 mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
+    <div className="mx-auto w-1/2 mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
       <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8 print:hidden">
         <h1 className="font-serif text-xl text-[#1c2b22] sm:text-2xl">Loan calculator</h1>
         <p className="mt-1 text-sm text-[#4a5c50]">
