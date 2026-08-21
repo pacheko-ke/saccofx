@@ -1,9 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type CalcMethod = "reducing" | "flat";
-type Frequency = "monthly";
+
+interface LoanProduct {
+  loan_product_id: string;
+  product_name: string;
+  interest_rate: number;
+  interest_method: CalcMethod;
+  min_amount: number;
+  max_amount: number;
+  min_term_months: number;
+  max_term_months: number;
+}
 
 interface ScheduleRow {
   period: number;
@@ -23,15 +34,9 @@ function formatKES(amount: number) {
   return `KES ${amount.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Reducing balance: standard amortizing loan. Interest is charged only on
-// the outstanding balance each period, so it shrinks over the loan's life
-// even though the installment stays level — this is the same method used
-// for actual disbursed loan schedules (LoanSchedule/reducing-balance
-// amortization), just computed ahead of disbursement here.
 function buildReducingBalanceSchedule(principal: number, annualRatePct: number, termMonths: number): ScheduleRow[] {
   const r = annualRatePct / 100 / 12;
   const n = termMonths;
-
   const installment = r === 0 ? principal / n : (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 
   const rows: ScheduleRow[] = [];
@@ -42,8 +47,6 @@ function buildReducingBalanceSchedule(principal: number, annualRatePct: number, 
     let principalPortion = installment - interest;
     let closing = balance - principalPortion;
 
-    // Absorb rounding drift into the final installment so the schedule
-    // closes exactly at zero rather than a few cents off.
     if (period === n) {
       principalPortion = balance;
       closing = 0;
@@ -64,10 +67,6 @@ function buildReducingBalanceSchedule(principal: number, annualRatePct: number, 
   return rows;
 }
 
-// Flat rate: interest is calculated once on the original principal and
-// spread evenly across the term, regardless of the declining balance.
-// This produces a higher effective (APR-equivalent) rate than reducing
-// balance for the same quoted percentage — worth surfacing to members.
 function buildFlatRateSchedule(principal: number, annualRatePct: number, termMonths: number): ScheduleRow[] {
   const totalInterest = principal * (annualRatePct / 100) * (termMonths / 12);
   const principalPerPeriod = principal / termMonths;
@@ -93,26 +92,86 @@ function buildFlatRateSchedule(principal: number, annualRatePct: number, termMon
   return rows;
 }
 
-// Rough flat-rate-equivalent APR, for the "this is more expensive than it
-// looks" callout. Not a precise IRR solve — good enough as a directional
-// comparison, not for regulatory disclosure.
 function approximateFlatRateAPR(annualRatePct: number): number {
   return annualRatePct * 1.8;
 }
 
 export default function LoanCalculatorPage() {
+  const router = useRouter();
+
+  const [products, setProducts] = useState<LoanProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+
   const [amount, setAmount] = useState("100000");
   const [rate, setRate] = useState("12");
   const [term, setTerm] = useState("12");
   const [method, setMethod] = useState<CalcMethod>("reducing");
-  const [frequency] = useState<Frequency>("monthly");
   const [showSchedule, setShowSchedule] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoadingProducts(true);
+      setLoadError("");
+      try {
+        const res = await fetch("/api/v1/member/loans/products");
+        if (!res.ok) throw new Error("Failed to load loan products");
+        const data = await res.json();
+        if (cancelled) return;
+
+        const list: LoanProduct[] = data.products ?? [];
+        setProducts(list);
+
+        if (list.length > 0) {
+          applyProduct(list[0]);
+        }
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    }
+
+    loadProducts();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function applyProduct(product: LoanProduct) {
+    setSelectedProductId(product.loan_product_id);
+    setRate(String(product.interest_rate));
+    setMethod(product.interest_method);
+    // Clamp the current amount/term into the product's allowed range
+    // rather than silently overwriting whatever the member had typed.
+    setAmount((prev) => {
+      const n = Number(prev) || product.min_amount;
+      return String(Math.min(Math.max(n, product.min_amount), product.max_amount));
+    });
+    setTerm((prev) => {
+      const n = Number(prev) || product.min_term_months;
+      return String(Math.min(Math.max(n, product.min_term_months), product.max_term_months));
+    });
+  }
+
+  const selectedProduct = products.find((p) => p.loan_product_id === selectedProductId);
 
   const principal = Number(amount) || 0;
   const annualRate = Number(rate) || 0;
   const termMonths = Number(term) || 0;
 
-  const isValid = principal > 0 && annualRate >= 0 && termMonths > 0 && termMonths <= 360;
+  const withinProductLimits =
+    !selectedProduct ||
+    (principal >= selectedProduct.min_amount &&
+      principal <= selectedProduct.max_amount &&
+      termMonths >= selectedProduct.min_term_months &&
+      termMonths <= selectedProduct.max_term_months);
+
+  const isValid = principal > 0 && annualRate >= 0 && termMonths > 0 && termMonths <= 360 && withinProductLimits;
 
   const schedule = useMemo(() => {
     if (!isValid) return [];
@@ -132,19 +191,69 @@ export default function LoanCalculatorPage() {
     };
   }, [schedule]);
 
+  function handleApply() {
+    if (!isValid) return;
+
+    // Hands the calculated inputs off to the loan application flow as
+    // query params so the form can pre-fill rather than making the member
+    // re-enter everything. Adjust the target path to wherever your actual
+    // application page lives.
+    const params = new URLSearchParams({
+      amount: String(principal),
+      termMonths: String(termMonths),
+      ...(selectedProduct ? { productId: selectedProduct.loan_product_id } : {}),
+    });
+    router.push(`/portal/member/loans/apply?${params.toString()}`);
+  }
+
   return (
-    <div className="mx-2 md:w-1/2 md:mx-auto mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
-      <div className="border-b border-[#c9a24b]/30 px-2 py-5 sm:px-8 print:hidden">
+    <div className="mx-4 mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
+      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8 print:hidden">
         <h1 className="font-serif text-xl text-[#1c2b22] sm:text-2xl">Loan calculator</h1>
         <p className="mt-1 text-sm text-[#4a5c50]">
-          Estimate your monthly installment and full repayment schedule before applying. Actual terms depend on the
-          product you qualify for and are confirmed at application.
+          Estimate your monthly installment and full repayment schedule before applying.
         </p>
       </div>
 
-      <div className="px-2 py-7 sm:px-8">
+      <div className="px-6 py-7 sm:px-8">
+        {loadError && (
+          <p className="mb-4 rounded-md bg-[#f4dede] px-3 py-2 text-sm text-[#8a2c2c]">
+            {loadError} — you can still calculate manually below using a custom rate.
+          </p>
+        )}
+
+        {/* Product picker */}
+        {!loadingProducts && products.length > 0 && (
+          <div className="mb-5 print:hidden">
+            <p className={labelClasses}>Loan product</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {products.map((p) => (
+                <button
+                  key={p.loan_product_id}
+                  type="button"
+                  onClick={() => applyProduct(p)}
+                  className={`rounded-md border px-4 py-3 text-left transition-colors ${
+                    selectedProductId === p.loan_product_id
+                      ? "border-[#1c2b22] bg-[#e4efe6]"
+                      : "border-[#c9a24b]/40 bg-white hover:bg-[#eee7d6]"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-[#1c2b22]">{p.product_name}</p>
+                  <p className="mt-0.5 text-xs text-[#4a5c50]">
+                    {p.interest_rate}% p.a. · {p.interest_method === "reducing" ? "Reducing balance" : "Flat rate"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#4a5c50]">
+                    {formatKES(p.min_amount)} – {formatKES(p.max_amount)} · {p.min_term_months}–{p.max_term_months}
+                    mo
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Inputs */}
-        <div className="rounded-md border border-[#c9a24b]/30 bg-white py-5 px-2 print:hidden">
+        <div className="rounded-md border border-[#c9a24b]/30 bg-white p-5 print:hidden">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
               <label className={labelClasses}>Loan amount (KES)</label>
@@ -162,6 +271,7 @@ export default function LoanCalculatorPage() {
                 className={inputClasses}
                 value={rate}
                 onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
+                disabled={!!selectedProduct}
                 inputMode="decimal"
                 placeholder="e.g. 12"
               />
@@ -178,31 +288,40 @@ export default function LoanCalculatorPage() {
             </div>
           </div>
 
-          <div className="mt-5">
-            <label className={labelClasses}>Calculation method</label>
-            <div className="grid grid-cols-2 gap-3 sm:max-w-md">
-              {[
-                { value: "reducing" as const, label: "Reducing balance", hint: "Interest on outstanding balance" },
-                { value: "flat" as const, label: "Flat rate", hint: "Interest on original amount" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setMethod(opt.value)}
-                  className={`rounded-md border px-4 py-3 text-left transition-colors ${
-                    method === opt.value
-                      ? "border-[#1c2b22] bg-[#e4efe6] text-[#1c2b22]"
-                      : "border-[#c9a24b]/40 text-[#4a5c50] hover:bg-[#eee7d6]"
-                  }`}
-                >
-                  <p className="text-sm font-medium">{opt.label}</p>
-                  <p className="mt-0.5 text-xs text-[#4a5c50]">{opt.hint}</p>
-                </button>
-              ))}
+          {!selectedProduct && (
+            <div className="mt-5">
+              <label className={labelClasses}>Calculation method</label>
+              <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+                {[
+                  { value: "reducing" as const, label: "Reducing balance", hint: "Interest on outstanding balance" },
+                  { value: "flat" as const, label: "Flat rate", hint: "Interest on original amount" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setMethod(opt.value)}
+                    className={`rounded-md border px-4 py-3 text-left transition-colors ${
+                      method === opt.value
+                        ? "border-[#1c2b22] bg-[#e4efe6] text-[#1c2b22]"
+                        : "border-[#c9a24b]/40 text-[#4a5c50] hover:bg-[#eee7d6]"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{opt.label}</p>
+                    <p className="mt-0.5 text-xs text-[#4a5c50]">{opt.hint}</p>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {!isValid && (
+          {!isValid && principal > 0 && termMonths > 0 && !withinProductLimits && selectedProduct && (
+            <p className="mt-4 text-xs text-red-600">
+              {selectedProduct.product_name} allows {formatKES(selectedProduct.min_amount)}–
+              {formatKES(selectedProduct.max_amount)} over {selectedProduct.min_term_months}–
+              {selectedProduct.max_term_months} months. Adjust the amount or term to match.
+            </p>
+          )}
+          {!isValid && (principal <= 0 || termMonths <= 0) && (
             <p className="mt-4 text-xs text-red-600">
               Enter a loan amount greater than 0 and a term between 1 and 360 months.
             </p>
@@ -238,8 +357,14 @@ export default function LoanCalculatorPage() {
               </div>
             </div>
 
-            {/* Schedule toggle */}
-            <div className="mt-5 flex items-center justify-between print:hidden">
+            <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden">
+              <button
+                type="button"
+                onClick={handleApply}
+                className="rounded-md bg-[#1c2b22] px-5 py-2.5 text-sm font-medium text-[#faf6ec] transition-colors hover:bg-[#233a2c]"
+              >
+                Apply for this loan
+              </button>
               <button
                 type="button"
                 onClick={() => setShowSchedule((s) => !s)}
