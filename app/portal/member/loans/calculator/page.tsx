@@ -10,10 +10,11 @@ interface LoanProduct {
   product_name: string;
   interest_rate: number;
   interest_method: CalcMethod;
-  min_amount: number;
-  max_amount: number;
-  min_term_months: number;
-  max_term_months: number;
+  interest_rate_pa:number;
+  min_principal: number;
+  max_principal: number;
+  min_tenure_months: number;
+  max_tenure_months: number;
 }
 
 interface ScheduleRow {
@@ -117,7 +118,7 @@ export default function LoanCalculatorPage() {
       setLoadingProducts(true);
       setLoadError("");
       try {
-        const res = await fetch("/api/v1/member/loans/products");
+        const res = await fetch("/api/v1/members/loans/products");
         if (!res.ok) throw new Error("Failed to load loan products");
         const data = await res.json();
         if (cancelled) return;
@@ -144,17 +145,17 @@ export default function LoanCalculatorPage() {
 
   function applyProduct(product: LoanProduct) {
     setSelectedProductId(product.loan_product_id);
-    setRate(String(product.interest_rate));
+    setRate(String(product.interest_rate_pa));
     setMethod(product.interest_method);
     // Clamp the current amount/term into the product's allowed range
     // rather than silently overwriting whatever the member had typed.
     setAmount((prev) => {
-      const n = Number(prev) || product.min_amount;
-      return String(Math.min(Math.max(n, product.min_amount), product.max_amount));
+      const n = Number(prev) || product.min_principal;
+      return String(Math.min(Math.max(n, product.min_principal), product.max_principal));
     });
     setTerm((prev) => {
-      const n = Number(prev) || product.min_term_months;
-      return String(Math.min(Math.max(n, product.min_term_months), product.max_term_months));
+      const n = Number(prev) || product.min_tenure_months;
+      return String(Math.min(Math.max(n, product.min_tenure_months), product.max_tenure_months));
     });
   }
 
@@ -166,10 +167,10 @@ export default function LoanCalculatorPage() {
 
   const withinProductLimits =
     !selectedProduct ||
-    (principal >= selectedProduct.min_amount &&
-      principal <= selectedProduct.max_amount &&
-      termMonths >= selectedProduct.min_term_months &&
-      termMonths <= selectedProduct.max_term_months);
+    (principal >= selectedProduct.min_principal &&
+      principal <= selectedProduct.max_principal &&
+      termMonths >= selectedProduct.min_tenure_months &&
+      termMonths <= selectedProduct.max_tenure_months);
 
   const isValid = principal > 0 && annualRate >= 0 && termMonths > 0 && termMonths <= 360 && withinProductLimits;
 
@@ -203,7 +204,7 @@ export default function LoanCalculatorPage() {
       termMonths: String(termMonths),
       ...(selectedProduct ? { productId: selectedProduct.loan_product_id } : {}),
     });
-    router.push(`/portal/member/loans/apply?${params.toString()}`);
+    router.push(`/portal/member/loans/application?${params.toString()}`);
   }
 
   return (
@@ -240,11 +241,11 @@ export default function LoanCalculatorPage() {
                 >
                   <p className="text-sm font-medium text-[#1c2b22]">{p.product_name}</p>
                   <p className="mt-0.5 text-xs text-[#4a5c50]">
-                    {p.interest_rate}% p.a. · {p.interest_method === "reducing" ? "Reducing balance" : "Flat rate"}
+                    {p.interest_rate_pa}% p.a. · {p.interest_method === "reducing" ? "Reducing balance" : "Flat rate"}
                   </p>
                   <p className="mt-0.5 text-xs text-[#4a5c50]">
-                    {formatKES(p.min_amount)} – {formatKES(p.max_amount)} · {p.min_term_months}–{p.max_term_months}
-                    mo
+                    {formatKES(p.min_principal)} – {formatKES(p.max_principal)} · {p.min_tenure_months}–{p.max_tenure_months}
+                     mo
                   </p>
                 </button>
               ))}
@@ -316,9 +317,9 @@ export default function LoanCalculatorPage() {
 
           {!isValid && principal > 0 && termMonths > 0 && !withinProductLimits && selectedProduct && (
             <p className="mt-4 text-xs text-red-600">
-              {selectedProduct.product_name} allows {formatKES(selectedProduct.min_amount)}–
-              {formatKES(selectedProduct.max_amount)} over {selectedProduct.min_term_months}–
-              {selectedProduct.max_term_months} months. Adjust the amount or term to match.
+              {selectedProduct.product_name} allows {formatKES(selectedProduct.min_principal)}–
+              {formatKES(selectedProduct.max_principal)} over {selectedProduct.min_tenure_months}–
+              {selectedProduct.max_tenure_months} months. Adjust the amount or term to match.
             </p>
           )}
           {!isValid && (principal <= 0 || termMonths <= 0) && (

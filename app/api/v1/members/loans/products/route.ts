@@ -40,10 +40,10 @@ export async function GET() {
     // column names to match your real schema if this differs — in
     // particular `interest_method` is assumed to be 'reducing' | 'flat'.
     const result = await client.query(
-      `SELECT loan_product_id, product_name, interest_rate, interest_method,
-              min_amount, max_amount, min_term_months, max_term_months
+      `SELECT loan_product_id, product_name, interest_rate_pa, interest_method,
+              min_principal::float8, max_principal::float8, min_tenure_months, max_tenure_months
        FROM loan_products
-       WHERE tenant_id = $1 AND status = 'active'
+       WHERE tenant_id = $1 AND is_active = 't'
        ORDER BY product_name`,
       [tenantId]
     );
