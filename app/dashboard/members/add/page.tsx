@@ -595,12 +595,33 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
               <label className={labelClasses}>Full name</label>
               <input
                 className={inputClasses}
-                value={formData.fullName}
+                value={formData.firstName}
                 onChange={(e) => update("fullName", e.target.value)}
                 placeholder="As it appears on your national ID"
               />
               {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
             </div>
+
+              <div>
+              <label className={labelClasses}>Last Name</label>
+              <input
+                className={inputClasses}
+                value={formData.lastName}
+                onChange={(e) => update("fullName", e.target.value)}
+                placeholder="As it appears on your national ID"
+              />
+              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
+            </div>
+             <div>
+                <label className={labelClasses}>Id Type</label>
+                <select className={inputClasses} value={formData.gender} onChange={(e) => update("gender", e.target.value)}>
+                  <option value="">Select</option>
+                  <option value="female">Maisha Card</option>
+                  <option value="male">Old Generation Id</option>
+                 
+                </select>
+                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
+              </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
@@ -626,6 +647,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
                 {errors.dateOfBirth && <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>}
               </div>
             </div>
+            
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
