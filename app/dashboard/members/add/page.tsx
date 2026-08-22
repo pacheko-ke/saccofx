@@ -290,7 +290,7 @@ function BulkImportForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div>
+    <div className="md:mx-20 md:w-3/4">
       <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8">
         <button type="button" onClick={onBack} className="mb-2 text-xs font-medium text-[#4a5c50] hover:underline">
           ← Back
@@ -508,7 +508,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const res = await fetch("/api/v1/members", {
+      const res = await fetch("/api/v1/members/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -524,7 +524,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
 
   if (submitted) {
     return (
-      <div className="p-10 text-center">
+      <div className="p-10 md:px-20 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#1c2b22] text-[#faf6ec]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
@@ -550,9 +550,9 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div>
+    <div className="">
       {/* Header */}
-      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8">
+      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8 ">
         <button type="button" onClick={onBack} className="mb-2 text-xs font-medium text-[#4a5c50] hover:underline">
           ← Back
         </button>

@@ -51,7 +51,7 @@ interface SavingsPoint {
 interface TransactionRow {
   id: string;
   date: string; // ISO
-  description: string;
+  narrative: string;
   type: "deposit" | "withdrawal" | "loan_repayment" | "share_purchase" | "charge";
   amount: number; // positive = credit, negative = debit
   balanceAfter: number;
@@ -71,14 +71,6 @@ interface MemberDashboardResponse {
   recentTransactions: TransactionRow[];
   loans: LoanSummary[];
 }
-
-const TRANSACTION_LABEL: Record<TransactionRow["type"], string> = {
-  deposit: "Deposit",
-  withdrawal: "Withdrawal",
-  loan_repayment: "Loan Repayment",
-  share_purchase: "Share Purchase",
-  charge: "Charge",
-};
 
 const LOAN_STATUS_STYLE: Record<LoanSummary["status"], string> = {
   active: "bg-[#dfe9dd] text-[#1c2b22] border-[#5c7a5f]/50",
@@ -333,8 +325,8 @@ export default function MemberDashboard() {
                       <td className="whitespace-nowrap px-3 py-3 font-mono text-[12px] text-[#1c2b22]/60">
                         {formatDate(tx.date)}
                       </td>
-                      <td className="px-3 py-3 text-[#1c2b22]">{tx.description}</td>
-                      <td className="px-3 py-3 text-[#1c2b22]/70">{TRANSACTION_LABEL[tx.type]}</td>
+                      <td className="px-3 py-3 text-[#1c2b22]">{tx.narrative}</td>
+                      <td className="px-3 py-3 text-[#1c2b22]/70">{tx.type}</td>
                       <td
                         className={`px-3 py-3 font-mono text-[13px] ${
                           tx.amount >= 0 ? "text-[#5c7a5f]" : "text-[#b8543a]"

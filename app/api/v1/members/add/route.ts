@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid tenant" }, { status: 400 });
   }
 
-  // Adjust to your actual role names
-  if (!["admin", "staff", "loan_officer", "teller"].includes(role)) {
+  // Adjust to actual role names
+  if (!["admin", "staff", "loan_officer", "teller", "member_portal_user"].includes(role)) {
     return NextResponse.json({ error: "Not authorized to register members" }, { status: 403 });
   }
 
@@ -85,7 +85,9 @@ export async function POST(req: NextRequest) {
     await client.query(`SET LOCAL app.current_user_id = '${userId}'`);
 
     const dup = await client.query(
-      `SELECT id FROM members WHERE tenant_id = $1 AND id_number = $2 AND deleted_at IS NULL`,
+      `SELECT m.member_id, u.tenant_id FROM users u
+      INNER JOIN members m ON m.member_id= u.member_id
+      WHERE u.tenant_id = $1 AND m.id_number = $2 AND deleted_at IS NULL`,
       [tenantId, idNumber.trim()]
     );
     if (dup.rows.length > 0) {
@@ -98,19 +100,18 @@ export async function POST(req: NextRequest) {
 
     const result = await client.query(
       `INSERT INTO members (
-         tenant_id, full_name, id_number, date_of_birth, gender, marital_status,
-         phone, email, physical_address, county,
-         kin_full_name, kin_relationship, kin_phone,
-         member_type, monthly_contribution, number_of_shares, income_source,
-         status, created_by
+         tenant_id, first_name, id_number, date_of_birth, gender, marital_status,
+         phone_primary, email, physical_address, county,
+        
+       monthly_contribution,
+         status, created_by,member_number,last_name
        ) VALUES (
          $1, $2, $3, $4, $5, $6,
          $7, $8, $9, $10,
-         $11, $12, $13,
-         $14, $15, $16, $17,
-         'pending', $18
+        
+         $11, $12,$13,$14,$15
        )
-       RETURNING id, full_name, status`,
+       RETURNING member_id`,
       [
         tenantId,
         fullName.trim(),
@@ -122,14 +123,35 @@ export async function POST(req: NextRequest) {
         email?.trim() || null,
         physicalAddress.trim(),
         county.trim(),
-        kinFullName.trim(),
-        kinRelationship.trim(),
-        kinPhone.trim(),
-        memberType || "individual",
         Number(monthlyContribution),
-        Number(numberOfShares),
-        incomeSource.trim(),
+        'pending',
         userId,
+        'FPK-00150',
+        fullName.trim()
+      ]
+    );
+
+
+    const memberId = result.rows[0].member_id
+
+    const kin_result = await client.query(
+      `INSERT INTO next_of_kin (
+         tenant_id, full_name, id_number,
+         phone, relationship,member_id
+        
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6
+      
+       )
+       RETURNING id, full_name, status`,
+      [
+        tenantId,
+        kinFullName.trim(),
+        idNumber.trim(),
+        kinPhone.trim(),
+        kinRelationship.trim(),
+
+        memberId,
       ]
     );
 
