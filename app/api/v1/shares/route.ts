@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/app/lib/auth"; 
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function getAuthPayload() {
   const token = (await cookies()).get("auth_token")?.value;

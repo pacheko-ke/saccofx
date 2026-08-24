@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/app/lib/auth";
 
@@ -36,8 +36,6 @@ export async function GET(request: NextRequest) {
   // branchId must be a UUID if provided
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const safeBranchId = branchId && uuidRegex.test(branchId) ? branchId : null;
-
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const client = await pool.connect();
 
   try {

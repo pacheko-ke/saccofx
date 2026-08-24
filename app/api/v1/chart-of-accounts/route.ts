@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
-
-const sql = neon(process.env.DATABASE_URL!);
+import {sql} from "@/app/lib/db"
 
 // Adjust table/column names to match your actual chart_of_accounts schema.
 export async function GET() {

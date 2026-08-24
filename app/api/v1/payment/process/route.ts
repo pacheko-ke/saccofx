@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Daraja API Configuration (Ensure these exist in your .env.local file)
+// Daraja API Configuration
 const DARAJA_CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY || "";
 const DARAJA_CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET || "";
 const DARAJA_BUSINESS_SHORTCODE = process.env.DARAJA_BUSINESS_SHORTCODE || "";

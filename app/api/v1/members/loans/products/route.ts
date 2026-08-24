@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { verifyAuthToken } from "@/app/lib/auth";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // --- GET: list active loan products (member-facing) ------------------------
 // Read-only reference data — any authenticated member can see product

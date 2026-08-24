@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 interface MemberSearchResult {
   member_id: string;
-  memberNumber: string;
+
+  member_number: string;
   firstName: string;
   lastName: string;
   idNumber: string;

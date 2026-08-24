@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { renderToBuffer } from "@react-pdf/renderer";
 import { verifyAuthToken } from "@/app/lib/auth";
 import { MemberStatementDocument, type StatementTransaction } from "@/app/lib/statement/statementDocument";
@@ -10,8 +10,6 @@ export const runtime = "nodejs";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_RANGE_DAYS = 366;
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // --- Shared auth check ----------------------------------------------------
 // Statements are strictly self-service: memberId comes only from the JWT.

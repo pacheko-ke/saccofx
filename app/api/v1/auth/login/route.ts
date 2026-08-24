@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import bcrypt from "bcryptjs";
 import { createAuthToken } from "../../../../lib/auth";
-
-// 1. Maintain pool connection across invocations (outside handler)
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 
 const attempts = new Map<string, { count: number; resetAt: number }>();

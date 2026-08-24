@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/app/lib/auth";
 
@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ members: [] });
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const client = await pool.connect();
 
   try {

@@ -1,9 +1,7 @@
 // app/api/v1/security/audit-log/export/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { verifyAuthToken } from "@/app/lib/auth";
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACTION_KINDS = ["login", "logout", "create", "update", "delete", "view", "config"] as const;

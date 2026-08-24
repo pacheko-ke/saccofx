@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { Pool } from "@neondatabase/serverless";
+import {pool} from "@/app/lib/db"
 import { verifyAuthToken } from "@/app/lib/auth";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PHONE_RE = /^(?:\+254|0)\d{9}$/;
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export async function POST(req: NextRequest) {
   // --- Auth ------------------------------------------------------------
