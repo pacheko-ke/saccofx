@@ -19,16 +19,15 @@ type FeeCalculationType = "FLAT" | "PERCENTAGE" | "TIERED";
 type FeeChargeStatus = "PENDING" | "PAID" | "WAIVED" | "REVERSED";
 
 interface FeeType {
-  id: string;
-  code: string;
-  name: string;
-  category: FeeCategory;
-  calculationType: FeeCalculationType;
+  fee_type_id: string;
+  fee_name: string;
+  applies_to: FeeCategory;
+  charge_basis: FeeCalculationType;
   flatAmount: number | null;
   percentageRate: number | null;
   minAmount: number | null;
   maxAmount: number | null;
-  isActive: boolean;
+  is_active: boolean;
   updatedAt: string;
 }
 
@@ -45,147 +44,6 @@ interface FeeCharge {
   paidDate: string | null;
   createdAt: string;
 }
-
-/* ────────────────────────────────────────────────────────────
-   Demo fallback data — used only if the API call fails,
-   so the page still renders something sensible in dev
-   ──────────────────────────────────────────────────────────── */
-
-const DEMO_FEE_TYPES: FeeType[] = [
-  {
-    id: "1",
-    code: "LOAN_PROCESSING",
-    name: "Loan Processing Fee",
-    category: "LOAN",
-    calculationType: "PERCENTAGE",
-    flatAmount: null,
-    percentageRate: 0.025,
-    minAmount: 200,
-    maxAmount: 5000,
-    isActive: true,
-    updatedAt: "2026-07-14",
-  },
-  {
-    id: "2",
-    code: "WITHDRAWAL_FEE",
-    name: "Savings Withdrawal Fee",
-    category: "TRANSACTION",
-    calculationType: "TIERED",
-    flatAmount: null,
-    percentageRate: null,
-    minAmount: null,
-    maxAmount: null,
-    isActive: true,
-    updatedAt: "2026-06-02",
-  },
-  {
-    id: "3",
-    code: "ACCOUNT_MAINTENANCE",
-    name: "Monthly Account Maintenance",
-    category: "ACCOUNT",
-    calculationType: "FLAT",
-    flatAmount: 50,
-    percentageRate: null,
-    minAmount: null,
-    maxAmount: null,
-    isActive: true,
-    updatedAt: "2026-05-20",
-  },
-  {
-    id: "4",
-    code: "LATE_PAYMENT_PENALTY",
-    name: "Late Loan Repayment Penalty",
-    category: "PENALTY",
-    calculationType: "PERCENTAGE",
-    flatAmount: null,
-    percentageRate: 0.05,
-    minAmount: 100,
-    maxAmount: null,
-    isActive: true,
-    updatedAt: "2026-04-11",
-  },
-  {
-    id: "5",
-    code: "MEMBERSHIP_ENTRY",
-    name: "New Membership Entry Fee",
-    category: "MEMBERSHIP",
-    calculationType: "FLAT",
-    flatAmount: 1000,
-    percentageRate: null,
-    minAmount: null,
-    maxAmount: null,
-    isActive: false,
-    updatedAt: "2026-01-30",
-  },
-];
-
-const DEMO_CHARGES: FeeCharge[] = [
-  {
-    id: "c1",
-    feeTypeId: "1",
-    feeTypeName: "Loan Processing Fee",
-    memberId: "m1",
-    memberName: "Wanjiru Kamau",
-    memberNumber: "SFX-2201",
-    amount: 3250,
-    status: "PAID",
-    dueDate: "2026-08-01",
-    paidDate: "2026-08-01",
-    createdAt: "2026-07-30",
-  },
-  {
-    id: "c2",
-    feeTypeId: "3",
-    feeTypeName: "Monthly Account Maintenance",
-    memberId: "m2",
-    memberName: "Otieno Owuor",
-    memberNumber: "SFX-1875",
-    amount: 50,
-    status: "PENDING",
-    dueDate: "2026-08-31",
-    paidDate: null,
-    createdAt: "2026-08-01",
-  },
-  {
-    id: "c3",
-    feeTypeId: "4",
-    feeTypeName: "Late Loan Repayment Penalty",
-    memberId: "m3",
-    memberName: "Achieng Odhiambo",
-    memberNumber: "SFX-2044",
-    amount: 620,
-    status: "WAIVED",
-    dueDate: "2026-07-15",
-    paidDate: null,
-    createdAt: "2026-07-16",
-  },
-  {
-    id: "c4",
-    feeTypeId: "2",
-    feeTypeName: "Savings Withdrawal Fee",
-    memberId: "m4",
-    memberName: "Kiplagat Rono",
-    memberNumber: "SFX-1990",
-    amount: 30,
-    status: "PAID",
-    dueDate: "2026-08-05",
-    paidDate: "2026-08-05",
-    createdAt: "2026-08-05",
-  },
-  {
-    id: "c5",
-    feeTypeId: "1",
-    feeTypeName: "Loan Processing Fee",
-    memberId: "m5",
-    memberName: "Nyambura Gitau",
-    memberNumber: "SFX-2110",
-    amount: 4100,
-    status: "REVERSED",
-    dueDate: "2026-06-20",
-    paidDate: "2026-06-20",
-    createdAt: "2026-06-18",
-  },
-];
 
 /* ────────────────────────────────────────────────────────────
    Small display helpers
@@ -223,23 +81,6 @@ function StatusPill({ status }: { status: FeeChargeStatus }) {
   );
 }
 
-function feeAmountLabel(f: FeeType) {
-  if (f.calculationType === "FLAT" && f.flatAmount != null) {
-    return KES.format(f.flatAmount);
-  }
-  if (f.calculationType === "PERCENTAGE" && f.percentageRate != null) {
-    const pct = `${(f.percentageRate * 100).toFixed(2)}%`;
-    if (f.minAmount != null || f.maxAmount != null) {
-      const min = f.minAmount != null ? KES.format(f.minAmount) : "—";
-      const max = f.maxAmount != null ? KES.format(f.maxAmount) : "no cap";
-      return `${pct} (min ${min} / max ${max})`;
-    }
-    return pct;
-  }
-  if (f.calculationType === "TIERED") return "Tiered — by amount band";
-  return "—";
-}
-
 /* ────────────────────────────────────────────────────────────
    Page
    ──────────────────────────────────────────────────────────── */
@@ -248,8 +89,8 @@ type Tab = "types" | "charges";
 
 export default function ChargesAndFeesPage() {
   const [tab, setTab] = useState<Tab>("types");
-  const [feeTypes, setFeeTypes] = useState<FeeType[]>(DEMO_FEE_TYPES);
-  const [charges, setCharges] = useState<FeeCharge[]>(DEMO_CHARGES);
+  const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
+  const [charges, setCharges] = useState<FeeCharge[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingDemoData, setUsingDemoData] = useState(false);
 
@@ -291,9 +132,9 @@ export default function ChargesAndFeesPage() {
     return feeTypes.filter((f) => {
       const matchesSearch =
         search.trim() === "" ||
-        f.name.toLowerCase().includes(search.toLowerCase()) ||
-        f.code.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = categoryFilter === "ALL" || f.category === categoryFilter;
+        f.fee_name.toLowerCase().includes(search.toLowerCase()) ||
+        f.fee_type_id.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = categoryFilter === "ALL" || f.applies_to === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [feeTypes, search, categoryFilter]);
