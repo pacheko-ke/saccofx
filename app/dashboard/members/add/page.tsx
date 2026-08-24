@@ -537,7 +537,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
         </div>
         <h2 className="font-serif text-2xl text-[#1c2b22]">Application received</h2>
         <p className="mt-2 text-[15px] text-[#4a5c50]">
-          {formData.firstName.split(" ")[0] || "Your"} application to join has been recorded. A membership officer
+          {formData.firstName.charAt(0).toUpperCase() + formData.firstName.slice(1).toLowerCase() || "Your"} application has been submitted. Another committee member
           will verify the details and confirm share allocation.
         </p>
         <button

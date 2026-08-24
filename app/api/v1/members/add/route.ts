@@ -108,12 +108,12 @@ export async function POST(req: NextRequest) {
          phone_primary, email, physical_address, county,
         
        monthly_contribution,
-         status, created_by,member_number,last_name,id_type
+         status, created_by,last_name,id_type
        ) VALUES (
          $1, $2, $3, $4, $5, $6,
          $7, $8, $9, $10,
         
-         $11, $12,$13,$14,$15,$16
+         $11, $12,$13,$14,$15
        )
        RETURNING member_id`,
       [
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
         Number(monthlyContribution),
         'pending',
         userId,
-        'FPK-00150',
+        
         lastName.trim(),
         idType.trim(),
       ]
@@ -155,7 +155,6 @@ export async function POST(req: NextRequest) {
         idNumber.trim(),
         kinPhone.trim(),
         kinRelationship.trim(),
-
         memberId,
       ]
     );

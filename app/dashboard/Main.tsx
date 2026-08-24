@@ -59,10 +59,10 @@ interface ActivityItem {
 }
 
 interface MemberRow {
-  id: string;
+  member_number:string,
   name: string;
   amount: string;
-  status: "Active" | "Pending" | "Suspended";
+  status: string;
 }
 
 interface SavingsPoint {
@@ -382,7 +382,7 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
-                  {["Member ID", "Name", "Amount", "Status"].map((h) => (
+                  {["Member Number", "Name", "Amount", "Status"].map((h) => (
                     <th
                       key={h}
                       className="px-3 py-3 text-left font-serif text-[13px] font-normal tracking-wide text-[#1c2b22]/70"
@@ -401,8 +401,8 @@ export default function Dashboard() {
                   </tr>
                 ) : (
                   members.map((m) => (
-                    <tr key={m.id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
-                      <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]/60">{m.id}</td>
+                    <tr key={m.member_number} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
+                      <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]/60">{m.member_number}</td>
                       <td className="px-3 py-3 text-[#1c2b22]">{m.name}</td>
                       <td className="px-3 py-3 font-mono text-[13px] text-[#1c2b22]">{m.amount}</td>
                       <td className="px-3 py-3">

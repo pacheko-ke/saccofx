@@ -130,20 +130,23 @@ export async function GET(req: NextRequest) {
 
       // ── Recent activity (audit log) ──────────────────────────
       client.query(`
-        SELECT
-          u.username AS user_name,
-          al.action AS action,
-          al.created_at AS time
-        FROM audit_logs al
-        JOIN users u ON u.user_id = al.user_id
-        ORDER BY al.created_at DESC
-        LIMIT 5
+SELECT
+  m.first_name AS user_name,
+  al.action_description AS action,
+  al.created_at AS time
+FROM audit_logs al
+INNER JOIN users u 
+  ON al.user_id = u.user_id
+INNER JOIN members m 
+  ON u.member_id = m.member_id
+ORDER BY al.created_at DESC
+LIMIT 5;
       `),
 
       // ── Recently active members ──────────────────────────────
       client.query(`
         SELECT
-          m.member_id,
+          m.member_number,
           m.first_name || ' ' || m.last_name AS name,
           COALESCE(sa.balance, 0) AS amount,
           m.status
@@ -247,6 +250,7 @@ export async function GET(req: NextRequest) {
 
     const members = membersResult.rows.map((r) => ({
       id: r.member_id,
+      member_number: r.member_number,
       name: r.name,
       amount: `KES ${num(r.amount).toLocaleString()}`,
       status: r.status.charAt(0).toUpperCase() + r.status.slice(1),
