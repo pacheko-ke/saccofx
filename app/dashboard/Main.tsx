@@ -382,7 +382,7 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
-                  {["Member Number", "Name", "Amount", "Status"].map((h) => (
+                  {["Member Number", "Name", "Savings", "Status"].map((h) => (
                     <th
                       key={h}
                       className="px-3 py-3 text-left font-serif text-[13px] font-normal tracking-wide text-[#1c2b22]/70"

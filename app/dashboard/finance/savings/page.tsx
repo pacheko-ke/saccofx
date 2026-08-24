@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import AddSavingsAccountModal from "./AddSavingsAccountModal";
 
 interface Member {
   id: string;
@@ -37,20 +38,26 @@ export default function Savings() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
-  // h full member list once on mount
+  const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
+
+  // Pulled out so both the initial load and the post-create refresh can use it
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/v1/savings");
+      if (!res.ok) throw new Error("Failed to load accounts");
+      const data = await res.json();
+      setAllMembers(data.members);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch full member list once on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/v1/savings");
-        if (!res.ok) throw new Error("Failed to load accounts");
-        const data = await res.json();
-        setAllMembers(data.members);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchAccounts();
   }, []);
 
   // Filter entirely client-side
@@ -92,12 +99,12 @@ export default function Savings() {
             <h1 className="font-serif text-2xl text-[#1c2b22]">Savings Accounts</h1>
             <p className="mt-1 text-sm text-[#4a5c50]">View Savings across accounts.</p>
           </div>
-          <Link
-            href="/dashboard/add-members"
+          <button
+            onClick={() => setIsAddAccountOpen(true)}
             className="inline-flex items-center justify-center rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
           >
             + Open Account
-          </Link>
+          </button>
         </div>
 
         {/* Filters */}
@@ -211,6 +218,12 @@ export default function Savings() {
           </div>
         </div>
       </div>
+
+      <AddSavingsAccountModal
+        isOpen={isAddAccountOpen}
+        onClose={() => setIsAddAccountOpen(false)}
+        onSuccess={fetchAccounts}
+      />
     </div>
   );
 }
