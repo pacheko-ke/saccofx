@@ -198,7 +198,7 @@ const KES = new Intl.NumberFormat("en-KE", {
 });
 
 const CATEGORY_LABEL: Record<FeeCategory, string> = {
-  LOAN: "Loan",
+  LOAN: "loan",
   SAVINGS: "Savings",
   ACCOUNT: "Account",
   TRANSACTION: "Transaction",
@@ -264,8 +264,8 @@ export default function ChargesAndFeesPage() {
     async function load() {
       try {
         const [typesRes, chargesRes] = await Promise.all([
-          fetch("/api/fees/types"),
-          fetch("/api/fees/charges"),
+          fetch("/api/v1/fees/types"),
+          fetch("/api/v1/fees/charges"),
         ]);
         if (!typesRes.ok || !chargesRes.ok) throw new Error("Fee API unavailable");
         const types = await typesRes.json();
@@ -489,7 +489,7 @@ function FeeTypesTable({ rows }: { rows: FeeType[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
-            {["Code", "Name", "Category", "Type", "Amount / Rate", "Status", ""].map((h) => (
+            {[ "Name", "Category", "Type", "Amount / Rate", "Status", ""].map((h) => (
               <th
                 key={h}
                 className="px-4 py-3 text-left font-serif text-[13px] font-normal tracking-wide text-[#1c2b22]/70"
@@ -501,27 +501,27 @@ function FeeTypesTable({ rows }: { rows: FeeType[] }) {
         </thead>
         <tbody>
           {rows.map((f) => (
-            <tr key={f.id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
-              <td className="px-4 py-3 font-mono text-[13px] text-[#1c2b22]/70">{f.code}</td>
-              <td className="px-4 py-3 text-[#1c2b22]">{f.name}</td>
-              <td className="px-4 py-3 text-[#1c2b22]/70">{CATEGORY_LABEL[f.category]}</td>
+            <tr key={f.fee_type_id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
+            
+              <td className="px-4 py-3 text-[#1c2b22]">{f.fee_name}</td>
+              <td className="px-4 py-3 text-[#1c2b22]/70">{f.applies_to}</td>
               <td className="px-4 py-3 text-[#1c2b22]/70">
-                {f.calculationType.charAt(0) + f.calculationType.slice(1).toLowerCase()}
+               {f.charge_basis}
               </td>
-              <td className="px-4 py-3 font-mono text-[13px] text-[#1c2b22]">{feeAmountLabel(f)}</td>
+              <td className="px-4 py-3 font-mono text-[13px] text-[#1c2b22]">{f.percentage?f.percentage + '%':f.amount}</td>
               <td className="px-4 py-3">
                 <span
                   className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${
-                    f.isActive
+                    f.is_active
                       ? "border-[#5c7a5f]/50 bg-[#dfe9dd] text-[#1c2b22]"
                       : "border-[#a89f87]/50 bg-[#e4e0d6] text-[#5c5646]"
                   }`}
                 >
-                  {f.isActive ? "Active" : "Inactive"}
+                  {f.is_active ? "Active" : "Inactive"}
                 </span>
               </td>
               <td className="px-4 py-3 text-right">
-                <a href={`#edit-${f.id}`} className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]">
+                <a href={`#edit-${f.fee_type_id}`} className="text-sm text-[#c9a24b] underline underline-offset-4 hover:text-[#a9843c]">
                   Edit
                 </a>
               </td>

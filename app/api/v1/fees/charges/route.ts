@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-export async function GET(req: NextRequest) {
+import { sql } from "@/app/lib/db";
 
-
-    return NextResponse.json(
-      "Service Not Found"
-     
-    );
-  }
+export async function GET(){
+  const feeTypes = await sql`
+    SELECT * FROM fee_charges 
+  
+  
+  `
+  return NextResponse.json(feeTypes);
+}

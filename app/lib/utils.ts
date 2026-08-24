@@ -8,3 +8,4 @@ export function formatDatePicker():string{
   return newDate.toISOString().split('T')[0];
    
 }
+
