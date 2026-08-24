@@ -35,8 +35,11 @@ export async function POST(req: NextRequest) {
   // --- Parse & validate --------------------------------------------------
   const body = await req.json();
   const {
-    fullName,
+    firstName,
+
+    lastName,
     idNumber,
+    idType,
     dateOfBirth,
     gender,
     maritalStatus,
@@ -55,7 +58,8 @@ export async function POST(req: NextRequest) {
 
   // Never trust client-side validation — re-check everything server-side
   const errors: Record<string, string> = {};
-  if (!fullName?.trim()) errors.fullName = "Full name is required";
+  if (!firstName?.trim()) errors.firstName = "First name is required";
+  if (!lastName?.trim()) errors.lastName = "First name is required";
   if (!idNumber?.trim() || !/^\d{6,10}$/.test(idNumber.trim())) errors.idNumber = "Invalid ID number";
   if (!dateOfBirth) errors.dateOfBirth = "Date of birth is required";
   if (!gender) errors.gender = "Gender is required";
@@ -104,17 +108,17 @@ export async function POST(req: NextRequest) {
          phone_primary, email, physical_address, county,
         
        monthly_contribution,
-         status, created_by,member_number,last_name
+         status, created_by,member_number,last_name,id_type
        ) VALUES (
          $1, $2, $3, $4, $5, $6,
          $7, $8, $9, $10,
         
-         $11, $12,$13,$14,$15
+         $11, $12,$13,$14,$15,$16
        )
        RETURNING member_id`,
       [
         tenantId,
-        fullName.trim(),
+        firstName.trim(),
         idNumber.trim(),
         dateOfBirth,
         gender,
@@ -127,7 +131,8 @@ export async function POST(req: NextRequest) {
         'pending',
         userId,
         'FPK-00150',
-        fullName.trim()
+        lastName.trim(),
+        idType.trim(),
       ]
     );
 
@@ -143,7 +148,7 @@ export async function POST(req: NextRequest) {
          $1, $2, $3, $4, $5, $6
       
        )
-       RETURNING id, full_name, status`,
+       `,
       [
         tenantId,
         kinFullName.trim(),

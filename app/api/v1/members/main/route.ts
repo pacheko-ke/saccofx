@@ -10,7 +10,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export async function GET(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value;
   if (!token) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    // return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.redirect('/auth/login')
   }
 
   const payload = await verifyAuthToken(token);

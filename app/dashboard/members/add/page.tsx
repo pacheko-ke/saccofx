@@ -6,9 +6,11 @@ import {formatDatePicker} from '@/app/lib/utils'
 
 type FormData = {
   // Step 1: Personal details
-  fullName: string;
+  firstName: string;
+  lastName: string;
   idNumber: string;
   dateOfBirth: string;
+  idType: string;
   gender: string;
   maritalStatus: string;
 
@@ -34,7 +36,9 @@ type FormData = {
 };
 
 const initialFormData: FormData = {
-  fullName: "",
+  firstName: "",
+    lastName: "",
+      idType: "",
   idNumber: "",
   dateOfBirth: "",
   gender: "",
@@ -128,7 +132,7 @@ function parseWorkbookToRows(workbook: XLSX.WorkBook): BulkRow[] {
     const get = (col: string) => String(r[col] ?? "").trim();
 
     const data: Partial<FormData> = {
-      fullName: get("Full Name"),
+      firstName: get("Full Name"),
       idNumber: get("National ID Number"),
       dateOfBirth: get("Date of Birth (YYYY-MM-DD)"),
       gender: get("Gender (male/female/other)").toLowerCase(),
@@ -147,7 +151,8 @@ function parseWorkbookToRows(workbook: XLSX.WorkBook): BulkRow[] {
     };
 
     const errors: string[] = [];
-    if (!data.fullName) errors.push("Full name is missing");
+    if (!data.firstName) errors.push("Full name is missing");
+    if (!data.lastName) errors.push("Full name is missing");
     if (!data.idNumber || !/^\d{6,10}$/.test(data.idNumber)) errors.push("Invalid ID number");
     if (!data.phone || !PHONE_RE.test(data.phone)) errors.push("Invalid phone number");
     if (!data.county) errors.push("County is missing");
@@ -393,7 +398,7 @@ function BulkImportForm({ onBack }: { onBack: () => void }) {
                       {rows.map((r) => (
                         <tr key={r.rowNumber}>
                           <td className="px-3 py-2 text-[#4a5c50]">{r.rowNumber}</td>
-                          <td className="px-3 py-2 text-[#1c2b22]">{r.data.fullName || "—"}</td>
+                          <td className="px-3 py-2 text-[#1c2b22]">{r.data.firstName || "—"}</td>
                           <td className="px-3 py-2 text-[#4a5c50]">{r.data.idNumber || "—"}</td>
                           <td className="px-3 py-2 text-[#4a5c50]">{r.data.phone || "—"}</td>
                           <td className="px-3 py-2">
@@ -451,7 +456,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
     const next: Partial<Record<keyof FormData, string>> = {};
 
     if (current === 0) {
-      if (!formData.fullName.trim()) next.fullName = "Full name is required";
+      if (!formData.firstName.trim()) next.firstName = "Frst name is required";
       if (!formData.idNumber.trim()) next.idNumber = "National ID number is required";
       else if (!/^\d{6,10}$/.test(formData.idNumber.trim()))
         next.idNumber = "Enter a valid ID number";
@@ -532,7 +537,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
         </div>
         <h2 className="font-serif text-2xl text-[#1c2b22]">Application received</h2>
         <p className="mt-2 text-[15px] text-[#4a5c50]">
-          {formData.fullName.split(" ")[0] || "Your"} application to join has been recorded. A membership officer
+          {formData.firstName.split(" ")[0] || "Your"} application to join has been recorded. A membership officer
           will verify the details and confirm share allocation.
         </p>
         <button
@@ -550,9 +555,9 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="">
+    <div className="md:mx-auto md:ml-20">
       {/* Header */}
-      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8 ">
+      <div className="border-b border-[#c9a24b]/30 px-6 py-5 sm:px-8  ">
         <button type="button" onClick={onBack} className="mb-2 text-xs font-medium text-[#4a5c50] hover:underline">
           ← Back
         </button>
@@ -591,36 +596,36 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
 
         {step === 0 && (
           <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Full name</label>
+                <div>
+              <label className={labelClasses}>First name</label>
               <input
                 className={inputClasses}
                 value={formData.firstName}
-                onChange={(e) => update("fullName", e.target.value)}
+                onChange={(e) => update("firstName", e.target.value)}
                 placeholder="As it appears on your national ID"
               />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
+              {errors.firstName && <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>}
             </div>
-
-              <div>
-              <label className={labelClasses}>Last Name</label>
+            <div>
+              <label className={labelClasses}>Last name</label>
               <input
                 className={inputClasses}
                 value={formData.lastName}
-                onChange={(e) => update("fullName", e.target.value)}
+                onChange={(e) => update("lastName", e.target.value)}
                 placeholder="As it appears on your national ID"
               />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
+              {errors.lastName && <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>}
             </div>
+
              <div>
                 <label className={labelClasses}>Id Type</label>
-                <select className={inputClasses} value={formData.gender} onChange={(e) => update("gender", e.target.value)}>
+                <select className={inputClasses} value={formData.idType} onChange={(e) => update("idType", e.target.value)}>
                   <option value="">Select</option>
-                  <option value="female">Maisha Card</option>
-                  <option value="male">Old Generation Id</option>
+                  <option value="maisha_card">Maisha Card</option>
+                  <option value="old_gen_id">Old Generation Id</option>
                  
                 </select>
-                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
+                {errors.idType && <p className="mt-1 text-xs text-red-600">{errors.idType}</p>}
               </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -837,10 +842,12 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
               <ReviewSection
                 title="Personal details"
                 rows={[
-                  ["Full name", formData.fullName],
+                  ["First name", formData.firstName],
+                  ["Last name", formData.lastName],
                   ["ID number", formData.idNumber],
                   ["Date of birth", formData.dateOfBirth],
                   ["Gender", formData.gender],
+                  ["Marital Status", formData.maritalStatus],
                 ]}
                 onEdit={() => setStep(0)}
               />
