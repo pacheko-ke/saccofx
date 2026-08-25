@@ -133,7 +133,7 @@ export default function AddSavingsAccountModal({
     setError(null);
 
     try {
-      const res = await fetch("/api/v1/savings/accounts", {
+      const res = await fetch("/api/v1/savings/accounts/new", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

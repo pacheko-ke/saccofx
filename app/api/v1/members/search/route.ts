@@ -25,9 +25,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ members: [] });
   }
 
-  const client = await pool.connect();
+ 
 
   try {
+     const client = await pool.connect();
     await client.query("SELECT set_config('app.current_tenant', $1, true)", [
       payload.tenantId,
     ]);
@@ -72,8 +73,5 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Member search failed:", error);
     return NextResponse.json({ error: "Search failed" }, { status: 500 });
-  } finally {
-    client.release();
-    await pool.end();
   }
 }
