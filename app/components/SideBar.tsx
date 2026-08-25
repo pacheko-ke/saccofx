@@ -78,7 +78,7 @@ const links: NavItem[] = [
     children: [
       { href: "/dashboard/loans", label: "Loans", icon: Users },
       { href: "/dashboard/loans/application/new", label: "Loan Application", icon: Shield },
-      { href: "/dashboard/loans/history", label: "Loan History", icon: Shield },
+      // { href: "/dashboard/loans/history", label: "Loan History", icon: Shield },
       { href: "/dashboard/loans/defaulters", label: "Defaulters", icon: Shield },
       // { href: "/dashboard/closed-loans", label: "Closed Loans", icon: Shield },
       { href: "/dashboard/loans/products", label: "Loan Products & Rates", icon: Shield },
