@@ -158,7 +158,7 @@ export default function EditLoanProductPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/v1/loans/products/${params.id}`, {
+      const res = await fetch(`/api/v1/loans/product/${params.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -446,7 +446,7 @@ export default function EditLoanProductPage() {
               {/* Actions */}
               <div className="mt-6 flex justify-end gap-3 border-t border-[#c9a24b]/20 pt-4">
                 <Link
-                  href={`/dashboard/loan-products/${params.id}`}
+                  href={`/dashboard/loans/products`}
                   className="rounded-md border border-[#c9a24b]/40 px-4 py-2 text-sm text-[#1c2b22] hover:bg-[#eee7d6]"
                 >
                   Cancel

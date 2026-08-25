@@ -10,7 +10,7 @@ import Link from "next/link";
 type ParBucket = "1-30" | "31-60" | "61-90" | "90+";
 
 interface Defaulter {
-  id: string;
+ memberId: string;
   memberNo: string;
   memberName: string;
   branches: string;
@@ -60,117 +60,7 @@ function formatDate(dateStr: string | null) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Mock fallback data — remove once /api/loans/defaulters is wired up
-// ---------------------------------------------------------------------------
 
-const MOCK_DEFAULTERS: Defaulter[] = [
-  {
-    id: "1",
-    memberNo: "SF-00231",
-    memberName: "Wanjiru Kamau",
-    branches: "Nairobi CBD",
-    loanNo: "LN-2025-0187",
-    loanProduct: "Development Loan",
-    principalOutstanding: 184500,
-    arrearsAmount: 21200,
-    daysOverdue: 14,
-    lastPaymentDate: "2026-07-29",
-    lastPaymentAmount: 5000,
-    phone: "+254712345001",
-    guarantorCount: 2,
-  },
-  {
-    id: "2",
-    memberNo: "SF-00114",
-    memberName: "Otieno Ochieng",
-    branches: "Kisumu",
-    loanNo: "LN-2025-0092",
-    loanProduct: "Emergency Loan",
-    principalOutstanding: 42000,
-    arrearsAmount: 18700,
-    daysOverdue: 47,
-    lastPaymentDate: "2026-06-20",
-    lastPaymentAmount: 3000,
-    phone: "+254722345002",
-    guarantorCount: 1,
-  },
-  {
-    id: "3",
-    memberNo: "SF-00459",
-    memberName: "Grace Wambui",
-    branches: "Nakuru",
-    loanNo: "LN-2024-0311",
-    loanProduct: "School Fees Loan",
-    principalOutstanding: 76300,
-    arrearsAmount: 34500,
-    daysOverdue: 73,
-    lastPaymentDate: "2026-05-11",
-    lastPaymentAmount: 2500,
-    phone: "+254733345003",
-    guarantorCount: 2,
-  },
-  {
-    id: "4",
-    memberNo: "SF-00028",
-    memberName: "Hassan Abdi",
-    branches: "Mombasa",
-    loanNo: "LN-2024-0056",
-    loanProduct: "Development Loan",
-    principalOutstanding: 312400,
-    arrearsAmount: 98200,
-    daysOverdue: 132,
-    lastPaymentDate: "2026-03-02",
-    lastPaymentAmount: 10000,
-    phone: "+254744345004",
-    guarantorCount: 3,
-  },
-  {
-    id: "5",
-    memberNo: "SF-00302",
-    memberName: "Njoki Mwangi",
-    branches: "Nairobi CBD",
-    loanNo: "LN-2025-0203",
-    loanProduct: "Salary Advance",
-    principalOutstanding: 19800,
-    arrearsAmount: 6400,
-    daysOverdue: 22,
-    lastPaymentDate: "2026-07-15",
-    lastPaymentAmount: 2000,
-    phone: "+254712345005",
-    guarantorCount: 1,
-  },
-  {
-    id: "6",
-    memberNo: "SF-00187",
-    memberName: "Peter Kiprotich",
-    branches: "Eldoret",
-    loanNo: "LN-2024-0402",
-    loanProduct: "Development Loan",
-    principalOutstanding: 156000,
-    arrearsAmount: 61300,
-    daysOverdue: 95,
-    lastPaymentDate: "2026-04-18",
-    lastPaymentAmount: 4000,
-    phone: "+254755345006",
-    guarantorCount: 2,
-  },
-  {
-    id: "7",
-    memberNo: "SF-00519",
-    memberName: "Faith Nyambura",
-    branches: "Nakuru",
-    loanNo: "LN-2025-0244",
-    loanProduct: "Emergency Loan",
-    principalOutstanding: 28500,
-    arrearsAmount: 9100,
-    daysOverdue: 8,
-    lastPaymentDate: "2026-08-01",
-    lastPaymentAmount: 3500,
-    phone: "+254766345007",
-    guarantorCount: 1,
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -199,7 +89,7 @@ export default function LoanDefaultersPage() {
       } catch {
         // Fallback to mock data during development
         if (!cancelled) {
-          setDefaulters(MOCK_DEFAULTERS);
+          setDefaulters([]);
           setError(null);
         }
       } finally {
@@ -371,12 +261,12 @@ export default function LoanDefaultersPage() {
                     const style = BUCKET_STYLES[bucket];
                     return (
                       <tr
-                        key={d.id}
+                        key={d.memberId}
                         className="border-b border-[#c9a24b]/20 last:border-0 hover:bg-[#faf6ec]"
                       >
                         <td className="px-4 py-3">
                           <Link
-                            href={`/dashboard/members/${d.memberNo}`}
+                            href={`/dashboard/members/${d.memberId}`}
                             className="text-[#1c2b22] underline decoration-[#c9a24b] decoration-1 underline-offset-4 hover:text-[#8a6d1d]"
                           >
                             {d.memberName}

@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/app/lib/auth";
-import { pool } from "@/app/lib/db"; // TODO: confirm this is your actual pool export path/name
+import { pool } from "@/app/lib/db"; 
 
-// ---------------------------------------------------------------------------
-// GET /api/loans/defaulters
-//
-// Returns members with loans in arrears, computed from loan_repayment_schedule /
-// loan_repayments rather than stored in a dedicated table. "Days overdue" is
-// anchored to the EARLIEST unpaid/partially-paid installment for each loan,
-// per SASRA PAR aging convention (this matches the pattern used in your
-// dashboard PAR bucket calculation).
-//
-// ASSUMPTIONS (verify against your actual 54-table schema and adjust):
-//   loan_repayment_schedule:   loan_id, installment_no, due_date, due_amount,
-//                     paid_amount, status
-//   loans:   id, member_id, loan_product_id, loan_no, status,
-//                     principal_outstanding, branches_id / branches
-//   loan_repayments: loan_id, amount, paid_at (or payment_date)
-//   loan_guarantors: loan_id, member_id  (optional table — if you
-//                     don't have this, the guarantorCount subquery below
-//                     will just need removing/adjusting)
-//   members:         id, member_no, first_name, last_name, phone,
-//                     branches_id / branch_name
-// ---------------------------------------------------------------------------
+
 
 export async function GET(req: NextRequest) {
   // --- Auth (inline, per your stated preference — no shared session helper) ---
@@ -57,7 +37,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const minDaysOverdue = Number(searchParams.get("minDaysOverdue") ?? "1");
 
-//   const pool = getPool();
+
   const client = await pool.connect();
 
   try {
@@ -102,6 +82,7 @@ guarantor_counts AS (
 SELECT
   la.loan_id                               AS id,
   m.member_number                          AS member_no,
+  m.member_id ,
   (m.first_name || ' ' || m.last_name)     AS member_name,
   COALESCE(b.branch_name, 'Unassigned')  AS branches,
   la.loan_account_number                   AS loan_no,
@@ -132,6 +113,7 @@ ORDER BY eo.days_overdue DESC
 
     const defaulters = rows.map((r) => ({
       id: String(r.id),
+      memberId:r.member_id,
       memberNo: r.member_no,
       memberName: r.member_name,
       branches: r.branches,
