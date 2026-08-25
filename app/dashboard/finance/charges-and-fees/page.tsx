@@ -161,7 +161,7 @@ export default function ChargesAndFeesPage() {
     const waived = charges
       .filter((c) => c.status === "WAIVED")
       .reduce((sum, c) => sum + c.amount, 0);
-    const activeTypes = feeTypes.filter((f) => f.isActive).length;
+    const activeTypes = feeTypes.filter((f) => f.is_active).length;
     return { outstanding, collectedThisMonth, waived, activeTypes };
   }, [charges, feeTypes]);
 

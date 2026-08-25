@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
           (SELECT COALESCE(SUM(number_of_shares), 0) FROM member_share_accounts
             WHERE member_id = $1) AS share_capital,
           (SELECT outstanding_principal+outstanding_interest AS outstanding_balance FROM loans
-            WHERE member_id = $1 AND status IN ('active', 'overdue')) AS active_loan_balance`,
+            WHERE member_id = $1 AND status IN ('active', 'disbursed')) AS active_loan_balance`,
         [memberId]
       ),
 
