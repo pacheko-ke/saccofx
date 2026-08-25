@@ -62,7 +62,7 @@ export default function ShareHoldingsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/shares", { cache: "no-store" });
+      const res = await fetch("/api/v1/finance/shares", { cache: "no-store" });
       if (!res.ok) {
         throw new Error(`Request failed (${res.status})`);
       }
@@ -356,7 +356,7 @@ function RecordSharePurchaseModal({
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/members/search?q=${encodeURIComponent(memberQuery)}`, {
+        const res = await fetch(`/api/v1/members/search?q=${encodeURIComponent(memberQuery)}`, {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Search failed");
@@ -394,7 +394,7 @@ function RecordSharePurchaseModal({
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/shares/purchase", {
+      const res = await fetch("/api/v1/shares/purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

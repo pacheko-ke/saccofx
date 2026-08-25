@@ -17,13 +17,20 @@ import { verifyAuthToken } from "@/app/lib/auth";
       }
     
       const tenantId = payload.tenantId as string;
-    //   const userId = payload.userId as string;
+      const userId = payload.userId as string;
 
  try{
     const body = req.json()
 const{memberId,productId,initialDeposit} =await body;
     await client.query("BEGIN")
-    const newAccount = client.query(`INSERT INTO savings_accounts(member_id,savings_product_id,balance,tenant_id)VALUES($1,$2,$3)`,[memberId,productId,initialDeposit,tenantId])
+    const newAccount =await client.query(`INSERT INTO savings_accounts(member_id,savings_product_id,balance,tenant_id)VALUES($1,$2,$3,$4) RETURNING member_id,account_number`,[memberId,productId,initialDeposit,tenantId])
+    await client.query(`INSERT INTO audit_logs()`)
+
+     const productName = newAccount.rows[0].member_id;
+     const accountNumber = newAccount.rows[0].member_id;
+
+    const actionDescription :string = `open account ${accountNumber}`
+    await client.query(`INSERT INTO audit_logs(user_id,action_description,action) VALUES($1,$2,$3)`,[userId,actionDescription,'OPEN-ACCOUNT'])
      await client.query("COMMIT")
     return NextResponse.json({newAccount})
     

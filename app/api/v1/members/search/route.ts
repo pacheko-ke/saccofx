@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ members: [] });
   }
 
- 
-
   try {
      const client = await pool.connect();
     await client.query("SELECT set_config('app.current_tenant', $1, true)", [

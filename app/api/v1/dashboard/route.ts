@@ -262,7 +262,7 @@ LIMIT 5;
     console.error("Dashboard fetch failed:", err);
     return NextResponse.json({ error: "Failed to load dashboard data" }, { status: 500 });
   } finally {
-    client.release();
+    // client.release();
   }
 }
 
