@@ -1,601 +1,362 @@
+// app/reports/defaulters/page.tsx
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-type FormData = {
-  // Step 1: Personal details
-  fullName: string;
-  idNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
-
-  // Step 2: Contact & address
-  phone: string;
-  email: string;
-  physicalAddress: string;
-  county: string;
-
-  // Step 3: Next of kin
-  kinFullName: string;
-  kinRelationship: string;
-  kinPhone: string;
-
-  // Step 4: Membership & shares
-  memberType: string;
-  monthlyContribution: string;
-  numberOfShares: string;
-  incomeSource: string;
-
-  // Step 5: Confirmation
-  termsAccepted: boolean;
-};
-
-const initialFormData: FormData = {
-  fullName: "",
-  idNumber: "",
-  dateOfBirth: "",
-  gender: "",
-  maritalStatus: "",
-  phone: "",
-  email: "",
-  physicalAddress: "",
-  county: "",
-  kinFullName: "",
-  kinRelationship: "",
-  kinPhone: "",
-  memberType: "individual",
-  monthlyContribution: "",
-  numberOfShares: "",
-  incomeSource: "",
-  termsAccepted: false,
-};
-
-const STEPS = [
-  { label: "Personal Details", ledger: "01" },
-  { label: "Contact & Address", ledger: "02" },
-  { label: "Next of Kin", ledger: "03" },
-  { label: "Membership & Shares", ledger: "04" },
-  { label: "Review & Submit", ledger: "05" },
-];
-
-const inputClasses =
-  "w-full rounded-md border border-stone-300 bg-white px-3.5 py-2.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 transition-colors";
-
-const labelClasses = "mb-1.5 block text-[13px] font-medium text-stone-700";
-
-export default function MemberRegistrationForm() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-
-  const isLastStep = step === STEPS.length - 1;
-
-  function update<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
-  }
-
-  function validateStep(current: number): boolean {
-    const next: Partial<Record<keyof FormData, string>> = {};
-
-    if (current === 0) {
-      if (!formData.fullName.trim()) next.fullName = "Full name is required";
-      if (!formData.idNumber.trim()) next.idNumber = "National ID number is required";
-      else if (!/^\d{6,10}$/.test(formData.idNumber.trim()))
-        next.idNumber = "Enter a valid ID number";
-      if (!formData.dateOfBirth) next.dateOfBirth = "Date of birth is required";
-      if (!formData.gender) next.gender = "Select a gender";
-    }
-
-    if (current === 1) {
-      if (!formData.phone.trim()) next.phone = "Phone number is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.phone.trim()))
-        next.phone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-      if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email))
-        next.email = "Enter a valid email address";
-      if (!formData.physicalAddress.trim()) next.physicalAddress = "Address is required";
-      if (!formData.county.trim()) next.county = "County is required";
-    }
-
-    if (current === 2) {
-      if (!formData.kinFullName.trim()) next.kinFullName = "Next of kin name is required";
-      if (!formData.kinRelationship.trim()) next.kinRelationship = "Relationship is required";
-      if (!formData.kinPhone.trim()) next.kinPhone = "Next of kin phone is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.kinPhone.trim()))
-        next.kinPhone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-    }
-
-    if (current === 3) {
-      if (!formData.monthlyContribution || Number(formData.monthlyContribution) <= 0)
-        next.monthlyContribution = "Enter a monthly contribution amount";
-      if (!formData.numberOfShares || Number(formData.numberOfShares) <= 0)
-        next.numberOfShares = "Enter number of shares to purchase";
-      if (!formData.incomeSource.trim()) next.incomeSource = "Source of income is required";
-    }
-
-    if (current === 4) {
-      if (!formData.termsAccepted) next.termsAccepted = "You must accept the membership terms";
-    }
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
-  function goNext() {
-    if (!validateStep(step)) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }
-
-  function goBack() {
-    setErrors({});
-    setStep((s) => Math.max(s - 1, 0));
-  }
-
-  async function handleSubmit() {
-    if (!validateStep(4)) return;
-    setSubmitting(true);
-    setSubmitError("");
-    try {
-      // Replace with your actual API route.
-      const res = await fetch("/api/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error("Failed to submit application");
-      setSubmitted(true);
-    } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-xl rounded-lg border border-stone-200 bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-800 text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 className="font-serif text-2xl text-stone-900">Application received</h2>
-        <p className="mt-2 text-[15px] text-stone-600">
-          {formData.fullName.split(" ")[0] || "Your"} application to join has been recorded.
-          A membership officer will verify your details and confirm your share allocation.
-        </p>
-        <button
-          onClick={() => {
-            setFormData(initialFormData);
-            setStep(0);
-            setSubmitted(false);
-          }}
-          className="mt-6 rounded-md border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-        >
-          Register another member
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
-      {/* Header */}
-      <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
-       
-        <h1 className="mt-1 text-xl text-orange-500 sm:text-2xl">Add member</h1>
-      </div>
-
-      {/* Ledger-style progress rail */}
-      <div className="flex border-b border-stone-200 bg-stone-50 px-2 sm:px-4">
-        {STEPS.map((s, i) => {
-          const state = i < step ? "done" : i === step ? "active" : "upcoming";
-          return (
-            <div
-              key={s.label}
-              className={`flex flex-1 flex-col items-center gap-1.5 border-t-2 px-1 py-3 text-center ${
-                state === "active"
-                  ? "border-emerald-800"
-                  : state === "done"
-                  ? "border-emerald-800/40"
-                  : "border-transparent"
-              }`}
-            >
-              <span
-                className={`font-mono text-[11px] tabular-nums ${
-                  state === "upcoming" ? "text-stone-400" : "text-emerald-800"
-                }`}
-              >
-                {s.ledger}
-              </span>
-              <span
-                className={`hidden text-[11px] font-medium leading-tight sm:block ${
-                  state === "upcoming" ? "text-stone-400" : "text-stone-800"
-                }`}
-              >
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Body */}
-      <div className="px-6 py-7 sm:px-8">
-        <p className="mb-6 font-serif text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
-
-        {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                placeholder="As it appears on your national ID"
-              />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>National ID number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.idNumber}
-                  onChange={(e) => update("idNumber", e.target.value)}
-                  placeholder="e.g. 12345678"
-                  inputMode="numeric"
-                />
-                {errors.idNumber && <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Date of birth</label>
-                <input
-                  type="date"
-                  className={inputClasses}
-                  value={formData.dateOfBirth}
-                  onChange={(e) => update("dateOfBirth", e.target.value)}
-                />
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Gender</label>
-                <select
-                  className={inputClasses}
-                  value={formData.gender}
-                  onChange={(e) => update("gender", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="other">Prefer not to say</option>
-                </select>
-                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Marital status</label>
-                <select
-                  className={inputClasses}
-                  value={formData.maritalStatus}
-                  onChange={(e) => update("maritalStatus", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="single">Single</option>
-                  <option value="married">Married</option>
-                  <option value="widowed">Widowed</option>
-                  <option value="divorced">Divorced</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Email (optional)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="you@example.com"
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Physical address</label>
-              <input
-                className={inputClasses}
-                value={formData.physicalAddress}
-                onChange={(e) => update("physicalAddress", e.target.value)}
-                placeholder="Estate, street, house number"
-              />
-              {errors.physicalAddress && (
-                <p className="mt-1 text-xs text-red-600">{errors.physicalAddress}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClasses}>County</label>
-              <input
-                className={inputClasses}
-                value={formData.county}
-                onChange={(e) => update("county", e.target.value)}
-                placeholder="e.g. Nairobi"
-              />
-              {errors.county && <p className="mt-1 text-xs text-red-600">{errors.county}</p>}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-            <p className="text-sm text-stone-500">
-              Your next of kin will be the designated beneficiary on your account.
-            </p>
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.kinFullName}
-                onChange={(e) => update("kinFullName", e.target.value)}
-              />
-              {errors.kinFullName && (
-                <p className="mt-1 text-xs text-red-600">{errors.kinFullName}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Relationship</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinRelationship}
-                  onChange={(e) => update("kinRelationship", e.target.value)}
-                  placeholder="e.g. Spouse, Sibling"
-                />
-                {errors.kinRelationship && (
-                  <p className="mt-1 text-xs text-red-600">{errors.kinRelationship}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinPhone}
-                  onChange={(e) => update("kinPhone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.kinPhone && <p className="mt-1 text-xs text-red-600">{errors.kinPhone}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Membership type</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "individual", label: "Individual" },
-                  { value: "group", label: "Group / Chama" },
-                ].map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => update("memberType", opt.value)}
-                    className={`rounded-md border px-4 py-3 text-left text-sm font-medium transition-colors ${
-                      formData.memberType === opt.value
-                        ? "border-emerald-800 bg-emerald-50 text-emerald-900"
-                        : "border-stone-300 text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Monthly contribution (KES)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.monthlyContribution}
-                  onChange={(e) => update("monthlyContribution", e.target.value)}
-                  placeholder="e.g. 2000"
-                  inputMode="numeric"
-                />
-                {errors.monthlyContribution && (
-                  <p className="mt-1 text-xs text-red-600">{errors.monthlyContribution}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Number of shares</label>
-                <input
-                  className={inputClasses}
-                  value={formData.numberOfShares}
-                  onChange={(e) => update("numberOfShares", e.target.value)}
-                  placeholder="e.g. 20"
-                  inputMode="numeric"
-                />
-                {errors.numberOfShares && (
-                  <p className="mt-1 text-xs text-red-600">{errors.numberOfShares}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Main source of income</label>
-              <input
-                className={inputClasses}
-                value={formData.incomeSource}
-                onChange={(e) => update("incomeSource", e.target.value)}
-                placeholder="e.g. Employment, business, farming"
-              />
-              {errors.incomeSource && (
-                <p className="mt-1 text-xs text-red-600">{errors.incomeSource}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-6">
-            <div className="rounded-md border border-stone-200 divide-y divide-stone-200 overflow-hidden">
-              <ReviewSection
-                title="Personal details"
-                rows={[
-                  ["Full name", formData.fullName],
-                  ["ID number", formData.idNumber],
-                  ["Date of birth", formData.dateOfBirth],
-                  ["Gender", formData.gender],
-                ]}
-                onEdit={() => setStep(0)}
-              />
-              <ReviewSection
-                title="Contact & address"
-                rows={[
-                  ["Phone", formData.phone],
-                  ["Email", formData.email || "—"],
-                  ["Address", formData.physicalAddress],
-                  ["County", formData.county],
-                ]}
-                onEdit={() => setStep(1)}
-              />
-              <ReviewSection
-                title="Next of kin"
-                rows={[
-                  ["Name", formData.kinFullName],
-                  ["Relationship", formData.kinRelationship],
-                  ["Phone", formData.kinPhone],
-                ]}
-                onEdit={() => setStep(2)}
-              />
-              <ReviewSection
-                title="Membership & shares"
-                rows={[
-                  ["Type", formData.memberType],
-                  ["Monthly contribution", `KES ${formData.monthlyContribution || "0"}`],
-                  ["Shares", formData.numberOfShares],
-                  ["Income source", formData.incomeSource],
-                ]}
-                onEdit={() => setStep(3)}
-              />
-            </div>
-
-            <label className="flex items-start gap-2.5 text-sm text-stone-700">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-800 focus:ring-emerald-800/30"
-                checked={formData.termsAccepted}
-                onChange={(e) => update("termsAccepted", e.target.checked)}
-              />
-              <span>
-                I confirm the information provided is accurate and I agree to the Sacco's
-                membership terms and bylaws.
-              </span>
-            </label>
-            {errors.termsAccepted && (
-              <p className="text-xs text-red-600">{errors.termsAccepted}</p>
-            )}
-
-            {submitError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Footer nav */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-6 py-4 sm:px-8">
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={step === 0}
-          className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-0"
-        >
-          Back
-        </button>
-        {!isLastStep ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-60 transition-colors"
-          >
-            {submitting ? "Submitting…" : "Submit application"}
-          </button>
-        )}
-      </div>
-    </div>
-  );
+interface DefaulterRecord {
+  id: string;
+  loanNumber: string;
+  memberNumber: string;
+  memberName: string;
+  phoneNumber: string;
+  productName: string;
+  outstandingPrincipal: number; // COA 1200
+  accruedInterest: number;      // COA 1210
+  penaltyFees: number;          // COA 1220
+  daysInArrears: number;
+  lastPaymentDate: string;
+  guarantorCount: number;
+  guarantorCoverageRatio: number; // %
+  recoveryStatus: "notice_issued" | "guarantor_attached" | "crb_listed" | "legal_action" | "pending_review";
 }
 
-function ReviewSection({
-  title,
-  rows,
-  onEdit,
-}: {
-  title: string;
-  rows: [string, string][];
-  onEdit: () => void;
-}) {
+const RECOVERY_STATUS_OPTIONS = [
+  "all",
+  "notice_issued",
+  "guarantor_attached",
+  "crb_listed",
+  "legal_action",
+  "pending_review",
+];
+
+const ARREARS_BUCKETS = ["all", "substandard", "doubtful", "loss"];
+const PAGE_SIZE = 20;
+
+const RECOVERY_STYLES: Record<string, string> = {
+  notice_issued: "bg-[#f3e6c8] text-[#7a5c1e]",
+  guarantor_attached: "bg-[#e2ddd0] text-[#4a5c50]",
+  crb_listed: "bg-[#f4dede] text-[#8a2c2c]",
+  legal_action: "bg-[#f4dede] font-semibold text-[#8a2c2c]",
+  pending_review: "bg-[#eee7d6] text-[#1c2b22]",
+};
+
+const RECOVERY_LABELS: Record<string, string> = {
+  notice_issued: "Demand Notice",
+  guarantor_attached: "Guarantors Attached",
+  crb_listed: "CRB Listed",
+  legal_action: "Legal Recovery",
+  pending_review: "Pending Review",
+};
+
+export default function LoanDefaultersPage() {
+  const [defaulters, setDefaulters] = useState<DefaulterRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [recoveryFilter, setRecoveryFilter] = useState("all");
+  const [arrearsBucket, setArrearsBucket] = useState("all");
+  const [page, setPage] = useState(1);
+
+  // Fetch defaulted loans on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/v1/reports/defaulters");
+        if (!res.ok) throw new Error("Failed to load defaulters ledger");
+        const data = await res.json();
+        setDefaulters(data.defaulters);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Filter client-side
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return defaulters.filter((d) => {
+      const matchesRecovery = recoveryFilter === "all" || d.recoveryStatus === recoveryFilter;
+
+      let matchesBucket = true;
+      if (arrearsBucket === "substandard") matchesBucket = d.daysInArrears > 90 && d.daysInArrears <= 180;
+      if (arrearsBucket === "doubtful") matchesBucket = d.daysInArrears > 180 && d.daysInArrears <= 360;
+      if (arrearsBucket === "loss") matchesBucket = d.daysInArrears > 360;
+
+      if (!matchesRecovery || !matchesBucket) return false;
+
+      if (!q) return true;
+
+      return (
+        d.loanNumber.toLowerCase().includes(q) ||
+        d.memberName.toLowerCase().includes(q) ||
+        d.memberNumber.toLowerCase().includes(q) ||
+        d.phoneNumber.toLowerCase().includes(q)
+      );
+    });
+  }, [defaulters, search, recoveryFilter, arrearsBucket]);
+
+  // Reset page on filter state change
+  useEffect(() => {
+    setPage(1);
+  }, [search, recoveryFilter, arrearsBucket]);
+
+  // Aggregate metrics
+  const stats = useMemo(() => {
+    return filtered.reduce(
+      (acc, d) => {
+        const totalDue = d.outstandingPrincipal + d.accruedInterest + d.penaltyFees;
+        acc.totalDefaultedAmount += totalDue;
+        acc.totalPrincipalAtRisk += d.outstandingPrincipal;
+        acc.totalPenaltiesAccrued += d.penaltyFees;
+        if (d.daysInArrears > 360) acc.lossCategoryCount += 1;
+        return acc;
+      },
+      { totalDefaultedAmount: 0, totalPrincipalAtRisk: 0, totalPenaltiesAccrued: 0, lossCategoryCount: 0 }
+    );
+  }, [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const formatCurrency = (val: number) =>
+    new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(val);
+
   return (
-    <div className="px-4 py-3.5">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-          {title}
-        </p>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="text-xs font-medium text-emerald-800 hover:underline"
-        >
-          Edit
-        </button>
-      </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-stone-500">{label}</dt>
-            <dd className="text-stone-900">{value || "—"}</dd>
+    <div className="min-h-screen bg-[#eee7d6]">
+      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-serif text-2xl text-[#1c2b22]">Loan Defaulters Report</h1>
+            <p className="mt-1 text-sm text-[#4a5c50]">
+              Delinquent accounts, guarantor exposure, and debt recovery workflows (&gt;90 Days Arrears).
+            </p>
           </div>
-        ))}
-      </dl>
+          <div className="flex gap-2">
+            <Link
+              href="/dashboard/recovery/demand-notices"
+              className="inline-flex items-center justify-center rounded-md border border-[#c9a24b]/50 bg-[#faf6ec] px-4 py-2 text-sm font-medium text-[#1c2b22] hover:bg-[#eee7d6]"
+            >
+              Issue Demand Notices
+            </Link>
+            <Link
+              href="/dashboard/recovery/crb-export"
+              className="inline-flex items-center justify-center rounded-md bg-[#8a2c2c] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#722323]"
+            >
+              Export CRB Listing
+            </Link>
+          </div>
+        </div>
+
+        {/* Metrics Bar */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-[#4a5c50]">
+              Total Defaulted Exposure
+            </span>
+            <div className="mt-1 font-serif text-2xl font-semibold text-[#8a2c2c]">
+              {formatCurrency(stats.totalDefaultedAmount)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-[#4a5c50]">
+              Principal Defaulted (COA 1200)
+            </span>
+            <div className="mt-1 font-serif text-2xl font-semibold text-[#1c2b22]">
+              {formatCurrency(stats.totalPrincipalAtRisk)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-[#4a5c50]">
+              Accrued Penalties (COA 1220)
+            </span>
+            <div className="mt-1 font-serif text-2xl font-semibold text-[#7a5c1e]">
+              {formatCurrency(stats.totalPenaltiesAccrued)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] p-4 shadow-sm">
+            <span className="text-xs uppercase tracking-wider text-[#4a5c50]">
+              Loss Accounts (&gt;360 Days)
+            </span>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="font-serif text-2xl font-semibold text-[#8a2c2c]">
+                {stats.lossCategoryCount}
+              </span>
+              <span className="text-xs text-[#9aa79f]">Requires full provision</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+          <input
+            type="text"
+            placeholder="Search by Loan No, Member, Phone Number..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] placeholder:text-[#9aa79f] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
+          />
+          <select
+            value={arrearsBucket}
+            onChange={(e) => setArrearsBucket(e.target.value)}
+            className="rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
+          >
+            {ARREARS_BUCKETS.map((b) => (
+              <option key={b} value={b}>
+                {b === "all"
+                  ? "All Non-Performing (>90d)"
+                  : b === "substandard"
+                  ? "Substandard (91-180d)"
+                  : b === "doubtful"
+                  ? "Doubtful (181-360d)"
+                  : "Loss (>360d)"}
+              </option>
+            ))}
+          </select>
+          <select
+            value={recoveryFilter}
+            onChange={(e) => setRecoveryFilter(e.target.value)}
+            className="rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
+          >
+            {RECOVERY_STATUS_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {r === "all" ? "All Recovery Actions" : RECOVERY_LABELS[r] ?? r}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-md bg-[#f4dede] px-4 py-2 text-sm text-[#8a2c2c]">
+            {error}
+          </div>
+        )}
+
+        {/* Ledger Table */}
+        <div className="overflow-x-auto rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] shadow-sm">
+          <table className="min-w-full text-sm">
+            <thead className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60 text-left">
+              <tr>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Loan No</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Borrower</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Total Due</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Arrears</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Guarantor Cover</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Recovery Stage</th>
+                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#c9a24b]/15">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-[#9aa79f]">
+                    Loading defaulters ledger...
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-[#9aa79f]">
+                    No defaulted accounts match the criteria
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((d) => {
+                  const totalDue = d.outstandingPrincipal + d.accruedInterest + d.penaltyFees;
+
+                  return (
+                    <tr key={d.id} className="hover:bg-[#eee7d6]/40">
+                      <td className="px-4 py-3 font-mono text-xs font-semibold text-[#1c2b22]">
+                        {d.loanNumber}
+                        <div className="font-sans text-[11px] font-normal text-[#4a5c50]">
+                          {d.productName}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[#1c2b22]">
+                        <div className="font-medium">{d.memberName}</div>
+                        <div className="font-mono text-xs text-[#4a5c50]">
+                          {d.phoneNumber}{" "}
+                          {d.memberNumber && (
+                            <span className="text-[#9aa79f]">({d.memberNumber})</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#1c2b22]">
+                        <div className="font-semibold text-[#8a2c2c]">{formatCurrency(totalDue)}</div>
+                        <div className="text-[11px] text-[#4a5c50]">
+                          P: {formatCurrency(d.outstandingPrincipal)} | Fee: {formatCurrency(d.penaltyFees)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#1c2b22]">
+                        <span className="font-semibold text-[#8a2c2c]">{d.daysInArrears} days</span>
+                        <div className="text-[11px] text-[#4a5c50]">
+                          Last: {new Date(d.lastPaymentDate).toLocaleDateString("en-KE")}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[#4a5c50]">
+                        <div className="font-mono font-medium text-[#1c2b22]">
+                          {d.guarantorCoverageRatio}% Cover
+                        </div>
+                        <div className="text-[11px]">
+                          {d.guarantorCount} Guarantor{d.guarantorCount !== 1 ? "s" : ""}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            RECOVERY_STYLES[d.recoveryStatus] ?? "bg-[#e2ddd0] text-[#4a5c50]"
+                          }`}
+                        >
+                          {RECOVERY_LABELS[d.recoveryStatus] ?? d.recoveryStatus}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/dashboard/recovery/${d.id}`}
+                          className="font-medium text-[#7a5c1e] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#1c2b22]"
+                        >
+                          Manage Recovery
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-[#4a5c50]">
+            {filtered.length} defaulter{filtered.length !== 1 ? "s" : ""} · Page {page} of{" "}
+            {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
