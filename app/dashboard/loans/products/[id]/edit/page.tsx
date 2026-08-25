@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 interface LoanProduct {
   loan_product_id: string;
@@ -14,7 +15,7 @@ interface LoanProduct {
   interest_rate_pa: string;
   interest_method: string;
   repayment_frequency: string;
-  max_multiplier_of_shares: string;
+  max_multiplier_of_shares: string | null;
   requires_guarantors: boolean;
   min_guarantors: number;
   requires_collateral: boolean;
@@ -24,9 +25,6 @@ interface LoanProduct {
   grace_period_days: number;
   is_active: boolean;
 }
-
-const STATUS_OPTIONS = ["all", "active", "inactive"];
-const PAGE_SIZE = 20;
 
 const INTEREST_METHODS = [
   { value: "reducing_balance", label: "Reducing balance" },
@@ -39,8 +37,7 @@ const REPAYMENT_FREQUENCIES = [
   { value: "biweekly", label: "Bi-weekly" },
 ];
 
-// Shape of the create-form. Kept separate from LoanProduct since numeric
-// fields are edited as strings in inputs and cast on submit.
+// All editable fields as strings/booleans for form control — cast on submit.
 interface LoanProductFormState {
   product_name: string;
   product_code: string;
@@ -62,99 +59,82 @@ interface LoanProductFormState {
   is_active: boolean;
 }
 
-const EMPTY_FORM: LoanProductFormState = {
-  product_name: "",
-  product_code: "",
-  min_principal: "",
-  max_principal: "",
-  min_tenure_months: "",
-  max_tenure_months: "",
-  interest_rate_pa: "",
-  interest_method: "reducing_balance",
-  repayment_frequency: "monthly",
-  max_multiplier_of_shares: "",
-  requires_guarantors: false,
-  min_guarantors: "0",
-  requires_collateral: false,
-  processing_fee_pct: "",
-  insurance_fee_pct: "",
-  penalty_rate_pct: "",
-  grace_period_days: "0",
-  is_active: true,
-};
+function toFormState(p: LoanProduct): LoanProductFormState {
+  return {
+    product_name: p.product_name,
+    product_code: p.product_code,
+    min_principal: String(p.min_principal ?? ""),
+    max_principal: String(p.max_principal ?? ""),
+    min_tenure_months: String(p.min_tenure_months ?? ""),
+    max_tenure_months: String(p.max_tenure_months ?? ""),
+    interest_rate_pa: String(p.interest_rate_pa ?? ""),
+    interest_method: p.interest_method ?? "reducing_balance",
+    repayment_frequency: p.repayment_frequency ?? "monthly",
+    max_multiplier_of_shares: p.max_multiplier_of_shares != null ? String(p.max_multiplier_of_shares) : "",
+    requires_guarantors: Boolean(p.requires_guarantors),
+    min_guarantors: String(p.min_guarantors ?? "0"),
+    requires_collateral: Boolean(p.requires_collateral),
+    processing_fee_pct: String(p.processing_fee_pct ?? ""),
+    insurance_fee_pct: String(p.insurance_fee_pct ?? ""),
+    penalty_rate_pct: String(p.penalty_rate_pct ?? ""),
+    grace_period_days: String(p.grace_period_days ?? "0"),
+    is_active: Boolean(p.is_active),
+  };
+}
 
-export default function LoanProductsPage() {
-  const [products, setProducts] = useState<LoanProduct[]>([]);
+export default function EditLoanProductPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [productName, setProductName] = useState<string>("");
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [page, setPage] = useState(1);
-
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<LoanProductFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<LoanProductFormState | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  async function loadProducts() {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/v1/loans/products");
-      if (!res.ok) throw new Error("Failed to load loan products");
-      const data = await res.json();
-      setProducts(data.loanProducts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setLoadError(null);
+        const res = await fetch(`/api/v1/loans/products/${params.id}`, { cache: "no-store" });
+        if (res.status === 404) {
+          if (!cancelled) setLoadError("Loan product not found.");
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to load loan product");
+        const data = await res.json();
+        const product: LoanProduct = data.loanProduct ?? data;
+        if (!cancelled) {
+          setForm(toFormState(product));
+          setProductName(product.product_name);
+        }
+      } catch (err) {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-
-    return products.filter((p) => {
-      const matchesStatus = status === "all" || (status === "active" ? p.is_active : !p.is_active);
-      if (!matchesStatus) return false;
-
-      if (!q) return true;
-
-      return p.product_name.toLowerCase().includes(q) || p.product_code.toLowerCase().includes(q);
-    });
-  }, [products, search, status]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, status]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  function openModal() {
-    setForm(EMPTY_FORM);
-    setFormError(null);
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    if (submitting) return; // don't allow closing mid-submit
-    setShowModal(false);
-  }
+    if (params.id) load();
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id]);
 
   function updateField<K extends keyof LoanProductFormState>(key: K, value: LoanProductFormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => (f ? { ...f, [key]: value } : f));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form) return;
     setFormError(null);
 
-    // Minimal client-side sanity checks before hitting the API
     if (!form.product_name.trim() || !form.product_code.trim()) {
       setFormError("Product name and code are required.");
       return;
@@ -178,8 +158,8 @@ export default function LoanProductsPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/v1/loans/products/new", {
-        method: "POST",
+      const res = await fetch(`/api/v1/loans/products/${params.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           product_name: form.product_name.trim(),
@@ -207,11 +187,10 @@ export default function LoanProductsPage() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to create loan product");
+        throw new Error(body?.error ?? "Failed to update loan product");
       }
 
-      setShowModal(false);
-      await loadProducts();
+      router.push(`/dashboard/loan-products/${params.id}`);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -221,160 +200,37 @@ export default function LoanProductsPage() {
 
   return (
     <div className="min-h-screen bg-[#eee7d6] pt-4">
-      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-serif text-2xl text-[#1c2b22]">Loan products</h1>
-            <p className="mt-1 text-sm text-[#4a5c50]">Catalogue of loan products offered by the SACCO.</p>
+      <div className="mx-auto max-w-3xl px-4 py-10 md:px-8">
+        <Link
+          href={params.id ? `/dashboard/loan-products/${params.id}` : "/dashboard/loan-products"}
+          className="mb-6 inline-flex items-center gap-1 text-sm text-[#4a5c50] hover:text-[#1c2b22]"
+        >
+          ← Back to {productName || "loan product"}
+        </Link>
+
+        {loading && (
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] px-6 py-12 text-center text-[#9aa79f]">
+            Loading loan product...
           </div>
-          <button
-            type="button"
-            onClick={openModal}
-            className="inline-flex items-center justify-center rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
-          >
-            + New Loan Product
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-          <input
-            type="text"
-            placeholder="Search by product name or code..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] placeholder:text-[#9aa79f] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
-          />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="rounded-md border border-[#c9a24b]/40 bg-[#faf6ec] px-3 py-2 text-sm capitalize text-[#1c2b22] focus:border-[#1c2b22] focus:outline-none focus:ring-1 focus:ring-[#1c2b22]"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s} className="capitalize">
-                {s === "all" ? "All statuses" : s}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-[#f4dede] px-4 py-2 text-sm text-[#8a2c2c]">{error}</div>
         )}
 
-        {/* Ledger table */}
-        <div className="overflow-x-auto rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60 text-left">
-              <tr>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Code</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Product name</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Principal range</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Tenure (months)</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Interest p.a.</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Method</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Status</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#c9a24b]/15">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-[#9aa79f]">
-                    Loading loan products...
-                  </td>
-                </tr>
-              ) : paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-[#9aa79f]">
-                    No loan products found
-                  </td>
-                </tr>
-              ) : (
-                paginated.map((p) => (
-                  <tr key={p.loan_product_id} className="hover:bg-[#eee7d6]/40">
-                    <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{p.product_code}</td>
-                    <td className="px-4 py-3 text-[#1c2b22]">{p.product_name}</td>
-                    <td className="px-4 py-3 text-[#1c2b22]">
-                      KES {Number(p.min_principal).toLocaleString()} – {Number(p.max_principal).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-[#4a5c50]">
-                      {p.min_tenure_months} – {p.max_tenure_months}
-                    </td>
-                    <td className="px-4 py-3 text-[#1c2b22]">{p.interest_rate_pa}%</td>
-                    <td className="px-4 py-3 capitalize text-[#4a5c50]">
-                      {p.interest_method?.replace(/_/g, " ")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          p.is_active ? "bg-[#e4efe6] text-[#1c2b22]" : "bg-[#e2ddd0] text-[#4a5c50]"
-                        }`}
-                      >
-                        {p.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/dashboard/loans/products/${p.loan_product_id}`}
-                        className="font-medium text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#233a2c]"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-[#4a5c50]">
-            {filtered.length} product{filtered.length !== 1 ? "s" : ""} · Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+        {!loading && loadError && (
+          <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] px-6 py-12 text-center">
+            <p className="text-sm text-[#8a2c2c]">{loadError}</p>
+            <Link
+              href="/dashboard/loan-products"
+              className="mt-4 inline-block text-sm text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2"
             >
-              Prev
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="rounded-md border border-[#c9a24b]/40 px-3 py-1 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
-            >
-              Next
-            </button>
+              Return to loan products
+            </Link>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* New Loan Product modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1c2b22]/50 px-4 py-8"
-          onClick={closeModal}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-[#c9a24b]/40 bg-[#faf6ec] shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-[#c9a24b]/30 px-6 py-4">
-              <h2 className="font-serif text-lg text-[#1c2b22]">New Loan Product</h2>
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={submitting}
-                className="text-[#4a5c50] hover:text-[#1c2b22] disabled:opacity-40"
-                aria-label="Close"
-              >
-                ✕
-              </button>
+        {!loading && !loadError && form && (
+          <div className="overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] shadow-sm">
+            <div className="border-b border-[#c9a24b]/30 px-6 py-4">
+              <h1 className="font-serif text-xl text-[#1c2b22]">Edit loan product</h1>
+              <p className="mt-1 text-sm text-[#4a5c50]">{productName}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5">
@@ -496,7 +352,7 @@ export default function LoanProductsPage() {
                   />
                 </Field>
 
-                {/* <Field label="Grace period (days)">
+                <Field label="Grace period (days)">
                   <input
                     type="number"
                     min={0}
@@ -504,7 +360,7 @@ export default function LoanProductsPage() {
                     onChange={(e) => updateField("grace_period_days", e.target.value)}
                     className={inputClass}
                   />
-                </Field> */}
+                </Field>
 
                 <Field label="Processing fee (%)">
                   <input
@@ -517,7 +373,7 @@ export default function LoanProductsPage() {
                   />
                 </Field>
 
-                {/* <Field label="Insurance fee (%)">
+                <Field label="Insurance fee (%)">
                   <input
                     type="number"
                     step="0.01"
@@ -526,7 +382,7 @@ export default function LoanProductsPage() {
                     onChange={(e) => updateField("insurance_fee_pct", e.target.value)}
                     className={inputClass}
                   />
-                </Field> */}
+                </Field>
 
                 <Field label="Penalty rate (%)">
                   <input
@@ -566,7 +422,7 @@ export default function LoanProductsPage() {
                   </div>
                 )}
 
-                {/* <label className="flex items-center gap-2 text-sm text-[#1c2b22]">
+                <label className="flex items-center gap-2 text-sm text-[#1c2b22]">
                   <input
                     type="checkbox"
                     checked={form.requires_collateral}
@@ -574,9 +430,9 @@ export default function LoanProductsPage() {
                     className="h-4 w-4 rounded border-[#c9a24b]/60 text-[#1c2b22] focus:ring-[#1c2b22]"
                   />
                   Requires collateral
-                </label> */}
+                </label>
 
-                {/* <label className="flex items-center gap-2 text-sm text-[#1c2b22]">
+                <label className="flex items-center gap-2 text-sm text-[#1c2b22]">
                   <input
                     type="checkbox"
                     checked={form.is_active}
@@ -584,31 +440,29 @@ export default function LoanProductsPage() {
                     className="h-4 w-4 rounded border-[#c9a24b]/60 text-[#1c2b22] focus:ring-[#1c2b22]"
                   />
                   Active (available for new loan applications)
-                </label> */}
+                </label>
               </div>
 
               {/* Actions */}
               <div className="mt-6 flex justify-end gap-3 border-t border-[#c9a24b]/20 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  disabled={submitting}
-                  className="rounded-md border border-[#c9a24b]/40 px-4 py-2 text-sm text-[#1c2b22] hover:bg-[#eee7d6] disabled:opacity-40"
+                <Link
+                  href={`/dashboard/loan-products/${params.id}`}
+                  className="rounded-md border border-[#c9a24b]/40 px-4 py-2 text-sm text-[#1c2b22] hover:bg-[#eee7d6]"
                 >
                   Cancel
-                </button>
+                </Link>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c] disabled:opacity-50"
                 >
-                  {submitting ? "Creating..." : "Create loan product"}
+                  {submitting ? "Saving..." : "Save changes"}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
