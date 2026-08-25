@@ -192,7 +192,7 @@ export default function LoanDefaultersPage() {
     async function load() {
       try {
         setLoading(true);
-        const res = await fetch("/api/loans/defaulters", { cache: "no-store" });
+        const res = await fetch("/api/v1/loans/defaulters", { cache: "no-store" });
         if (!res.ok) throw new Error("request failed");
         const data = await res.json();
         if (!cancelled) setDefaulters(data.defaulters ?? data);
