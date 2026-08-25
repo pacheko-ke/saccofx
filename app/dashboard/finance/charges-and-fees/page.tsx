@@ -2,9 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-/* ────────────────────────────────────────────────────────────
-   Types — mirror the FeeType / FeeCharge Prisma models
-   ──────────────────────────────────────────────────────────── */
 
 type FeeCategory =
   | "LOAN"
@@ -24,7 +21,8 @@ interface FeeType {
   applies_to: FeeCategory;
   charge_basis: FeeCalculationType;
   flatAmount: number | null;
-  percentageRate: number | null;
+  percentage: number | null;
+  amount:number | null;
   minAmount: number | null;
   maxAmount: number | null;
   is_active: boolean;

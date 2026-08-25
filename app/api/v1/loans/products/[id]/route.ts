@@ -192,7 +192,7 @@ export async function PATCH(
   const setClauses = updates.map(([key], idx) => `${key} = $${idx + 1}`);
   const values = updates.map(([, value]) => value);
 
-  const pool = getPool();
+  // const pool = getPool();
   const client = await pool.connect();
 
   try {
