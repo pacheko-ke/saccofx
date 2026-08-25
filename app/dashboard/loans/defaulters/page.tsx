@@ -13,7 +13,7 @@ interface Defaulter {
   id: string;
   memberNo: string;
   memberName: string;
-  branch: string;
+  branches: string;
   loanNo: string;
   loanProduct: string;
   principalOutstanding: number;
@@ -69,7 +69,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "1",
     memberNo: "SF-00231",
     memberName: "Wanjiru Kamau",
-    branch: "Nairobi CBD",
+    branches: "Nairobi CBD",
     loanNo: "LN-2025-0187",
     loanProduct: "Development Loan",
     principalOutstanding: 184500,
@@ -84,7 +84,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "2",
     memberNo: "SF-00114",
     memberName: "Otieno Ochieng",
-    branch: "Kisumu",
+    branches: "Kisumu",
     loanNo: "LN-2025-0092",
     loanProduct: "Emergency Loan",
     principalOutstanding: 42000,
@@ -99,7 +99,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "3",
     memberNo: "SF-00459",
     memberName: "Grace Wambui",
-    branch: "Nakuru",
+    branches: "Nakuru",
     loanNo: "LN-2024-0311",
     loanProduct: "School Fees Loan",
     principalOutstanding: 76300,
@@ -114,7 +114,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "4",
     memberNo: "SF-00028",
     memberName: "Hassan Abdi",
-    branch: "Mombasa",
+    branches: "Mombasa",
     loanNo: "LN-2024-0056",
     loanProduct: "Development Loan",
     principalOutstanding: 312400,
@@ -129,7 +129,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "5",
     memberNo: "SF-00302",
     memberName: "Njoki Mwangi",
-    branch: "Nairobi CBD",
+    branches: "Nairobi CBD",
     loanNo: "LN-2025-0203",
     loanProduct: "Salary Advance",
     principalOutstanding: 19800,
@@ -144,7 +144,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "6",
     memberNo: "SF-00187",
     memberName: "Peter Kiprotich",
-    branch: "Eldoret",
+    branches: "Eldoret",
     loanNo: "LN-2024-0402",
     loanProduct: "Development Loan",
     principalOutstanding: 156000,
@@ -159,7 +159,7 @@ const MOCK_DEFAULTERS: Defaulter[] = [
     id: "7",
     memberNo: "SF-00519",
     memberName: "Faith Nyambura",
-    branch: "Nakuru",
+    branches: "Nakuru",
     loanNo: "LN-2025-0244",
     loanProduct: "Emergency Loan",
     principalOutstanding: 28500,
@@ -182,7 +182,7 @@ export default function LoanDefaultersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [branchFilter, setBranchFilter] = useState<string>("all");
+  const [branchesFilter, setbranchesFilter] = useState<string>("all");
   const [bucketFilter, setBucketFilter] = useState<ParBucket | "all">("all");
   const [sortKey, setSortKey] = useState<"daysOverdue" | "arrearsAmount">("daysOverdue");
 
@@ -214,7 +214,7 @@ export default function LoanDefaultersPage() {
   }, []);
 
   const branches = useMemo(
-    () => Array.from(new Set(defaulters.map((d) => d.branch))).sort(),
+    () => Array.from(new Set(defaulters.map((d) => d.branches))).sort(),
     [defaulters]
   );
 
@@ -222,7 +222,7 @@ export default function LoanDefaultersPage() {
     const q = search.trim().toLowerCase();
     return defaulters
       .filter((d) => {
-        if (branchFilter !== "all" && d.branch !== branchFilter) return false;
+        if (branchesFilter !== "all" && d.branches !== branchesFilter) return false;
         if (bucketFilter !== "all" && parBucketOf(d.daysOverdue) !== bucketFilter) return false;
         if (
           q &&
@@ -235,7 +235,7 @@ export default function LoanDefaultersPage() {
         return true;
       })
       .sort((a, b) => b[sortKey] - a[sortKey]);
-  }, [defaulters, search, branchFilter, bucketFilter, sortKey]);
+  }, [defaulters, search, branchesFilter, bucketFilter, sortKey]);
 
   const summary = useMemo(() => {
     const totalArrears = filtered.reduce((sum, d) => sum + d.arrearsAmount, 0);
@@ -304,8 +304,8 @@ export default function LoanDefaultersPage() {
           />
           <div className="flex flex-wrap items-center gap-3">
             <select
-              value={branchFilter}
-              onChange={(e) => setBranchFilter(e.target.value)}
+              value={branchesFilter}
+              onChange={(e) => setbranchesFilter(e.target.value)}
               className="rounded-sm border border-[#c9a24b]/50 bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22] focus:border-[#1c2b22] focus:outline-none"
             >
               <option value="all">All branches</option>
@@ -342,7 +342,7 @@ export default function LoanDefaultersPage() {
                 <tr className="border-b border-[#c9a24b]/50 text-left font-serif text-[#1c2b22]">
                   <th className="px-4 py-3 font-medium">Member</th>
                   <th className="px-4 py-3 font-medium">Loan</th>
-                  <th className="px-4 py-3 font-medium">Branch</th>
+                  <th className="px-4 py-3 font-medium">branches</th>
                   <th className="px-4 py-3 text-right font-medium">Principal O/S</th>
                   <th className="px-4 py-3 text-right font-medium">Arrears</th>
                   <th className="px-4 py-3 text-center font-medium">Days overdue</th>
@@ -387,7 +387,7 @@ export default function LoanDefaultersPage() {
                           <p className="font-mono text-xs text-[#1c2b22]/70">{d.loanNo}</p>
                           <p className="text-xs text-[#1c2b22]/50">{d.loanProduct}</p>
                         </td>
-                        <td className="px-4 py-3 text-[#1c2b22]/80">{d.branch}</td>
+                        <td className="px-4 py-3 text-[#1c2b22]/80">{d.branches}</td>
                         <td className="px-4 py-3 text-right font-mono text-[#1c2b22]">
                           {formatKES(d.principalOutstanding)}
                         </td>
