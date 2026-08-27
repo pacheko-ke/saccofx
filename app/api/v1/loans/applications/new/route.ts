@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "@neondatabase/serverless";
-import { verifyAuthToken } from "@/lib/auth"; // adjust path to wherever verifyAuthToken actually lives
+import { cookies } from "next/headers";
+import { verifyAuthToken } from "@/app/lib/auth"; // adjust path to wherever verifyAuthToken actually lives
 
 // ---------------------------------------------------------------------------
 // POST /api/loans/applications
@@ -49,16 +50,37 @@ interface LoanApplicationBody {
   guarantors: GuarantorInput[];
 }
 
-export async function POST(req: NextRequest) {
-  // --- Auth -----------------------------------------------------------
-  const auth = await verifyAuthToken(req);
+export async function POST(req: NextRequest,
+  { params }: { params: Promise<{ loanId: string }> }) {
+  const { loanId } = await params;
+  const cookieStore = await cookies();
+  const auth = cookieStore.get("auth_token")?.value;
+
   if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { tenantId, userId, role } = auth;
 
-  if (!UUID_RE.test(tenantId)) {
-    return NextResponse.json({ error: "Invalid tenant context" }, { status: 400 });
+  let payload;
+  try {
+    payload = await verifyAuthToken(auth);
+  } catch {
+    return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+  }
+
+  if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
+    console.log(loanId)
+    return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
+  }
+
+
+  if (!auth || !['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
+    return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
   }
 
   // --- Parse & basic validation ----------------------------------------
@@ -91,7 +113,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Members can only apply for themselves; staff can submit on a member's behalf.
-  if (role === "member" && userId !== memberId) {
+  if (payload.role === "member" && payload.userId !== memberId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -109,7 +131,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await client.query("BEGIN");
-    await client.query("SELECT set_config('app.current_tenant', $1, true)", [tenantId]);
+    await client.query("SELECT set_config('app.current_tenant', $1, true)", [payload.tenantId]);
 
     // --- Look up the loan product & its guarantor requirement ----------
     const productResult = await client.query(
@@ -122,7 +144,7 @@ export async function POST(req: NextRequest) {
          is_active AS "isActive"
        FROM loan_products
        WHERE id = $1 AND tenant_id = $2`,
-      [loanProductId, tenantId]
+      [loanProductId, payload.tenantId]
     );
 
     if (productResult.rowCount === 0) {
@@ -168,7 +190,7 @@ export async function POST(req: NextRequest) {
     // --- Confirm the member exists in this tenant -----------------------
     const memberResult = await client.query(
       `SELECT id, full_name AS "fullName" FROM members WHERE id = $1 AND tenant_id = $2`,
-      [memberId, tenantId]
+      [memberId, payload.tenantId]
     );
     if (memberResult.rowCount === 0) {
       await client.query("ROLLBACK");
@@ -183,7 +205,7 @@ export async function POST(req: NextRequest) {
           purpose, status, submitted_at, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, 'pending_guarantor_approval', now(), now())
        RETURNING id AS "applicationId", status`,
-      [tenantId, memberId, loanProductId, amountRequested, termMonths, purpose.trim()]
+      [payload.tenantId, memberId, loanProductId, amountRequested, termMonths, purpose.trim()]
     );
 
     const applicationId = applicationResult.rows[0].applicationId;
@@ -195,8 +217,8 @@ export async function POST(req: NextRequest) {
       // Try to match this guarantor to an existing member account by
       // national ID within the same tenant, so we know who to notify.
       const matchResult = await client.query(
-        `SELECT id, user_id AS "userId" FROM members WHERE national_id = $1 AND tenant_id = $2`,
-        [g.nationalId.trim(), tenantId]
+        `SELECT id, user_id AS "payload.userId" FROM members WHERE national_id = $1 AND tenant_id = $2`,
+        [g.nationalId.trim(), payload.tenantId]
       );
       const matchedMember = matchResult.rows[0] ?? null;
 
@@ -207,7 +229,7 @@ export async function POST(req: NextRequest) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', now())
          RETURNING id AS "guarantorId"`,
         [
-          tenantId,
+          payload.tenantId,
           applicationId,
           matchedMember?.id ?? null,
           g.fullName.trim(),
@@ -219,14 +241,14 @@ export async function POST(req: NextRequest) {
       );
       const guarantorId = guarantorInsert.rows[0].guarantorId;
 
-      if (matchedMember?.userId) {
+      if (matchedMember?.payload.userId) {
         await client.query(
           `INSERT INTO notifications
              (tenant_id, user_id, type, title, body, related_entity_type, related_entity_id, read, created_at)
            VALUES ($1, $2, 'guarantor_approval_request', $3, $4, 'loan_application_guarantor', $5, false, now())`,
           [
-            tenantId,
-            matchedMember.userId,
+            payload.tenantId,
+            matchedMember.payload.userId,
             "Guarantee request",
             `${applicantName} has listed you as a guarantor for KES ${g.guaranteedAmount.toLocaleString()} on a loan application. Please review and approve or decline.`,
             guarantorId,
@@ -245,8 +267,8 @@ export async function POST(req: NextRequest) {
       `INSERT INTO audit_log (tenant_id, actor_id, action, entity_type, entity_id, metadata, created_at)
        VALUES ($1, $2, 'loan_application_submitted', 'loan_application', $3, $4, now())`,
       [
-        tenantId,
-        userId,
+        payload.tenantId,
+        payload.userId,
         applicationId,
         JSON.stringify({
           loanProductId,
