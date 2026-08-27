@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from '@neondatabase/serverless';
-import { verifyAuthToken } from '@/lib/auth';
-import { sendSMS } from '@/lib/africastalking';
+import { verifyAuthToken } from '@/app/lib/auth';
+import { sendSMS } from '@/app/lib/africastalking';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

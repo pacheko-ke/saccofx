@@ -48,7 +48,7 @@ export default function LoanApprovalsPage() {
   const fetchLoans = useCallback(async () => {
     setLoading(true);
     const qs = new URLSearchParams({ status: tab, search });
-    const res = await fetch(`/api/admin/loans/pending?${qs}`);
+    const res = await fetch(`/api/v1/loans/pending?${qs}`);
     if (res.ok) {
       const data = await res.json();
       setLoans(data.loans);
@@ -63,7 +63,7 @@ export default function LoanApprovalsPage() {
 
   async function handleApprove(loanId: string) {
     setActionError('');
-    const res = await fetch(`/api/admin/loans/${loanId}/approve`, {
+    const res = await fetch(`/api/v1/loans/${loanId}/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ comment }),
