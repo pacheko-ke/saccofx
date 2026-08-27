@@ -84,13 +84,13 @@ export async function POST(
       );
     } else if (loan.status === 'pending_second_approval') {
       // Second signature — must be a different person
-      // if (loan.firstApprovedBy === payload.userId) {
-      //   await client.query('ROLLBACK');
-      //   return NextResponse.json(
-      //     { error: 'Second approval must come from a different officer than the first' },
-      //     { status: 403 }
-      //   );
-      // }
+      if (loan.firstApprovedBy === payload.userId) {
+        await client.query('ROLLBACK');
+        return NextResponse.json(
+          { error: 'Second approval must come from a different officer' },
+          { status: 403 }
+        );
+      }
       newStatus = 'approved';
       finalized = true;
       await client.query(
