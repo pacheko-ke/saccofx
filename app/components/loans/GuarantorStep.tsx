@@ -16,8 +16,8 @@ export interface Guarantor {
 
 interface GuarantorStepProps {
   guarantors: Guarantor[];
-  minRequired:number;
   onChange: (guarantors: Guarantor[]) => void;
+  minRequired:number;
 }
 
 const MAX_GUARANTORS = 5;
