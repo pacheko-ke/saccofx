@@ -1,21 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from '@neondatabase/serverless';
 import { verifyAuthToken } from '@/app/lib/auth';
+import { cookies } from 'next/headers';
 import { sendSMS } from '@/app/lib/africastalking';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await verifyAuthToken(req);
-  if (!auth || !['admin', 'loan_supervisor', 'ceo'].includes(auth.role)) {
+export async function POST(req: NextRequest,
+  { params }: { params: Promise<{ loanId: string }> }) {
+  const { loanId } = await params;
+  const cookieStore = await cookies();
+  const auth = cookieStore.get("auth_token")?.value;
+
+  if (!auth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let payload;
+  try {
+    payload = await verifyAuthToken(auth);
+  } catch {
+    return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+  }
+
+  if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!UUID_RE.test(auth.tenantId) || !UUID_RE.test(params.id)) {
+  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
+    console.log(loanId)
+    return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
+  }
+
+
+  if (!auth || !['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
     return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
   }
 
   const body = await req.json().catch(() => ({}));
   const reason: string = (body.reason ?? '').trim().slice(0, 500);
+
   if (!reason) {
     return NextResponse.json({ error: 'Rejection reason is required' }, { status: 400 });
   }
@@ -25,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     await client.query('BEGIN');
-    await client.query(`SET LOCAL app.current_tenant = '${auth.tenantId}'`);
+    await client.query(`SET LOCAL app.current_tenant = '${payload.tenantId}'`);
 
     const loanRes = await client.query(
       `
@@ -35,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       WHERE la.id = $1
       FOR UPDATE
       `,
-      [params.id]
+      [loanId]
     );
 
     if (loanRes.rows.length === 0) {
@@ -52,13 +78,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       `UPDATE loan_accounts
        SET status = 'rejected', rejected_by = $1, rejected_at = NOW(), rejection_reason = $2
        WHERE id = $3`,
-      [auth.userId, reason, params.id]
+      [payload.userId, reason, loanId]
     );
 
     await client.query(
       `INSERT INTO audit_log (tenant_id, actor_id, action, entity_type, entity_id, details)
        VALUES ($1, $2, 'loan_rejected', 'loan_account', $3, $4)`,
-      [auth.tenantId, auth.userId, params.id, JSON.stringify({ reason })]
+      [payload.tenantId, payload.userId, loanId, JSON.stringify({ reason })]
     );
 
     await client.query('COMMIT');

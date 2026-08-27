@@ -127,7 +127,7 @@ export async function POST(
 
     if (finalized && loan.phoneNumber) {
       await sendSMS(
-        loan.phoneNumber,
+        '0734871064',
         `Dear ${loan.firstName}, your loan application of KES ${Number(loan.principalAmount).toLocaleString()} has been approved. Disbursement will follow shortly.`
       ).catch((e) => console.error('SMS send failed', e));
     }

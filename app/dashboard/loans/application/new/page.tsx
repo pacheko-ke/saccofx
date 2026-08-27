@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import GuarantorStep, { Guarantor } from "@/app/components/loans/GuarantorStep";
-import OtpVerifyModal from "@/app/components/loans/OtpVerifyModal";
 
-const STEPS = ["Loan details", "Guarantors", "Review", "Confirm & submit"] as const;
+const STEPS = ["Loan details", "Guarantors", "Review", "Submit"] as const;
 type Step = (typeof STEPS)[number];
 
 interface LoanDetails {
@@ -15,11 +14,22 @@ interface LoanDetails {
   purpose: string;
 }
 
-const LOAN_PRODUCTS = [
-  { id: "dev-loan", name: "Development Loan" },
-  { id: "emergency-loan", name: "Emergency Loan" },
-  { id: "school-fees-loan", name: "School Fees Loan" },
-  { id: "asset-finance-loan", name: "Asset Finance Loan" },
+interface LoanProduct {
+  id: string;
+  name: string;
+  /** Minimum number of guarantors required for this loan product */
+  minGuarantors: number;
+}
+
+// NOTE: minGuarantors here should ideally mirror whatever is configured
+// server-side for each loan product (e.g. a `min_guarantors` column on
+// loan_products). Keep this in sync, or better, fetch it from
+// /api/loans/products so the rule lives in one place.
+const LOAN_PRODUCTS: LoanProduct[] = [
+  { id: "dev-loan", name: "Development Loan", minGuarantors: 2 },
+  { id: "emergency-loan", name: "Emergency Loan", minGuarantors: 1 },
+  { id: "school-fees-loan", name: "School Fees Loan", minGuarantors: 1 },
+  { id: "asset-finance-loan", name: "Asset Finance Loan", minGuarantors: 3 },
 ];
 
 // TODO: replace with the signed-in member's real details once auth/session is wired in
@@ -43,12 +53,15 @@ export default function LoanApplicationPage() {
   });
   const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
   const [loanDetailsError, setLoanDetailsError] = useState("");
+  const [guarantorError, setGuarantorError] = useState("");
 
-  const [applicantOtpOpen, setApplicantOtpOpen] = useState(false);
-  const [applicantOtpVerified, setApplicantOtpVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  const selectedProduct = LOAN_PRODUCTS.find((p) => p.id === loanDetails.loanProductId);
+  const requiredGuarantors = selectedProduct?.minGuarantors ?? 1;
+  const guarantorsSatisfied = guarantors.length >= requiredGuarantors;
 
   function goNext() {
     if (step === "Loan details") {
@@ -60,8 +73,16 @@ export default function LoanApplicationPage() {
       if (!loanDetails.purpose.trim()) return setLoanDetailsError("Tell us the purpose of this loan.");
       setLoanDetailsError("");
     }
-    if (step === "Guarantors" && guarantors.length === 0) {
-      return; // button is disabled in this case, but guard anyway
+    if (step === "Guarantors") {
+      if (!guarantorsSatisfied) {
+        setGuarantorError(
+          `${selectedProduct?.name ?? "This loan product"} requires at least ${requiredGuarantors} guarantor${
+            requiredGuarantors === 1 ? "" : "s"
+          }. You've added ${guarantors.length}.`
+        );
+        return; // button is disabled in this case too, but guard anyway
+      }
+      setGuarantorError("");
     }
     setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   }
@@ -74,7 +95,7 @@ export default function LoanApplicationPage() {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const res = await fetch("/api/loans/applications", {
+      const res = await fetch("/api/v1/loans/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,9 +110,7 @@ export default function LoanApplicationPage() {
             nationalId: g.nationalId,
             relationship: g.relationship,
             guaranteedAmount: g.guaranteedAmount,
-            verified: g.verified,
           })),
-          applicantOtpVerified,
         }),
       });
 
@@ -108,8 +127,6 @@ export default function LoanApplicationPage() {
       setSubmitting(false);
     }
   }
-
-  const selectedProduct = LOAN_PRODUCTS.find((p) => p.id === loanDetails.loanProductId);
 
   return (
     <div className="min-h-screen bg-[#eee7d6] pt-4">
@@ -156,7 +173,14 @@ export default function LoanApplicationPage() {
                   <label className="mb-1 block text-xs font-medium text-[#4a5c50]">Loan product</label>
                   <select
                     value={loanDetails.loanProductId}
-                    onChange={(e) => setLoanDetails((d) => ({ ...d, loanProductId: e.target.value }))}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      setLoanDetails((d) => ({ ...d, loanProductId: nextId }));
+                      // Loan product changed: previously entered guarantors may no
+                      // longer satisfy the new product's requirement, so clear
+                      // any stale error and let the Guarantors step re-check.
+                      setGuarantorError("");
+                    }}
                     className="w-full rounded-md border border-[#c9a24b]/40 px-3 py-2 text-sm focus:border-[#1c2b22] focus:outline-none"
                   >
                     <option value="">Select a loan product</option>
@@ -166,6 +190,12 @@ export default function LoanApplicationPage() {
                       </option>
                     ))}
                   </select>
+                  {selectedProduct && (
+                    <p className="mt-1 text-xs text-[#4a5c50]">
+                      Requires at least {selectedProduct.minGuarantors} guarantor
+                      {selectedProduct.minGuarantors === 1 ? "" : "s"}.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -212,7 +242,35 @@ export default function LoanApplicationPage() {
           )}
 
           {/* Step 2: Guarantors */}
-          {step === "Guarantors" && <GuarantorStep guarantors={guarantors} onChange={setGuarantors} />}
+          {step === "Guarantors" && (
+            <div>
+              <div className="mb-4 flex items-center justify-between rounded-md bg-[#e4efe6] px-4 py-3 text-sm text-[#1c2b22]">
+                <span>
+                  {selectedProduct?.name ?? "This loan product"} requires at least{" "}
+                  <strong>{requiredGuarantors}</strong> guarantor{requiredGuarantors === 1 ? "" : "s"}.
+                </span>
+                <span className={guarantorsSatisfied ? "font-medium text-[#1c2b22]" : "font-medium text-red-600"}>
+                  {guarantors.length} / {requiredGuarantors} added
+                </span>
+              </div>
+
+              <GuarantorStep
+                guarantors={guarantors}
+                onChange={(next) => {
+                  setGuarantors(next);
+                  if (next.length >= requiredGuarantors) setGuarantorError("");
+                }}
+                minRequired={requiredGuarantors}
+              />
+
+              <p className="mt-3 text-xs text-[#4a5c50]">
+                Each guarantor will get an in-app notification on their SaccoFX Pro account asking them to approve
+                guaranteeing this loan. No OTP is needed here — approval happens on their end.
+              </p>
+
+              {guarantorError && <p className="mt-3 text-sm text-red-600">{guarantorError}</p>}
+            </div>
+          )}
 
           {/* Step 3: Review */}
           {step === "Review" && (
@@ -240,7 +298,9 @@ export default function LoanApplicationPage() {
                   <dd className="mt-1 text-[#1c2b22]">{loanDetails.purpose}</dd>
                 </div>
                 <div>
-                  <dt className="mb-2 text-[#4a5c50]">Guarantors ({guarantors.length})</dt>
+                  <dt className="mb-2 text-[#4a5c50]">
+                    Guarantors ({guarantors.length} / {requiredGuarantors} required)
+                  </dt>
                   <dd className="space-y-1">
                     {guarantors.map((g, i) => (
                       <div key={g.id} className="text-[#1c2b22]">
@@ -253,45 +313,28 @@ export default function LoanApplicationPage() {
             </div>
           )}
 
-          {/* Step 4: Confirm & submit */}
-          {step === "Confirm & submit" && (
+          {/* Step 4: Submit */}
+          {step === "Submit" && (
             <div>
               {!submitted ? (
                 <>
-                  <h2 className="font-serif text-xl text-[#1c2b22]">Confirm it's you</h2>
+                  <h2 className="font-serif text-xl text-[#1c2b22]">Ready to submit</h2>
                   <p className="mt-1 text-sm text-[#4a5c50]">
-                    As a final security step, confirm the one-time code sent to your registered phone number before
-                    we submit your application.
+                    Once you submit, each guarantor listed above will receive a notification on their SaccoFX Pro
+                    account asking them to approve guaranteeing this loan. Your application moves to committee
+                    review once all guarantors have approved.
                   </p>
-
-                  <div className="mt-5 rounded-md bg-[#e4efe6] px-4 py-3 text-sm text-[#1c2b22]">
-                    {applicantOtpVerified ? (
-                      <span>✓ Identity confirmed — ready to submit.</span>
-                    ) : (
-                      <span>Registered phone: {CURRENT_MEMBER.phone}</span>
-                    )}
-                  </div>
 
                   {submitError && <p className="mt-3 text-sm text-red-600">{submitError}</p>}
 
-                  {!applicantOtpVerified ? (
-                    <button
-                      type="button"
-                      onClick={() => setApplicantOtpOpen(true)}
-                      className="mt-5 rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
-                    >
-                      Send confirmation code
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleFinalSubmit}
-                      disabled={submitting}
-                      className="mt-5 rounded-md bg-[#c9a24b] px-4 py-2 text-sm font-medium text-[#1c2b22] hover:bg-[#b5903f] disabled:opacity-60"
-                    >
-                      {submitting ? "Submitting..." : "Submit loan application"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleFinalSubmit}
+                    disabled={submitting}
+                    className="mt-5 rounded-md bg-[#c9a24b] px-4 py-2 text-sm font-medium text-[#1c2b22] hover:bg-[#b5903f] disabled:opacity-60"
+                  >
+                    {submitting ? "Submitting..." : "Submit loan application"}
+                  </button>
                 </>
               ) : (
                 <div className="py-6 text-center">
@@ -300,8 +343,8 @@ export default function LoanApplicationPage() {
                   </div>
                   <h2 className="font-serif text-xl text-[#1c2b22]">Application submitted</h2>
                   <p className="mt-1 text-sm text-[#4a5c50]">
-                    Your loan application has been sent for committee review. You'll be notified once a decision has
-                    been made.
+                    Your guarantors have been notified and need to approve on their end before this goes to
+                    committee review. You'll be notified once a decision has been made.
                   </p>
                   <button
                     type="button"
@@ -317,7 +360,7 @@ export default function LoanApplicationPage() {
         </div>
 
         {/* Nav buttons */}
-        {!(step === "Confirm & submit" && submitted) && (
+        {!(step === "Submit" && submitted) && (
           <div className="mt-6 flex justify-between">
             <button
               type="button"
@@ -327,11 +370,11 @@ export default function LoanApplicationPage() {
             >
               Back
             </button>
-            {step !== "Confirm & submit" && (
+            {step !== "Submit" && (
               <button
                 type="button"
                 onClick={goNext}
-                disabled={step === "Guarantors" && guarantors.length === 0}
+                disabled={step === "Guarantors" && !guarantorsSatisfied}
                 className="rounded-md bg-[#1c2b22] px-5 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c] disabled:opacity-40"
               >
                 Continue
@@ -340,18 +383,6 @@ export default function LoanApplicationPage() {
           </div>
         )}
       </div>
-
-      <OtpVerifyModal
-        open={applicantOtpOpen}
-        purpose="applicant_confirmation"
-        identifier={CURRENT_MEMBER.phone}
-        title="Confirm your identity"
-        onClose={() => setApplicantOtpOpen(false)}
-        onVerified={() => {
-          setApplicantOtpVerified(true);
-          setApplicantOtpOpen(false);
-        }}
-      />
     </div>
   );
 }
