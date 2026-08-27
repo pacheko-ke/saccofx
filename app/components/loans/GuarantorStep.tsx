@@ -13,8 +13,10 @@ export interface Guarantor {
   verified: boolean;
 }
 
+
 interface GuarantorStepProps {
   guarantors: Guarantor[];
+  minRequired:number;
   onChange: (guarantors: Guarantor[]) => void;
 }
 
