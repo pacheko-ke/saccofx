@@ -72,8 +72,9 @@ export async function GET(req: NextRequest) {
             WHERE member_id = $1 AND status = 'active') AS savings_balance,
           (SELECT COALESCE(SUM(number_of_shares), 0) FROM member_share_accounts
             WHERE member_id = $1) AS share_capital,
-          (SELECT outstanding_principal+outstanding_interest AS outstanding_balance FROM loans
-            WHERE member_id = $1 AND status IN ('active', 'disbursed')) AS active_loan_balance`,
+          (SELECT SUM(total_due) FROM loan_repayment_schedule ls INNER JOIN 
+          loans la ON ls.loan_id=la.loan_id INNER JOIN members m ON 
+          m.member_id=la.member_id WHERE m.member_id=$1 AND ls.is_paid='f') AS active_loan_balance`,
         [memberId]
       ),
 
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
         `SELECT ls.total_due, ls.due_date
          FROM loan_repayment_schedule ls
          JOIN loans la ON la.loan_id = ls.loan_id
-         WHERE la.member_id = $1 AND ls.is_paid = false
+         WHERE la.member_id = $1 AND ls.is_paid = 'f'
          ORDER BY ls.due_date ASC
          LIMIT 1`,
         [memberId]
@@ -155,21 +156,8 @@ export async function GET(req: NextRequest) {
 
       // ── Active/overdue/cleared loans ──────────────────────────
       client.query(
-        `SELECT
-          la.loan_id,
-          lp.product_name,
-          la.outstanding_principal,
-          la.outstanding_interest,
-          la.status,
-          (SELECT MIN(ls.due_date) FROM loan_repayment_schedule ls
-            WHERE ls.loan_id = la.loan_id AND ls.is_paid = false) AS next_due_date
-         FROM loans la
-         JOIN loan_products lp ON lp.loan_product_id = la.loan_product_id
-         WHERE la.member_id = $1
-         ORDER BY
-           CASE la.status WHEN 'overdue' THEN 0 WHEN 'active' THEN 1 ELSE 2 END,
-           la.disbursed_at DESC
-         LIMIT 10`,
+        `SELECT * FROM loan_repayment_schedule ls INNER JOIN loans l ON 
+        l.loan_id=ls.loan_id INNER JOIN members m ON m.member_id=l.member_id INNER JOIN loan_products lp ON lp.loan_product_id=l.loan_product_id  WHERE m.member_id=$1 AND ls.is_paid='f'`,
         [memberId]
       ),
     ]);
@@ -228,15 +216,15 @@ export async function GET(req: NextRequest) {
       loans: loansResult.rows.map((r) => ({
         loanId: r.loan_id,
         productName: r.product_name,
-        outstandingBalance: num(r.outstanding_principal+r.outstanding_interest),
-        nextDueDate: r.next_due_date ?? null,
+        outstandingBalance: r.total_due,
+        nextDueDate: r.due_date ?? null,
         status: r.status,
       })),
     });
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     console.error("Member dashboard fetch failed:", err);
-    return NextResponse.json({ error: "Failed to load your dashboard" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to load your dashboardd" }, { status: 500 });
   } finally {
     client.release();
   }
