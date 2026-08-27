@@ -50,9 +50,8 @@ interface LoanApplicationBody {
   guarantors: GuarantorInput[];
 }
 
-export async function POST(req: NextRequest,
-  { params }: { params: Promise<{ loanId: string }> }) {
-  const { loanId } = await params;
+export async function POST(req: NextRequest) {
+
   const cookieStore = await cookies();
   const auth = cookieStore.get("auth_token")?.value;
 
@@ -70,8 +69,8 @@ export async function POST(req: NextRequest,
   if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
-    console.log(loanId)
+  if (!UUID_RE.test(payload.tenantId)) {
+  
     return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
   }
 
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest,
   if (!auth || !['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
+  if (!UUID_RE.test(payload.tenantId)) {
     return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
   }
 
