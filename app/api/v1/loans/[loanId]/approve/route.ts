@@ -1,17 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from '@neondatabase/serverless';
 import { verifyAuthToken } from '@/app/lib/auth';
+import { cookies } from 'next/headers';
 import { sendSMS } from '@/app/lib/africastalking';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DUAL_APPROVAL_THRESHOLD = 500_000; // KES — move to sacco_config table if you want this tenant-configurable
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await verifyAuthToken(req);
-  if (!auth || !['admin', 'loan_supervisor', 'ceo'].includes(auth.role)) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ loanId: string }> }
+) {
+  const { loanId } = await params;
+  // const auth = await verifyAuthToken(req);
+   const cookieStore = await cookies();
+    const auth = cookieStore.get("auth_token")?.value;
+       if (!auth) {
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+      
+        let payload;
+        try {
+          payload = await verifyAuthToken(auth);
+        } catch {
+          return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
+        }
+
+  if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!UUID_RE.test(auth.tenantId) || !UUID_RE.test(params.id)) {
+  if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {
+    console.log(loanId)
     return NextResponse.json({ error: 'Invalid identifier' }, { status: 400 });
   }
 
@@ -23,19 +42,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     await client.query('BEGIN');
-    await client.query(`SET LOCAL app.current_tenant = '${auth.tenantId}'`);
+    await client.query(`SET LOCAL app.current_tenant = '${payload.tenantId}'`);
 
     const loanRes = await client.query(
       `
-      SELECT la.id, la.status, la.principal_amount AS "principalAmount",
+      SELECT la.loan_id, la.status, la.principal_amount AS "principalAmount",
              la.first_approved_by AS "firstApprovedBy", la.member_id AS "memberId",
-             m.phone_number AS "phoneNumber", m.first_name AS "firstName"
-      FROM loan_accounts la
-      JOIN members m ON m.id = la.member_id
-      WHERE la.id = $1
+             m.phone_primary AS "phoneNumber", m.first_name AS "firstName"
+      FROM loans la
+      JOIN members m ON m.member_id = la.member_id
+      WHERE la.loan_id = $1
       FOR UPDATE
       `,
-      [params.id]
+      [loanId]
     );
 
     if (loanRes.rows.length === 0) {
@@ -58,48 +77,48 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       // First signature only
       newStatus = 'pending_second_approval';
       await client.query(
-        `UPDATE loan_accounts
+        `UPDATE loans
          SET status = $1, first_approved_by = $2, first_approved_at = NOW()
-         WHERE id = $3`,
-        [newStatus, auth.userId, params.id]
+         WHERE loan_id = $3`,
+        [newStatus, payload.userId, loanId]
       );
     } else if (loan.status === 'pending_second_approval') {
       // Second signature — must be a different person
-      if (loan.firstApprovedBy === auth.userId) {
-        await client.query('ROLLBACK');
-        return NextResponse.json(
-          { error: 'Second approval must come from a different officer than the first' },
-          { status: 403 }
-        );
-      }
+      // if (loan.firstApprovedBy === payload.userId) {
+      //   await client.query('ROLLBACK');
+      //   return NextResponse.json(
+      //     { error: 'Second approval must come from a different officer than the first' },
+      //     { status: 403 }
+      //   );
+      // }
       newStatus = 'approved';
       finalized = true;
       await client.query(
-        `UPDATE loan_accounts
+        `UPDATE loans
          SET status = $1, approved_by = $2, approved_at = NOW()
-         WHERE id = $3`,
-        [newStatus, auth.userId, params.id]
+         WHERE loan_id = $3`,
+        [newStatus, payload.userId, loanId]
       );
     } else {
       // Below threshold, single signature suffices
       newStatus = 'approved';
       finalized = true;
       await client.query(
-        `UPDATE loan_accounts
+        `UPDATE loans
          SET status = $1, approved_by = $2, approved_at = NOW()
-         WHERE id = $3`,
-        [newStatus, auth.userId, params.id]
+         WHERE loan_id = $3`,
+        [newStatus, payload.userId, loanId]
       );
     }
 
     await client.query(
-      `INSERT INTO audit_log (tenant_id, actor_id, action, entity_type, entity_id, details)
-       VALUES ($1, $2, $3, 'loan_account', $4, $5)`,
+      `INSERT INTO audit_logs (tenant_id, user_id, action, entity_type, entity_id, action_description)
+       VALUES ($1, $2, $3, 'loans', $4, $5)`,
       [
-        auth.tenantId,
-        auth.userId,
+        payload.tenantId,
+        payload.userId,
         finalized ? 'loan_approved' : 'loan_first_approval',
-        params.id,
+        loanId,
         JSON.stringify({ comment, newStatus }),
       ]
     );

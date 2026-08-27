@@ -3,7 +3,7 @@ import AfricasTalking from 'africastalking';
 
 const AT_USERNAME = process.env.AT_USERNAME;
 const AT_API_KEY = process.env.AT_API_KEY;
-const AT_SENDER_ID = process.env.AT_SENDER_ID; // optional; omit to use AT's shared shortcode
+// const AT_SENDER_ID = process.env.AT_SENDER_ID; // optional; omit to use AT's shared shortcode
 
 if (!AT_USERNAME || !AT_API_KEY) {
   console.warn('Africa\'s Talking credentials missing — SMS sending will fail at runtime.');
