@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     }
     if (search) {
       params.push(`%${search.toLowerCase()}%`);
-      conditions.push(`(LOWER(e.reference) LIKE $${params.length} OR LOWER(e.description) LIKE $${params.length})`);
+      conditions.push(`(LOWER(e.reference_type) LIKE $${params.length} OR LOWER(e.description) LIKE $${params.length})`);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

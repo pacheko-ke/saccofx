@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import { useEffect, useMemo, useState } from "react";
 
 interface Account {
@@ -114,7 +115,10 @@ export default function GeneralLedgerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#eee7d6] pt-4">
+
+    <>
+    <Sidebar></Sidebar>
+    <div className="min-h-screen bg-[#eee7d6] pt-4 md:px-10">
       <div className="mx-auto max-w-6xl px-2 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6">
@@ -287,6 +291,7 @@ export default function GeneralLedgerPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
