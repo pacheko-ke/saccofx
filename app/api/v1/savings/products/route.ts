@@ -11,8 +11,8 @@ export async function GET() {
       FROM savings_products
     
     `);
-
-    return NextResponse.json({ savingsProducts });
+console.log(savingsProducts.rows)
+    return NextResponse.json( savingsProducts.rows );
   } catch (error) {
     console.error("Failed to fetch savings products:", error);
     return NextResponse.json(

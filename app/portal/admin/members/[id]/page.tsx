@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import BackBtn from "@/app/components/BackButton";
+import { useState,useEffect } from "react";
 
 
 
@@ -177,12 +178,7 @@ export default function MemberProfilePage() {
   return (
     <div className="min-h-screen bg-[#eee7d6] pt-4">
       <div className="mx-auto max-w-5xl px-4 py-10 md:px-8">
-        <Link
-          href="/dashboard/members"
-          className="mb-6 inline-flex items-center gap-1 text-sm text-[#4a5c50] hover:text-[#1c2b22]"
-        >
-          ← Back to members
-        </Link>
+      <BackBtn/>
 
         {loading && (
           <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] px-6 py-12 text-center text-[#9aa79f]">

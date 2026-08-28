@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 
     const holdingsResult = await client.query(
       `SELECT
+      m.member_id,
          m.member_number       AS "memberNo",
          m.first_name          AS "firstName",
          m.last_name           AS "lastName",

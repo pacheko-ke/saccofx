@@ -1,12 +1,16 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/router";
+
 
 type ShareStatus = "active" | "dormant" | "transferred";
 
 interface ShareHolding {
   memberNo: string;
   firstName:string;
+  member_id:string;
   lastName:string;
   name: string;
   certificateNo: string;
@@ -94,8 +98,8 @@ export default function ShareHoldingsPage() {
       const matchesQuery =
         query.trim() === "" ||
         h.name.toLowerCase().includes(query.toLowerCase()) ||
-        h.memberNo.toLowerCase().includes(query.toLowerCase()) ||
-        h.certificateNo.toLowerCase().includes(query.toLowerCase());
+        h.memberNo.toLowerCase().includes(query.toLowerCase()) 
+        // ||h.certificateNo.toLowerCase().includes(query.toLowerCase());
 
       const matchesStatus = statusFilter === "all" || h.status === statusFilter;
 
@@ -116,6 +120,8 @@ export default function ShareHoldingsPage() {
   }, [holdings, parValueKes, minShares]);
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#faf6ec] font-[IBM_Plex_Sans] placeholder-sky-100 pt-10 md:pl-16">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 border-b border-[#c9a24b]/40 pb-6">
@@ -148,7 +154,7 @@ export default function ShareHoldingsPage() {
           <SummaryCard label="Total Shares in Issue" value={totals.totalShares.toLocaleString()} loading={loading} />
           <SummaryCard label="Shareholding Members" value={totals.shareholders.toString()} loading={loading} />
           <SummaryCard
-            label="Below Minimum"
+            label="Below Minimum Shareholders"
             value={totals.belowMin.toString()}
             accent={totals.belowMin > 0 ? "warn" : undefined}
             loading={loading}
@@ -235,7 +241,7 @@ export default function ShareHoldingsPage() {
                         <td className="whitespace-nowrap px-4 py-3">
                           <div className="text-sm font-medium text-[#1c2b22]">{h.name}</div>
                           
-                           <a href={`/members/${h.memberNo}`}
+                           <a href={`/portal/admin/members/${h.member_id}`}
                             className="text-xs text-[#8a6a1f] underline decoration-[#c9a24b] decoration-1 underline-offset-2 hover:text-[#c9a24b]"
                           >
                             {h.memberNo}
@@ -305,6 +311,7 @@ export default function ShareHoldingsPage() {
         />
       )}
     </div>
+    </>
   );
 }
 

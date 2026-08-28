@@ -3,6 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/app/components/SideBar';
+import BackButton from '@/app/components/BackButton';
 
 interface Account {
   id: string;
@@ -117,6 +118,8 @@ export default function SavingsAccountPage({
       <div className=''>
       <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#eee7d6] py-8 print:bg-white px-4 pt-16 md:pt-10 md:px-20 md:mx-auto">
+      
+      <BackButton></BackButton>
       <div className="max-w-4xl mx-auto">
         {/* Header / passbook cover */}
         <div className="bg-[#1c2b22] text-[#faf6ec] rounded-t-lg px-8 py-6 border-2 border-[#c9a24b]">

@@ -66,8 +66,8 @@ export default function AddSavingsAccountModal({
       try {
         const res = await fetch("/api/v1/savings/products");
         if (!res.ok) return;
-        const data = await res.json();
-        setProducts(data.savingsProducts ?? []);
+const data = await res.json();
+setProducts(data ?? data ?? []);
       } catch {
         // Non-fatal: fall back to manual product entry if this fails
       }
@@ -158,6 +158,7 @@ export default function AddSavingsAccountModal({
   };
 
   if (!isOpen) return null;
+ 
 
   return (
     <div
