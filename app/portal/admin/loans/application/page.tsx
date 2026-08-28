@@ -138,7 +138,7 @@ export default function LoanApprovalsPage() {
                 {k.label}
               </div>
               <div
-                className="text-2xl mt-1"
+                className="md:text-2xl mt-1"
                 style={{ fontFamily: 'Georgia, serif', color: '#1c2b22' }}
               >
                 {k.value}
@@ -148,7 +148,7 @@ export default function LoanApprovalsPage() {
         </div>
 
         {/* Tabs + search */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row  justify-between mb-4">
           <div className="flex gap-2">
             {TABS.map((t) => (
               <button
@@ -169,7 +169,7 @@ export default function LoanApprovalsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search member name or number…"
-            className="px-3 py-2 rounded-md border text-sm w-64"
+            className="px-3 py-2 my-2 md:0 rounded-md border text-sm md:w-64"
             style={{ borderColor: '#c9a24b', background: '#fff' }}
           />
         </div>
