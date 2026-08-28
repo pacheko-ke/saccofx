@@ -77,7 +77,7 @@ const links: NavItem[] = [
     icon: CreditCard,
     children: [
       { href: "/portal/admin/loans/application", label: "Loans", icon: Users },
-      { href: "/portal/admin/loans/new", label: "New Application", icon: Shield },
+      { href: "/portal/admin/loans/application/new", label: "New Application", icon: Shield },
       // { href: "/portal/admin/loans/history", label: "Loan History", icon: Shield },
       { href: "/portal/admin/loans/defaulters", label: "Defaulters", icon: Shield },
       // { href: "/portal/admin/closed-loans", label: "Closed Loans", icon: Shield },
