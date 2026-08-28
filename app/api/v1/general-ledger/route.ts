@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
     if (accountId) {
       params.push(accountId);
-      conditions.push(`l.account_id = $${params.length}`);
+      conditions.push(`l.gl_account_id = $${params.length}`);
     }
     if (dateFrom) {
       params.push(dateFrom);
