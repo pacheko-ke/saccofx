@@ -1,5 +1,6 @@
 'use client';
 
+import Sidebar from '@/app/components/SideBar';
 import { useEffect, useState, useCallback } from 'react';
 
 type Loan = {
@@ -101,6 +102,8 @@ export default function LoanApprovalsPage() {
   }
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen md:pl-20" style={{ background: '#faf6ec' }}>
       <div className="max-w-6xl mx-auto px-6 py-10">
         <h1
@@ -350,5 +353,6 @@ export default function LoanApprovalsPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

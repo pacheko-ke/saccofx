@@ -26,7 +26,7 @@ export async function POST(
           return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
         }
 
-  if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
+  if (!payload || ['loan.approve'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!UUID_RE.test(payload.tenantId) || !UUID_RE.test(loanId)) {

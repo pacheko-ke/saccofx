@@ -17,17 +17,20 @@ export async function GET(req: NextRequest) {
         let payload;
         try {
           payload = await verifyAuthToken(token);
+          console.log(payload)
         } catch {
           return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
         }
   
-      const tenantId = payload?.tenantId;
-        const userId = payload?.userId;
+
   if (!payload || ['admin', 'loan_supervisor', 'ceo'].includes(payload.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!UUID_RE.test(payload.tenantId)) {
-    return NextResponse.json({ error: 'Invalid tenant' }, { status: 400 });
+
+  let tenantId = payload.tenantId
+  if (!UUID_RE.test(tenantId)) {
+    console.log(payload.tenantId)
+    return NextResponse.json({ error: 'Invalid tenantt' }, { status: 400 });
   }
 
   const { searchParams } = new URL(req.url);

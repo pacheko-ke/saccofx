@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
         m.first_name,
         m.last_name,
         m.id_number,
-        m.member_id
+        m.member_id,
+        u.tenant_id
        FROM users u 
        LEFT JOIN roles r ON r.role_id=u.role_id
        LEFT JOIN members m ON m.member_id = u.member_id
@@ -121,13 +122,14 @@ export async function POST(req: NextRequest) {
     );
 
     const redirectTo =
-      activeRole === "member_portal_user" ? "/portal/member/dashboard" : "/dashboard";
+      activeRole === "member_portal_user" ? "/portal/member/dashboard" : "/portal/admin/dashboard";
 
     const response = NextResponse.json({
       redirectTo,
       user: {
         firstName: user.first_name,
         lastName: user.last_name,
+        tenantId:user.tenant_id,
         userId: user.user_id,
         memberId: user.member_id,
         role: activeRole,

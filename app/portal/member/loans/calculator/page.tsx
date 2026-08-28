@@ -205,7 +205,7 @@ export default function LoanCalculatorPage() {
       termMonths: String(termMonths),
       ...(selectedProduct ? { productId: selectedProduct.loan_product_id } : {}),
     });
-    router.push(`/portal/member/loans/application/new?${params.toString()}`);
+    router.push(`/portal/member/loans/new?${params.toString()}`);
   }
 
   return (

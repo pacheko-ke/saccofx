@@ -38,16 +38,16 @@ type NavItem = {
 };
 
 const links: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/portal/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
 
-  // { href: "/dashboard/docs", label: "Documents", icon: FileText },
+  // { href: "/portal/admin/docs", label: "Documents", icon: FileText },
 
   // {
   //   label: "Settings",
   //   icon: Settings,
   //   children: [
-  //     { href: "/dashboard/settings/notifications", label: "Notifications", icon: Bell },
-  //     { href: "/dashboard/settings/security", label: "Security", icon: Shield },
+  //     { href: "/portal/admin/settings/notifications", label: "Notifications", icon: Bell },
+  //     { href: "/portal/admin/settings/security", label: "Security", icon: Shield },
   //   ],
   // },
 
@@ -55,9 +55,9 @@ const links: NavItem[] = [
     label: "Membership",
     icon: Users,
     children: [
-      { href: "/dashboard/members/view", label: "View Members", icon: Users },
-      { href: "/dashboard/members/add", label: "Add Member", icon: Shield },
-      { href: "/dashboard/members/cards", label: "Membership Cards", icon: Shield },
+      { href: "/portal/admin/members/view", label: "View Members", icon: Users },
+      { href: "/portal/admin/members/add", label: "Add Member", icon: Shield },
+      { href: "/portal/admin/members/cards", label: "Membership Cards", icon: Shield },
     ],
   },
 
@@ -65,10 +65,10 @@ const links: NavItem[] = [
     label: "Payments & Collections",
     icon: Coins,
     children: [
-      { href: "/dashboard/payments/teller-deposits", label: "Teller Deposits", icon: Users },
-      { href: "/dashboard/payments/mobile-money", label: "Mobile Money", icon: Shield },
-      { href: "/dashboard/payments/repayments", label: "Loan Repayments", icon: Shield },
-      { href: "/dashboard/payments/cashbook", label: "Cashbook", icon: Shield },
+      { href: "/portal/admin/payments/teller-deposits", label: "Teller Deposits", icon: Users },
+      { href: "/portal/admin/payments/mobile-money", label: "Mobile Money", icon: Shield },
+      { href: "/portal/admin/payments/repayments", label: "Loan Repayments", icon: Shield },
+      { href: "/portal/admin/payments/cashbook", label: "Cashbook", icon: Shield },
     ],
   },
 
@@ -76,12 +76,12 @@ const links: NavItem[] = [
     label: "Lending",
     icon: CreditCard,
     children: [
-      { href: "/dashboard/loans/application", label: "Loans", icon: Users },
-      { href: "/dashboard/loans/application/new", label: "New Application", icon: Shield },
-      // { href: "/dashboard/loans/history", label: "Loan History", icon: Shield },
-      { href: "/dashboard/loans/defaulters", label: "Defaulters", icon: Shield },
-      // { href: "/dashboard/closed-loans", label: "Closed Loans", icon: Shield },
-      { href: "/dashboard/loans/products", label: "Loan Products & Rates", icon: Shield },
+      { href: "/portal/admin/loans/application", label: "Loans", icon: Users },
+      { href: "/portal/admin/loans/new", label: "New Application", icon: Shield },
+      // { href: "/portal/admin/loans/history", label: "Loan History", icon: Shield },
+      { href: "/portal/admin/loans/defaulters", label: "Defaulters", icon: Shield },
+      // { href: "/portal/admin/closed-loans", label: "Closed Loans", icon: Shield },
+      { href: "/portal/admin/loans/products", label: "Loan Products & Rates", icon: Shield },
     ],
   },
 
@@ -89,9 +89,9 @@ const links: NavItem[] = [
     label: "Member Finances",
     icon: ArrowDownRight,
     children: [
-      { href: "/dashboard/finance/savings", label: "Savings Accounts", icon: Users },
-      { href: "/dashboard/finance/shares", label: "Share Holdings", icon: Shield },
-      { href: "/dashboard/finance/charges-and-fees", label: "Charges and Fees", icon: Shield },
+      { href: "/portal/admin/finance/savings", label: "Savings Accounts", icon: Users },
+      { href: "/portal/admin/finance/shares", label: "Share Holdings", icon: Shield },
+      { href: "/portal/admin/finance/charges-and-fees", label: "Charges and Fees", icon: Shield },
     ],
   },
 
@@ -99,11 +99,11 @@ const links: NavItem[] = [
     label: "Accounting",
     icon: Banknote,
     children: [
-      { href: "/dashboard/accounting/expenditures", label: "Expenditures", icon: Users },
-      { href: "/dashboard/accounting/budget", label: "Budget", icon: Shield },
-      { href: "/dashboard/accounting/procurement", label: "Procurement", icon: Shield },
-      { href: "/dashboard/accounting/reversals-and-corrections", label: "Reversals & Corrections", icon: Shield },
-      { href: "/dashboard/accounting/general-ledger", label: "General Ledger", icon: Shield },
+      { href: "/portal/admin/accounting/expenditures", label: "Expenditures", icon: Users },
+      { href: "/portal/admin/accounting/budget", label: "Budget", icon: Shield },
+      { href: "/portal/admin/accounting/procurement", label: "Procurement", icon: Shield },
+      { href: "/portal/admin/accounting/reversals-and-corrections", label: "Reversals & Corrections", icon: Shield },
+      { href: "/portal/admin/accounting/general-ledger", label: "General Ledger", icon: Shield },
     ],
   },
 
@@ -111,16 +111,16 @@ const links: NavItem[] = [
     label: "Reporting",
     icon: LineChart,
     children: [
-      { href: "/dashboard/reports/document-generation", label: "Document Generation", icon: Users },
-      { href: "/dashboard/reports/financial-reports", label: "Financial Reports", icon: Shield },
-      { href: "/dashboard/reports/members", label: "Member Register", icon: Shield },
-      { href: "/dashboard/reports/member-statements", label: "Member Statements", icon: Shield },
-      { href: "/dashboard/reports/loans-portfolio", label: "Loan portfolio", icon: Shield },
-      { href: "/dashboard/reports/defaulters", label: "Loan defaulters", icon: Shield },
-      { href: "/dashboard/reports/savings", label: "Savings Accounts", icon: Shield },
-      { href: "/dashboard/reports/shares", label: "Share Holdings", icon: Shield },
-      { href: "/dashboard/reports/general-ledger", label: "General Ledger", icon: Shield },
-      { href: "/dashboard/reports/expenditures", label: "Expenditures", icon: Shield },
+      { href: "/portal/admin/reports/document-generation", label: "Document Generation", icon: Users },
+      { href: "/portal/admin/reports/financial-reports", label: "Financial Reports", icon: Shield },
+      { href: "/portal/admin/reports/members", label: "Member Register", icon: Shield },
+      { href: "/portal/admin/reports/member-statements", label: "Member Statements", icon: Shield },
+      { href: "/portal/admin/reports/loans-portfolio", label: "Loan portfolio", icon: Shield },
+      { href: "/portal/admin/reports/defaulters", label: "Loan defaulters", icon: Shield },
+      { href: "/portal/admin/reports/savings", label: "Savings Accounts", icon: Shield },
+      { href: "/portal/admin/reports/shares", label: "Share Holdings", icon: Shield },
+      { href: "/portal/admin/reports/general-ledger", label: "General Ledger", icon: Shield },
+      { href: "/portal/admin/reports/expenditures", label: "Expenditures", icon: Shield },
     ],
   },
 
@@ -128,9 +128,9 @@ const links: NavItem[] = [
     label: "Communication",
     icon: MessageCircle,
     children: [
-      { href: "/dashboard/communication/scheduled-emails", label: "Scheduled Emails", icon: Users },
-      { href: "/dashboard/communication/scheduled-sms", label: "Scheduled SMS", icon: Shield },
-      { href: "/dashboard/communication/support-tickets", label: "Support tickets", icon: Shield },
+      { href: "/portal/admin/communication/scheduled-emails", label: "Scheduled Emails", icon: Users },
+      { href: "/portal/admin/communication/scheduled-sms", label: "Scheduled SMS", icon: Shield },
+      { href: "/portal/admin/communication/support-tickets", label: "Support tickets", icon: Shield },
     ],
   },
 
@@ -138,9 +138,9 @@ const links: NavItem[] = [
     label: "Security and Admin",
     icon: Fingerprint,
     children: [
-      { href: "/dashboard/administration/security/roles", label: "Users & Roles", icon: Users },
-      { href: "/dashboard/administration/security/audit", label: "Security & Audit", icon: Shield },
-      { href: "/dashboard/administration/security/config", label: "Sacco Config", icon: Shield },
+      { href: "/portal/admin/administration/security/roles", label: "Users & Roles", icon: Users },
+      { href: "/portal/admin/administration/security/audit", label: "Security & Audit", icon: Shield },
+      { href: "/portal/admin/administration/security/config", label: "Sacco Config", icon: Shield },
     ],
   },
 

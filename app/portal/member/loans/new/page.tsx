@@ -64,6 +64,7 @@ function LoanApplicationPage() {
   }));
   const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
   const [loanDetailsError, setLoanDetailsError] = useState("");
+  const [limit, setLoanLimit] = useState();
 
   const [applicantOtpOpen, setApplicantOtpOpen] = useState(false);
   const [applicantOtpVerified, setApplicantOtpVerified] = useState(false);
@@ -72,6 +73,23 @@ function LoanApplicationPage() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
+
+    // to impliment limit computation
+    async function getLoanLimit(){
+
+      try{
+         const res = await fetch("/api/v1/members/loans/limit");
+        if (!res.ok) throw new Error("Failed to compute limit");
+        const data = await res.json();
+      }catch(error){
+
+
+      }
+    }
+
+
+
+
     let cancelled = false;
 
     async function loadProducts() {
@@ -264,6 +282,7 @@ function LoanApplicationPage() {
                       className="w-full rounded-md border border-[#c9a24b]/40 px-3 py-2 text-sm focus:border-[#1c2b22] focus:outline-none"
                       placeholder="150000"
                     />
+                    <h1 className="text-xs text-red-400 mt-2">Loan Limit: KES</h1>
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-[#4a5c50]">Term (months)</label>
