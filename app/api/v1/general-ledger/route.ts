@@ -7,7 +7,7 @@ const PAGE_SIZE = 50;
  * GET /api/general-ledger
  *
  * Query params (all optional):
- *   accountId   - filter to a single account (chart_of_accounts.account_id)
+ *   accountId   - filter to a single account (gl_accounts.account_id)
  *   dateFrom    - ISO date, inclusive
  *   dateTo      - ISO date, inclusive
  *   search      - matches entry reference or description
@@ -19,7 +19,7 @@ const PAGE_SIZE = 50;
  * the balance column is accurate, then the page slice is returned.
  *
  * NOTE: adjust table/column names below to match your actual
- * journal_entries / journal_entry_lines / chart_of_accounts schema.
+ * journal_entries / journal_entry_lines / gl_accounts schema.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -58,23 +58,22 @@ export async function GET(req: NextRequest) {
     const rows = await sql.query(
       `
       SELECT
-        l.journal_entry_line_id AS line_id,
-        e.entry_number,
+        l.journal_line_id AS line_id,
+        e.reference_id,
         e.entry_date,
-        e.reference,
+        e.reference_type,
         e.description AS entry_description,
-        l.description AS line_description,
-        l.debit_amount,
-        l.credit_amount,
-        a.account_id,
+        l.debit,
+        l.credit,
+        a.gl_account_id,
         a.account_code,
         a.account_name,
         a.account_type
-      FROM journal_entry_lines l
-      JOIN journal_entries e ON e.journal_entry_id = l.journal_entry_id
-      JOIN chart_of_accounts a ON a.account_id = l.account_id
+      FROM gl_journal_lines l
+      JOIN gl_journal_entries e ON e.journal_id = l.journal_id
+      JOIN gl_accounts a ON a.gl_account_id = l.gl_account_id
       ${whereClause}
-      ORDER BY e.entry_date ASC, e.entry_number ASC, l.journal_entry_line_id ASC
+      ORDER BY e.entry_date ASC, e.reference_id ASC, l.journal_line_id ASC
       `,
       params
     );
@@ -82,16 +81,16 @@ export async function GET(req: NextRequest) {
     // Running balance only makes sense when scoped to a single account.
     let runningBalance = 0;
     const withBalance = rows.map((r: any) => {
-      const debit = Number(r.debit_amount) || 0;
-      const credit = Number(r.credit_amount) || 0;
+      const debit = Number(r.debit) || 0;
+      const credit = Number(r.credit) || 0;
       if (accountId) {
         runningBalance += debit - credit;
       }
       return { ...r, running_balance: accountId ? runningBalance : null };
     });
 
-    const totalDebits = withBalance.reduce((sum: number, r: any) => sum + (Number(r.debit_amount) || 0), 0);
-    const totalCredits = withBalance.reduce((sum: number, r: any) => sum + (Number(r.credit_amount) || 0), 0);
+    const totalDebits = withBalance.reduce((sum: number, r: any) => sum + (Number(r.debit) || 0), 0);
+    const totalCredits = withBalance.reduce((sum: number, r: any) => sum + (Number(r.credit) || 0), 0);
 
     const totalCount = withBalance.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));

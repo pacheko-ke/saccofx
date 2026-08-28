@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 interface MemberSearchResult {
   member_id: string;
 
-  member_number: string;
+  memberNo: string;
   firstName: string;
   lastName: string;
   idNumber: string;
@@ -225,7 +225,7 @@ setProducts(data ?? data ?? []);
                           {m.firstName} {m.lastName}
                         </span>
                         <span className="ml-2 font-mono text-xs text-[#4a5c50]">
-                          {m.member_number}
+                          - {m.memberNo}
                         </span>
                       </button>
                     ))

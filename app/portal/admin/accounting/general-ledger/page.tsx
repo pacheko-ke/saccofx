@@ -102,7 +102,7 @@ export default function GeneralLedgerPage() {
   }, [accountId, dateFrom, dateTo, search, page]);
 
   const selectedAccount = useMemo(
-    () => accounts.find((a) => a.account_id === accountId),
+    () => accounts.find((a) => a.gl_account_id === accountId),
     [accounts, accountId]
   );
 
@@ -149,7 +149,7 @@ export default function GeneralLedgerPage() {
               >
                 <option value="">All accounts</option>
                 {accounts.map((a) => (
-                  <option key={a.account_id} value={a.account_id}>
+                  <option key={a.gl_account_id} value={a.gl_account_id}>
                     {a.account_code} · {a.account_name}
                   </option>
                 ))}
@@ -204,7 +204,7 @@ export default function GeneralLedgerPage() {
             <thead className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60 text-left">
               <tr>
                 <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Date</th>
-                <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Entry no.</th>
+                {/* <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Entry no.</th> */}
                 <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Reference</th>
                 {!accountId && <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Account</th>}
                 <th className="px-4 py-3 font-serif font-medium text-[#1c2b22]">Description</th>
@@ -236,8 +236,8 @@ export default function GeneralLedgerPage() {
                         day: "numeric",
                       })}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{e.entry_number}</td>
-                    <td className="px-4 py-3 text-[#4a5c50]">{e.reference || "—"}</td>
+                    {/* <td className="px-4 py-3 font-mono text-xs text-[#4a5c50]">{e.entry_number}</td> */}
+                    <td className="px-4 py-3 text-[#4a5c50]">{e.reference_type || "—"}</td>
                     {!accountId && (
                       <td className="px-4 py-3 text-[#1c2b22]">
                         {e.account_code} · {e.account_name}
@@ -245,10 +245,10 @@ export default function GeneralLedgerPage() {
                     )}
                     <td className="px-4 py-3 text-[#1c2b22]">{e.line_description || e.entry_description}</td>
                     <td className="px-4 py-3 text-right text-[#1c2b22]">
-                      {Number(e.debit_amount) > 0 ? KES(Number(e.debit_amount)) : "—"}
+                      {Number(e.debit) > 0 ? KES(Number(e.debit)) : "—"}
                     </td>
                     <td className="px-4 py-3 text-right text-[#1c2b22]">
-                      {Number(e.credit_amount) > 0 ? KES(Number(e.credit_amount)) : "—"}
+                      {Number(e.credit) > 0 ? KES(Number(e.credit)) : "—"}
                     </td>
                     {accountId && (
                       <td className="px-4 py-3 text-right font-medium text-[#1c2b22]">

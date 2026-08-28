@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {sql} from "@/app/lib/db"
+import {pool} from "@/app/lib/db"
 
 interface BulkMemberInput {
   fullName: string;
@@ -21,6 +21,7 @@ interface BulkMemberInput {
 }
 
 export async function POST(req: NextRequest) {
+   const client = await pool.connect()
   try {
     const body = (await req.json()) as { members: BulkMemberInput[] };
 
@@ -33,9 +34,10 @@ export async function POST(req: NextRequest) {
     const failures: { row: number; reason: string }[] = [];
 
     for (const [i, m] of body.members.entries()) {
+     
       try {
         // Adjust column names/table to match your actual members schema.
-        await sql`
+        await client.query(`
           INSERT INTO members (
             full_name,
             id_number,
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
             'pending',
             now()
           )
-        `;
+        `);
         imported++;
       } catch (err) {
         failed++;
@@ -87,5 +89,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Bulk member import error:", err);
     return NextResponse.json({ error: "Failed to import members" }, { status: 500 });
+  }finally{
+   client.release()
   }
 }

@@ -6,11 +6,11 @@ export async function GET() {
   try {
     const accounts = await sql`
       SELECT
-        account_id,
+        gl_account_id,
         account_code,
         account_name,
         account_type
-      FROM chart_of_accounts
+      FROM gl_accounts
       WHERE is_active = true
       ORDER BY account_code ASC
     `;
