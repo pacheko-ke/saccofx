@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import GuarantorStep, { Guarantor } from "@/app/components/loans/GuarantorStep";
+import Sidebar from "@/app/components/SideBar";
 
 const STEPS = ["Loan details", "Guarantors", "Review", "Submit"] as const;
 type Step = (typeof STEPS)[number];
@@ -129,6 +130,8 @@ export default function LoanApplicationPage() {
   }
 
   return (
+<>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#eee7d6] pt-4">
       <div className="mx-auto max-w-2xl px-4 py-10">
         <h1 className="font-serif text-2xl text-[#1c2b22]">Loan application</h1>
@@ -384,5 +387,6 @@ export default function LoanApplicationPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

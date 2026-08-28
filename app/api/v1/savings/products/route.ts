@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
-import {sql} from "@/app/lib/db"
+import { pool } from "@/app/lib/db"
 
 export async function GET() {
+  const client = await pool.connect();
   try {
-    const savingsProducts = await sql`
+
+    const savingsProducts = await client.query(`
       SELECT
        savings_product_id,product_name
       FROM savings_products
     
-    `;
+    `);
 
-    return NextResponse.json( {savingsProducts} );
+    return NextResponse.json({ savingsProducts });
   } catch (error) {
     console.error("Failed to fetch savings products:", error);
     return NextResponse.json(
       { error: "Failed to fetch savings products" },
       { status: 500 }
     );
+  } finally {
+    client.release()
   }
 }

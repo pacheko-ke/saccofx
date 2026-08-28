@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Sidebar from "@/app/components/SideBar";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -136,6 +137,8 @@ export default function LoanDefaultersPage() {
   }, [filtered]);
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen md:pl-20 bg-[#faf6ec]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
@@ -315,6 +318,7 @@ export default function LoanDefaultersPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }
 
@@ -344,5 +348,6 @@ function SummaryCard({
         {value}
       </p>
     </div>
+    
   );
 }

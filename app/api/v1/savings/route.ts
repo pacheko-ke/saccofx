@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const [members, totalResult] = await Promise.all([
       sql`
         SELECT
-        savings_accounts.savings_account_id,
+        savings_accounts.savings_account_id as "id",
         savings_accounts.account_number AS "accountNumber",
         members.id_number AS "memberID",
         members.first_name AS "lastName",

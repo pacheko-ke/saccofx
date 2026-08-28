@@ -38,7 +38,7 @@ const{memberId,productId,initialDeposit} =await body;
     await client.query("ROLLBACK")
     return NextResponse.json({error})
  }finally{
-    // client.release()
+    client.release()
  }
 
 }

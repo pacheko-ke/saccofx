@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Sidebar from "@/app/components/SideBar";
 
 interface LoanProduct {
   loan_product_id: string;
@@ -107,8 +108,10 @@ export default function LoanProductDetailPage() {
   }
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#eee7d6] pt-4">
-      <div className="mx-auto max-w-4xl px-4 py-10 md:px-8">
+      <div className="mx-auto md:max-w-1/2 px-4 py-10 md:px-8">
         {/* Back link */}
         <Link
           href="/dashboard/loan-products"
@@ -127,7 +130,7 @@ export default function LoanProductDetailPage() {
           <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] px-6 py-12 text-center">
             <p className="text-sm text-[#8a2c2c]">{error}</p>
             <button
-              onClick={() => router.push("/dashboard/loan-products")}
+              onClick={() => router.push("/portal/admin/loans/products")}
               className="mt-4 text-sm text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2"
             >
               Return to loan products
@@ -238,6 +241,7 @@ export default function LoanProductDetailPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

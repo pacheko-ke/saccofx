@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -220,7 +221,10 @@ export default function LoanProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#eee7d6] pt-4">
+
+    <>
+    <Sidebar></Sidebar>
+    <div className="min-h-screen bg-[#eee7d6] pt-4 md:px-10">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -317,7 +321,7 @@ export default function LoanProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/dashboard/loans/products/${p.loan_product_id}`}
+                        href={`/portal/admin/loans/products/${p.loan_product_id}`}
                         className="font-medium text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#233a2c]"
                       >
                         View
@@ -610,6 +614,7 @@ export default function LoanProductsPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

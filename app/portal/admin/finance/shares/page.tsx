@@ -62,7 +62,7 @@ export default function ShareHoldingsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/finance/shares", { cache: "no-store" });
+      const res = await fetch("/api/v1/shares", { cache: "no-store" });
       if (!res.ok) {
         throw new Error(`Request failed (${res.status})`);
       }

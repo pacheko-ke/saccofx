@@ -1,60 +1,75 @@
-import { NextRequest, NextResponse } from "next/server";
-import {pool} from "@/app/lib/db"
-import { cookies } from "next/headers";
-import { verifyAuthToken } from "@/app/lib/auth"; 
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/app/lib/db';
+import { verifyAuthToken } from '@/app/lib/auth';
+import { cookies } from 'next/headers';
 
+// Back-office only — this register isn't exposed on the member portal
+const ALLOWED_ROLES = new Set(['admin', 'manager', 'teller']);
 
-async function getAuthPayload() {
-  const token = (await cookies()).get("auth_token")?.value;
-  if (!token) return null;
+export async function GET(request: NextRequest) {
+   const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+  if (!token) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let session;
   try {
-    return await verifyAuthToken(token);
+    session = await verifyAuthToken(token);
   } catch {
-    return null;
-  }
-}
-
-export async function GET(_req: NextRequest) {
-  const payload = await getAuthPayload();
-  console.log(payload)
-  if (!payload) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const member_id = payload.memberId;
+  // if (!ALLOWED_ROLES.has(session.role)) {
+  //   return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  // }
 
-  if (!member_id) {
-    console.log(`member id is ${member_id}`)
-    return NextResponse.json({ error: "Invalid user" }, { status: 400 });
-  }
+
+  // CHECKING ROLES HERE
+
 
   const client = await pool.connect();
+  const tenantId = session?.tenantId;
   try {
-    await client.query("BEGIN");
-    // tenantId validated via Number.isInteger() above — SET LOCAL can't take $1 placeholders
-    await client.query(`SET LOCAL app.current_tenant = ${member_id}`);
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL app.current_tenant = '${tenantId}'`);
 
-    const { rows } = await client.query(
-      `
-      SELECT
-       number_of_shares AS "sharesHeld",
-       join_date AS "dateJoined",
-       first_name AS "firstName",
-       last_name AS "lastName",
-       m.member_number AS "memberNo",
-       msa.status,
-       msa.updated_at AS "lastActivityAt"
+    const settingsResult = await client.query(
+      `SELECT par_value_kes AS "parValueKes", minimum_shares AS "minShares"
+       FROM share_settings WHERE tenant_id=$1
+       LIMIT 1`,[tenantId]
+    );
+    const parValueKes = settingsResult.rows[0]?.parValueKes ?? 100;
+    const minShares = settingsResult.rows[0]?.minShares ?? 100;
 
-        FROM members m LEFT JOIN member_share_accounts msa ON m.member_id=msa.member_id
-      `
+    const holdingsResult = await client.query(
+      `SELECT
+         m.member_number       AS "memberNo",
+         m.first_name          AS "firstName",
+         m.last_name           AS "lastName",
+         (m.first_name || ' ' || m.last_name) AS "name",
+        
+         sa.number_of_shares        AS "sharesHeld",
+         sa.opened_at          AS "dateJoined",
+         sa.updated_at   AS "lastActivityAt",
+         sa.status
+       FROM member_share_accounts sa
+       JOIN members m ON m.member_id = sa.member_id
+       ORDER BY sa.number_of_shares DESC, m.last_name ASC`
     );
 
-    await client.query("COMMIT");
-    return NextResponse.json({ holdings: rows, parValueKes: 100, minShares: 100 });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("GET /api/shares failed:", err);
-    return NextResponse.json({ error: "Failed to load share holdings" }, { status: 500 });
+    await client.query('COMMIT');
+
+    return NextResponse.json({
+      success: true,
+      holdings: holdingsResult.rows,
+      parValueKes,
+      minShares,
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('GET /api/v1/shares error:', error);
+    return NextResponse.json(error);
   } finally {
     client.release();
   }
