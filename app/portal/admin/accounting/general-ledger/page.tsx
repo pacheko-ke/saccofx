@@ -8,17 +8,19 @@ interface Account {
   account_code: string;
   account_name: string;
   account_type: string;
+  gl_account_id:string;
+
 }
 
 interface LedgerEntry {
   line_id: string;
   entry_number: string;
   entry_date: string;
-  reference: string;
+  reference_type: string;
   entry_description: string;
   line_description: string;
-  debit_amount: string;
-  credit_amount: string;
+  debit: string;
+  credit: string;
   account_id: string;
   account_code: string;
   account_name: string;
