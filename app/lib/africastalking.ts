@@ -47,6 +47,12 @@ export interface SendSMSResult {
   cost?: string;
 }
 
+interface AtSmsPayload {
+  to: string[];
+  message: string;
+  from?: string;
+}
+
 /**
  * Sends a single SMS via Africa's Talking.
  * Throws on transport/config failure; check the returned status for
@@ -63,7 +69,7 @@ export async function sendSMS(
 
   const recipient = normalizePhoneNumber(to);
 
-  const payload: Record<string, any> = {
+  const payload: AtSmsPayload = {
     to: [recipient],
     message,
   };
@@ -111,7 +117,7 @@ export async function sendBulkSMS(
 
   const normalized = recipients.map(normalizePhoneNumber);
 
-  const payload: Record<string, any> = {
+  const payload: AtSmsPayload = {
     to: normalized,
     message,
   };
