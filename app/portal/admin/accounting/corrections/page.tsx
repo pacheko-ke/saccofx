@@ -125,7 +125,7 @@ function RequestReversalPanel() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/transactions/search?q=${encodeURIComponent(query)}&type=${type}`);
+      const res = await fetch(`/api/v1/transactions/search?q=${encodeURIComponent(query)}&type=${type}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Search failed');
       setResults(data.results);
@@ -141,7 +141,7 @@ function RequestReversalPanel() {
     setSubmitting(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/reversals', {
+      const res = await fetch('/api/v1/reversals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -314,7 +314,7 @@ function ReversalQueuePanel({ status, showActions }: { status: string; showActio
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const url = status ? `/api/reversals?status=${status}` : '/api/reversals';
+      const url = status ? `/api/v1/reversals?status=${status}` : '/api/v1/reversals';
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to load');
@@ -334,7 +334,7 @@ function ReversalQueuePanel({ status, showActions }: { status: string; showActio
     setBusyId(id);
     setError(null);
     try {
-      const res = await fetch(`/api/reversals/${id}/approve`, { method: 'POST' });
+      const res = await fetch(`/api/v1/reversals/${id}/approve`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Approval failed');
       await load();
@@ -350,7 +350,7 @@ function ReversalQueuePanel({ status, showActions }: { status: string; showActio
     setBusyId(id);
     setError(null);
     try {
-      const res = await fetch(`/api/reversals/${id}/reject`, {
+      const res = await fetch(`/api/v1/reversals/${id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rejectionReason: rejectReason.trim() }),
@@ -379,13 +379,13 @@ function ReversalQueuePanel({ status, showActions }: { status: string; showActio
         </div>
       )}
 
-      {items.length === 0 && (
+      {items?.length === 0 && (
         <p className="rounded-lg border border-dashed border-[#1c2b22]/20 bg-white/50 px-4 py-8 text-center text-sm text-[#1c2b22]/50">
           {status === 'pending' ? 'No reversal requests awaiting approval.' : 'No records yet.'}
         </p>
       )}
 
-      {items.map(item => {
+      {items?.map(item => {
         const isOwnRequest = item.requestedBy === userId;
         return (
           <div key={item.id} className="rounded-lg border border-[#1c2b22]/15 bg-white p-5 shadow-sm">

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import {formatDatePicker} from '@/app/lib/utils'
+import Sidebar from "@/app/components/SideBar";
 
 type FormData = {
   // Step 1: Personal details
@@ -177,11 +178,15 @@ export default function MemberRegistrationForm() {
   const [mode, setMode] = useState<Mode>("select");
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="mx-4 mt-14 overflow-hidden rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec]">
+      
       {mode === "select" && <ModeSelect onSelect={setMode} />}
       {mode === "single" && <SingleMemberForm onBack={() => setMode("select")} />}
       {mode === "bulk" && <BulkImportForm onBack={() => setMode("select")} />}
     </div>
+    </>
   );
 }
 
@@ -190,6 +195,7 @@ export default function MemberRegistrationForm() {
 function ModeSelect({ onSelect }: { onSelect: (m: Mode) => void }) {
   return (
     <div className="px-2 md:px-6 py-8 sm:px-8">
+      
       <h1 className="font-serif text-xl text-[#1c2b22] sm:text-2xl">Add members</h1>
       <p className="mt-1 text-sm text-[#4a5c50]">
         Register a single member by hand, or import a batch of members from an Excel file.
@@ -530,6 +536,7 @@ function SingleMemberForm({ onBack }: { onBack: () => void }) {
   if (submitted) {
     return (
       <div className="p-10 md:px-20 text-center">
+        
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#1c2b22] text-[#faf6ec]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />

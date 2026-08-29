@@ -102,7 +102,7 @@ const links: NavItem[] = [
       { href: "/portal/admin/accounting/expenditures", label: "Expenditures", icon: Users },
       { href: "/portal/admin/accounting/budget", label: "Budget", icon: Shield },
       { href: "/portal/admin/accounting/procurement", label: "Procurement", icon: Shield },
-      { href: "/portal/admin/accounting/reversals-and-corrections", label: "Reversals & Corrections", icon: Shield },
+      { href: "/portal/admin/accounting/corrections", label: "Reversals & Corrections", icon: Shield },
       { href: "/portal/admin/accounting/general-ledger", label: "General Ledger", icon: Shield },
     ],
   },
