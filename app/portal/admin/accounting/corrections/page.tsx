@@ -1,601 +1,491 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import Sidebar from '@/app/components/SideBar';
+import { useState, useEffect, useCallback } from 'react';
 
-type FormData = {
-  // Step 1: Personal details
-  fullName: string;
-  idNumber: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
+// ── SaccoFX Pro passbook/ledger brand ──
+// ink-green #1c2b22 · cream #faf6ec · parchment #eee7d6 · brass gold #c9a24b
+// serif headings throughout
 
-  // Step 2: Contact & address
-  phone: string;
-  email: string;
-  physicalAddress: string;
-  county: string;
-
-  // Step 3: Next of kin
-  kinFullName: string;
-  kinRelationship: string;
-  kinPhone: string;
-
-  // Step 4: Membership & shares
-  memberType: string;
-  monthlyContribution: string;
-  numberOfShares: string;
-  incomeSource: string;
-
-  // Step 5: Confirmation
-  termsAccepted: boolean;
+type SearchResult = {
+  id: string;
+  transactionType: string;
+  memberId: string;
+  memberName: string;
+  amount: number;
+  receiptNumber: string;
+  createdAt: string;
+  description: string | null;
+  alreadyReversed: boolean;
 };
 
-const initialFormData: FormData = {
-  fullName: "",
-  idNumber: "",
-  dateOfBirth: "",
-  gender: "",
-  maritalStatus: "",
-  phone: "",
-  email: "",
-  physicalAddress: "",
-  county: "",
-  kinFullName: "",
-  kinRelationship: "",
-  kinPhone: "",
-  memberType: "individual",
-  monthlyContribution: "",
-  numberOfShares: "",
-  incomeSource: "",
-  termsAccepted: false,
+type Reversal = {
+  id: string;
+  transactionType: string;
+  originalTransactionId: string;
+  memberId: string;
+  memberName: string;
+  amount: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected' | 'executed' | 'failed';
+  requestedBy: string;
+  requestedByName: string;
+  requestedAt: string;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  reversalTransactionId: string | null;
+  executedAt: string | null;
 };
 
-const STEPS = [
-  { label: "Personal Details", ledger: "01" },
-  { label: "Contact & Address", ledger: "02" },
-  { label: "Next of Kin", ledger: "03" },
-  { label: "Membership & Shares", ledger: "04" },
-  { label: "Review & Submit", ledger: "05" },
-];
+const TYPE_LABELS: Record<string, string> = {
+  savings_deposit: 'Savings Deposit',
+  savings_withdrawal: 'Savings Withdrawal',
+  loan_repayment: 'Loan Repayment',
+  share_purchase: 'Share Purchase',
+  gl_entry: 'GL Journal Entry',
+};
 
-const inputClasses =
-  "w-full rounded-md border border-stone-300 bg-white px-3.5 py-2.5 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 transition-colors";
+const STATUS_STYLES: Record<string, string> = {
+  pending: 'bg-[#c9a24b]/15 text-[#8a6a20] border-[#c9a24b]/40',
+  executed: 'bg-[#1c2b22]/10 text-[#1c2b22] border-[#1c2b22]/30',
+  rejected: 'bg-red-100 text-red-800 border-red-300',
+  approved: 'bg-[#1c2b22]/10 text-[#1c2b22] border-[#1c2b22]/30',
+  failed: 'bg-red-100 text-red-800 border-red-300',
+};
 
-const labelClasses = "mb-1.5 block text-[13px] font-medium text-stone-700";
+function currentUserId(): string {
+  // Wire this to your actual client-side auth/session context.
+  return typeof window !== 'undefined' ? (window as any).__SFX_USER_ID__ ?? '' : '';
+}
 
-export default function MemberRegistrationForm() {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-
-  const isLastStep = step === STEPS.length - 1;
-
-  function update<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
-  }
-
-  function validateStep(current: number): boolean {
-    const next: Partial<Record<keyof FormData, string>> = {};
-
-    if (current === 0) {
-      if (!formData.fullName.trim()) next.fullName = "Full name is required";
-      if (!formData.idNumber.trim()) next.idNumber = "National ID number is required";
-      else if (!/^\d{6,10}$/.test(formData.idNumber.trim()))
-        next.idNumber = "Enter a valid ID number";
-      if (!formData.dateOfBirth) next.dateOfBirth = "Date of birth is required";
-      if (!formData.gender) next.gender = "Select a gender";
-    }
-
-    if (current === 1) {
-      if (!formData.phone.trim()) next.phone = "Phone number is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.phone.trim()))
-        next.phone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-      if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email))
-        next.email = "Enter a valid email address";
-      if (!formData.physicalAddress.trim()) next.physicalAddress = "Address is required";
-      if (!formData.county.trim()) next.county = "County is required";
-    }
-
-    if (current === 2) {
-      if (!formData.kinFullName.trim()) next.kinFullName = "Next of kin name is required";
-      if (!formData.kinRelationship.trim()) next.kinRelationship = "Relationship is required";
-      if (!formData.kinPhone.trim()) next.kinPhone = "Next of kin phone is required";
-      else if (!/^(?:\+254|0)\d{9}$/.test(formData.kinPhone.trim()))
-        next.kinPhone = "Use format 07XXXXXXXX or +254XXXXXXXXX";
-    }
-
-    if (current === 3) {
-      if (!formData.monthlyContribution || Number(formData.monthlyContribution) <= 0)
-        next.monthlyContribution = "Enter a monthly contribution amount";
-      if (!formData.numberOfShares || Number(formData.numberOfShares) <= 0)
-        next.numberOfShares = "Enter number of shares to purchase";
-      if (!formData.incomeSource.trim()) next.incomeSource = "Source of income is required";
-    }
-
-    if (current === 4) {
-      if (!formData.termsAccepted) next.termsAccepted = "You must accept the membership terms";
-    }
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
-  function goNext() {
-    if (!validateStep(step)) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }
-
-  function goBack() {
-    setErrors({});
-    setStep((s) => Math.max(s - 1, 0));
-  }
-
-  async function handleSubmit() {
-    if (!validateStep(4)) return;
-    setSubmitting(true);
-    setSubmitError("");
-    try {
-      // Replace with your actual API route.
-      const res = await fetch("/api/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error("Failed to submit application");
-      setSubmitted(true);
-    } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-xl rounded-lg border border-stone-200 bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-800 text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <h2 className="font-serif text-2xl text-stone-900">Application received</h2>
-        <p className="mt-2 text-[15px] text-stone-600">
-          {formData.fullName.split(" ")[0] || "Your"} application to join has been recorded.
-          A membership officer will verify your details and confirm your share allocation.
-        </p>
-        <button
-          onClick={() => {
-            setFormData(initialFormData);
-            setStep(0);
-            setSubmitted(false);
-          }}
-          className="mt-6 rounded-md border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-        >
-          Register another member
-        </button>
-      </div>
-    );
-  }
+export default function ReversalsPage() {
+  const [tab, setTab] = useState<'new' | 'queue' | 'history'>('queue');
 
   return (
-    <div className="mx-auto w-3/4 mt-4 ml-20 overflow-hidden rounded-lg border border-stone-200 bg-white">
-      {/* Header */}
-      <div className="border-b border-stone-200 px-6 py-5 sm:px-8">
-       
-        <h1 className="mt-1 text-xl text-orange-500 sm:text-2xl">Add member</h1>
-      </div>
 
-      {/* Ledger-style progress rail */}
-      <div className="flex border-b border-stone-200 bg-stone-50 px-2 sm:px-4">
-        {STEPS.map((s, i) => {
-          const state = i < step ? "done" : i === step ? "active" : "upcoming";
-          return (
-            <div
-              key={s.label}
-              className={`flex flex-1 flex-col items-center gap-1.5 border-t-2 px-1 py-3 text-center ${
-                state === "active"
-                  ? "border-emerald-800"
-                  : state === "done"
-                  ? "border-emerald-800/40"
-                  : "border-transparent"
+    <div className="min-h-screen bg-[#faf6ec] text-[#1c2b22]">
+      <Sidebar></Sidebar>
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <header className="mb-8 border-b-2 border-[#1c2b22]/15 pb-6">
+          <h1 className="font-serif text-3xl tracking-tight text-[#1c2b22]">
+            Reversals &amp; Corrections
+          </h1>
+          <p className="mt-1 text-sm text-[#1c2b22]/70">
+            Every reversal is posted as a new, equal-and-opposite ledger entry — original
+            transactions are never edited or deleted. All executions require a second
+            authorised approver (maker-checker).
+          </p>
+        </header>
+
+        <nav className="mb-8 flex gap-1 border-b border-[#1c2b22]/15">
+          {([
+            ['queue', 'Pending Approvals'],
+            ['new', 'Request a Reversal'],
+            ['history', 'History'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-2.5 font-serif text-sm transition-colors ${
+                tab === key
+                  ? 'border-b-2 border-[#c9a24b] text-[#1c2b22]'
+                  : 'text-[#1c2b22]/50 hover:text-[#1c2b22]/80'
               }`}
             >
-              <span
-                className={`font-mono text-[11px] tabular-nums ${
-                  state === "upcoming" ? "text-stone-400" : "text-emerald-800"
-                }`}
-              >
-                {s.ledger}
-              </span>
-              <span
-                className={`hidden text-[11px] font-medium leading-tight sm:block ${
-                  state === "upcoming" ? "text-stone-400" : "text-stone-800"
-                }`}
-              >
-                {s.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+              {label}
+            </button>
+          ))}
+        </nav>
 
-      {/* Body */}
-      <div className="px-6 py-7 sm:px-8">
-        <p className="mb-6 font-serif text-lg text-stone-900 sm:hidden">{STEPS[step].label}</p>
-
-        {step === 0 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                placeholder="As it appears on your national ID"
-              />
-              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>National ID number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.idNumber}
-                  onChange={(e) => update("idNumber", e.target.value)}
-                  placeholder="e.g. 12345678"
-                  inputMode="numeric"
-                />
-                {errors.idNumber && <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Date of birth</label>
-                <input
-                  type="date"
-                  className={inputClasses}
-                  value={formData.dateOfBirth}
-                  onChange={(e) => update("dateOfBirth", e.target.value)}
-                />
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Gender</label>
-                <select
-                  className={inputClasses}
-                  value={formData.gender}
-                  onChange={(e) => update("gender", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="other">Prefer not to say</option>
-                </select>
-                {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Marital status</label>
-                <select
-                  className={inputClasses}
-                  value={formData.maritalStatus}
-                  onChange={(e) => update("maritalStatus", e.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="single">Single</option>
-                  <option value="married">Married</option>
-                  <option value="widowed">Widowed</option>
-                  <option value="divorced">Divorced</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
-              </div>
-              <div>
-                <label className={labelClasses}>Email (optional)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="you@example.com"
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Physical address</label>
-              <input
-                className={inputClasses}
-                value={formData.physicalAddress}
-                onChange={(e) => update("physicalAddress", e.target.value)}
-                placeholder="Estate, street, house number"
-              />
-              {errors.physicalAddress && (
-                <p className="mt-1 text-xs text-red-600">{errors.physicalAddress}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClasses}>County</label>
-              <input
-                className={inputClasses}
-                value={formData.county}
-                onChange={(e) => update("county", e.target.value)}
-                placeholder="e.g. Nairobi"
-              />
-              {errors.county && <p className="mt-1 text-xs text-red-600">{errors.county}</p>}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-            <p className="text-sm text-stone-500">
-              Your next of kin will be the designated beneficiary on your account.
-            </p>
-            <div>
-              <label className={labelClasses}>Full name</label>
-              <input
-                className={inputClasses}
-                value={formData.kinFullName}
-                onChange={(e) => update("kinFullName", e.target.value)}
-              />
-              {errors.kinFullName && (
-                <p className="mt-1 text-xs text-red-600">{errors.kinFullName}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Relationship</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinRelationship}
-                  onChange={(e) => update("kinRelationship", e.target.value)}
-                  placeholder="e.g. Spouse, Sibling"
-                />
-                {errors.kinRelationship && (
-                  <p className="mt-1 text-xs text-red-600">{errors.kinRelationship}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Phone number</label>
-                <input
-                  className={inputClasses}
-                  value={formData.kinPhone}
-                  onChange={(e) => update("kinPhone", e.target.value)}
-                  placeholder="07XX XXX XXX"
-                />
-                {errors.kinPhone && <p className="mt-1 text-xs text-red-600">{errors.kinPhone}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-5">
-            <div>
-              <label className={labelClasses}>Membership type</label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: "individual", label: "Individual" },
-                  { value: "group", label: "Group / Chama" },
-                ].map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => update("memberType", opt.value)}
-                    className={`rounded-md border px-4 py-3 text-left text-sm font-medium transition-colors ${
-                      formData.memberType === opt.value
-                        ? "border-emerald-800 bg-emerald-50 text-emerald-900"
-                        : "border-stone-300 text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className={labelClasses}>Monthly contribution (KES)</label>
-                <input
-                  className={inputClasses}
-                  value={formData.monthlyContribution}
-                  onChange={(e) => update("monthlyContribution", e.target.value)}
-                  placeholder="e.g. 2000"
-                  inputMode="numeric"
-                />
-                {errors.monthlyContribution && (
-                  <p className="mt-1 text-xs text-red-600">{errors.monthlyContribution}</p>
-                )}
-              </div>
-              <div>
-                <label className={labelClasses}>Number of shares</label>
-                <input
-                  className={inputClasses}
-                  value={formData.numberOfShares}
-                  onChange={(e) => update("numberOfShares", e.target.value)}
-                  placeholder="e.g. 20"
-                  inputMode="numeric"
-                />
-                {errors.numberOfShares && (
-                  <p className="mt-1 text-xs text-red-600">{errors.numberOfShares}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Main source of income</label>
-              <input
-                className={inputClasses}
-                value={formData.incomeSource}
-                onChange={(e) => update("incomeSource", e.target.value)}
-                placeholder="e.g. Employment, business, farming"
-              />
-              {errors.incomeSource && (
-                <p className="mt-1 text-xs text-red-600">{errors.incomeSource}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-6">
-            <div className="rounded-md border border-stone-200 divide-y divide-stone-200 overflow-hidden">
-              <ReviewSection
-                title="Personal details"
-                rows={[
-                  ["Full name", formData.fullName],
-                  ["ID number", formData.idNumber],
-                  ["Date of birth", formData.dateOfBirth],
-                  ["Gender", formData.gender],
-                ]}
-                onEdit={() => setStep(0)}
-              />
-              <ReviewSection
-                title="Contact & address"
-                rows={[
-                  ["Phone", formData.phone],
-                  ["Email", formData.email || "—"],
-                  ["Address", formData.physicalAddress],
-                  ["County", formData.county],
-                ]}
-                onEdit={() => setStep(1)}
-              />
-              <ReviewSection
-                title="Next of kin"
-                rows={[
-                  ["Name", formData.kinFullName],
-                  ["Relationship", formData.kinRelationship],
-                  ["Phone", formData.kinPhone],
-                ]}
-                onEdit={() => setStep(2)}
-              />
-              <ReviewSection
-                title="Membership & shares"
-                rows={[
-                  ["Type", formData.memberType],
-                  ["Monthly contribution", `KES ${formData.monthlyContribution || "0"}`],
-                  ["Shares", formData.numberOfShares],
-                  ["Income source", formData.incomeSource],
-                ]}
-                onEdit={() => setStep(3)}
-              />
-            </div>
-
-            <label className="flex items-start gap-2.5 text-sm text-stone-700">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-800 focus:ring-emerald-800/30"
-                checked={formData.termsAccepted}
-                onChange={(e) => update("termsAccepted", e.target.checked)}
-              />
-              <span>
-                I confirm the information provided is accurate and I agree to the Sacco's
-                membership terms and bylaws.
-              </span>
-            </label>
-            {errors.termsAccepted && (
-              <p className="text-xs text-red-600">{errors.termsAccepted}</p>
-            )}
-
-            {submitError && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Footer nav */}
-      <div className="flex items-center justify-between border-t border-stone-200 px-6 py-4 sm:px-8">
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={step === 0}
-          className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-0"
-        >
-          Back
-        </button>
-        {!isLastStep ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 transition-colors"
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-60 transition-colors"
-          >
-            {submitting ? "Submitting…" : "Submit application"}
-          </button>
-        )}
+        {tab === 'new' && <RequestReversalPanel />}
+        {tab === 'queue' && <ReversalQueuePanel status="pending" showActions />}
+        {tab === 'history' && <ReversalQueuePanel status="" showActions={false} />}
       </div>
     </div>
   );
 }
 
-function ReviewSection({
-  title,
-  rows,
-  onEdit,
-}: {
-  title: string;
-  rows: [string, string][];
-  onEdit: () => void;
-}) {
+// ─────────────────────────────────────────────────────────────────────────
+// Tab 1: search a transaction and file a reversal request
+// ─────────────────────────────────────────────────────────────────────────
+
+function RequestReversalPanel() {
+  const [query, setQuery] = useState('');
+  const [type, setType] = useState('all');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<SearchResult | null>(null);
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+
+  const search = useCallback(async () => {
+    if (query.trim().length < 2) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/transactions/search?q=${encodeURIComponent(query)}&type=${type}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Search failed');
+      setResults(data.results);
+    } catch (err: any) {
+      setMessage({ kind: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  }, [query, type]);
+
+  async function submitRequest() {
+    if (!selected || reason.trim().length < 10) return;
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/reversals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionType: selected.transactionType,
+          originalTransactionId: selected.id,
+          memberId: selected.memberId,
+          amount: selected.amount,
+          reason: reason.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to submit');
+      setMessage({ kind: 'success', text: 'Reversal request filed — awaiting a second approver.' });
+      setSelected(null);
+      setReason('');
+      setResults(r => r.map(x => (x.id === selected.id ? { ...x, alreadyReversed: true } : x)));
+    } catch (err: any) {
+      setMessage({ kind: 'error', text: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <div className="px-4 py-3.5">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
-          {title}
-        </p>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="text-xs font-medium text-emerald-800 hover:underline"
-        >
-          Edit
-        </button>
+    <div className="space-y-6">
+      <div className="rounded-lg border border-[#1c2b22]/15 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && search()}
+            placeholder="Search by receipt no., member name, or member no."
+            className="flex-1 rounded-md border border-[#1c2b22]/25 bg-[#faf6ec] px-3 py-2 text-sm focus:border-[#c9a24b] focus:outline-none"
+          />
+          <select
+            value={type}
+            onChange={e => setType(e.target.value)}
+            className="rounded-md border border-[#1c2b22]/25 bg-[#faf6ec] px-3 py-2 text-sm"
+          >
+            <option value="all">All transaction types</option>
+            <option value="savings_deposit">Savings Deposits</option>
+            <option value="savings_withdrawal">Savings Withdrawals</option>
+            <option value="loan_repayment">Loan Repayments</option>
+          </select>
+          <button
+            onClick={search}
+            disabled={loading}
+            className="rounded-md bg-[#1c2b22] px-5 py-2 font-serif text-sm text-[#faf6ec] transition-colors hover:bg-[#1c2b22]/90 disabled:opacity-50"
+          >
+            {loading ? 'Searching…' : 'Search'}
+          </button>
+        </div>
       </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-stone-500">{label}</dt>
-            <dd className="text-stone-900">{value || "—"}</dd>
+
+      {message && (
+        <div
+          className={`rounded-md border px-4 py-2.5 text-sm ${
+            message.kind === 'success'
+              ? 'border-[#1c2b22]/25 bg-[#1c2b22]/5 text-[#1c2b22]'
+              : 'border-red-300 bg-red-50 text-red-800'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div className="overflow-hidden rounded-lg border border-[#1c2b22]/15 bg-white shadow-sm">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#1c2b22]/15 bg-[#eee7d6] text-left font-serif text-[#1c2b22]/80">
+                <th className="px-4 py-2.5">Date</th>
+                <th className="px-4 py-2.5">Type</th>
+                <th className="px-4 py-2.5">Member</th>
+                <th className="px-4 py-2.5">Receipt</th>
+                <th className="px-4 py-2.5 text-right">Amount</th>
+                <th className="px-4 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map(r => (
+                <tr key={r.id} className="border-b border-[#1c2b22]/10 last:border-0">
+                  <td className="px-4 py-2.5 text-[#1c2b22]/70">
+                    {new Date(r.createdAt).toLocaleDateString('en-KE')}
+                  </td>
+                  <td className="px-4 py-2.5">{TYPE_LABELS[r.transactionType] ?? r.transactionType}</td>
+                  <td className="px-4 py-2.5">{r.memberName}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs">{r.receiptNumber}</td>
+                  <td className="px-4 py-2.5 text-right font-mono">
+                    KES {r.amount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    {r.alreadyReversed ? (
+                      <span className="text-xs text-[#1c2b22]/40">Already filed</span>
+                    ) : (
+                      <button
+                        onClick={() => setSelected(r)}
+                        className="font-serif text-xs text-[#8a6a20] underline decoration-[#c9a24b] hover:text-[#1c2b22]"
+                      >
+                        Reverse this
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {selected && (
+        <div className="rounded-lg border-2 border-[#c9a24b]/50 bg-white p-5 shadow-sm">
+          <h3 className="font-serif text-lg text-[#1c2b22]">Confirm Reversal Request</h3>
+          <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+            <dt className="text-[#1c2b22]/60">Member</dt>
+            <dd>{selected.memberName}</dd>
+            <dt className="text-[#1c2b22]/60">Type</dt>
+            <dd>{TYPE_LABELS[selected.transactionType]}</dd>
+            <dt className="text-[#1c2b22]/60">Receipt No.</dt>
+            <dd className="font-mono">{selected.receiptNumber}</dd>
+            <dt className="text-[#1c2b22]/60">Amount</dt>
+            <dd className="font-mono">KES {selected.amount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</dd>
+          </dl>
+
+          <label className="mt-4 block text-sm text-[#1c2b22]/80">
+            Reason for reversal (required, min. 10 characters)
+          </label>
+          <textarea
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            rows={3}
+            placeholder="e.g. Duplicate M-Pesa STK push credited twice against receipt SFX-2291"
+            className="mt-1 w-full rounded-md border border-[#1c2b22]/25 bg-[#faf6ec] px-3 py-2 text-sm focus:border-[#c9a24b] focus:outline-none"
+          />
+
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={submitRequest}
+              disabled={submitting || reason.trim().length < 10}
+              className="rounded-md bg-[#1c2b22] px-5 py-2 font-serif text-sm text-[#faf6ec] hover:bg-[#1c2b22]/90 disabled:opacity-50"
+            >
+              {submitting ? 'Filing…' : 'File Reversal Request'}
+            </button>
+            <button
+              onClick={() => setSelected(null)}
+              className="rounded-md border border-[#1c2b22]/25 px-5 py-2 font-serif text-sm text-[#1c2b22]/70 hover:bg-[#eee7d6]"
+            >
+              Cancel
+            </button>
           </div>
-        ))}
-      </dl>
+        </div>
+      )}
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tab 2 & 3: queue of pending approvals / full history
+// ─────────────────────────────────────────────────────────────────────────
+
+function ReversalQueuePanel({ status, showActions }: { status: string; showActions: boolean }) {
+  const [items, setItems] = useState<Reversal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const userId = currentUserId();
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = status ? `/api/reversals?status=${status}` : '/api/reversals';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to load');
+      setItems(data.reversals);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [status]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function approve(id: string) {
+    setBusyId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/reversals/${id}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Approval failed');
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function reject(id: string) {
+    if (rejectReason.trim().length < 5) return;
+    setBusyId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/reversals/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejectionReason: rejectReason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Rejection failed');
+      setRejectingId(null);
+      setRejectReason('');
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-[#1c2b22]/60">Loading…</p>;
+
+  return (
+    <>
+   
+    <div className="space-y-4">
+      {error && (
+        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-2.5 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      {items.length === 0 && (
+        <p className="rounded-lg border border-dashed border-[#1c2b22]/20 bg-white/50 px-4 py-8 text-center text-sm text-[#1c2b22]/50">
+          {status === 'pending' ? 'No reversal requests awaiting approval.' : 'No records yet.'}
+        </p>
+      )}
+
+      {items.map(item => {
+        const isOwnRequest = item.requestedBy === userId;
+        return (
+          <div key={item.id} className="rounded-lg border border-[#1c2b22]/15 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-serif text-base text-[#1c2b22]">{item.memberName}</span>
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[item.status]}`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm text-[#1c2b22]/60">
+                  {TYPE_LABELS[item.transactionType] ?? item.transactionType} · KES{' '}
+                  {item.amount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="text-right text-xs text-[#1c2b22]/50">
+                <p>Requested by {item.requestedByName}</p>
+                <p>{new Date(item.requestedAt).toLocaleString('en-KE')}</p>
+              </div>
+            </div>
+
+            <p className="mt-3 rounded-md bg-[#faf6ec] px-3 py-2 text-sm text-[#1c2b22]/80">
+              <span className="font-medium">Reason: </span>
+              {item.reason}
+            </p>
+
+            {item.status === 'rejected' && item.rejectionReason && (
+              <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+                <span className="font-medium">Rejection reason: </span>
+                {item.rejectionReason}
+              </p>
+            )}
+
+            {item.status === 'executed' && (
+              <p className="mt-2 text-xs text-[#1c2b22]/50">
+                Approved by {item.reviewedByName} on{' '}
+                {item.executedAt && new Date(item.executedAt).toLocaleString('en-KE')} — reversing entry posted.
+              </p>
+            )}
+
+            {showActions && item.status === 'pending' && (
+              <div className="mt-4 border-t border-[#1c2b22]/10 pt-4">
+                {isOwnRequest ? (
+                  <p className="text-xs italic text-[#1c2b22]/45">
+                    Maker-checker: you filed this request, so a different authorised reviewer must approve it.
+                  </p>
+                ) : rejectingId === item.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={rejectReason}
+                      onChange={e => setRejectReason(e.target.value)}
+                      rows={2}
+                      placeholder="Reason for rejecting this reversal…"
+                      className="w-full rounded-md border border-[#1c2b22]/25 bg-[#faf6ec] px-3 py-2 text-sm focus:border-[#c9a24b] focus:outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => reject(item.id)}
+                        disabled={busyId === item.id || rejectReason.trim().length < 5}
+                        className="rounded-md bg-red-700 px-4 py-1.5 text-sm text-white hover:bg-red-800 disabled:opacity-50"
+                      >
+                        Confirm Rejection
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRejectingId(null);
+                          setRejectReason('');
+                        }}
+                        className="rounded-md border border-[#1c2b22]/25 px-4 py-1.5 text-sm hover:bg-[#eee7d6]"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => approve(item.id)}
+                      disabled={busyId === item.id}
+                      className="rounded-md bg-[#1c2b22] px-4 py-1.5 font-serif text-sm text-[#faf6ec] hover:bg-[#1c2b22]/90 disabled:opacity-50"
+                    >
+                      {busyId === item.id ? 'Posting reversal…' : 'Approve & Execute'}
+                    </button>
+                    <button
+                      onClick={() => setRejectingId(item.id)}
+                      className="rounded-md border border-red-300 px-4 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+    </>
   );
 }
