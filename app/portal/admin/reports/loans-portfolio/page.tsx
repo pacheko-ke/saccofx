@@ -1,6 +1,7 @@
 // app/reports/loan-portfolio/page.tsx
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -122,6 +123,8 @@ export default function LoanPortfolioPage() {
     new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(val);
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#eee7d6]">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         {/* Header */}
@@ -344,5 +347,6 @@ export default function LoanPortfolioPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/app/components/SideBar";
+import BackButton from "@/app/components/BackButton";
 
 interface LoanProduct {
   loan_product_id: string;
@@ -110,15 +111,10 @@ export default function LoanProductDetailPage() {
   return (
     <>
     <Sidebar></Sidebar>
-    <div className="min-h-screen bg-[#eee7d6] pt-4">
-      <div className="mx-auto md:max-w-1/2 px-4 py-10 md:px-8">
+    <div className="min-h-screen bg-[#eee7d6] pt-4 md:pl-16">
+      <div className="mx-auto  px-4 py-10 md:px-8">
         {/* Back link */}
-        <Link
-          href="/dashboard/loan-products"
-          className="mb-6 inline-flex items-center gap-1 text-sm text-[#4a5c50] hover:text-[#1c2b22]"
-        >
-          ← Back to loan products
-        </Link>
+       <BackButton></BackButton>
 
         {loading && (
           <div className="rounded-lg border border-[#c9a24b]/30 bg-[#faf6ec] px-6 py-12 text-center text-[#9aa79f]">

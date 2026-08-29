@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import { useEffect, useRef, useState } from "react";
 
 interface Account {
@@ -190,6 +191,8 @@ export default function TellerDepositsPage() {
   const todayTotal = todayDeposits.reduce((sum, d) => sum + Number(d.amount), 0);
 
   return (
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#faf6ec] ">
       <div className="print:hidden ">
         <header className=" pt-16 md:pl-20 border-b border-[#c9a24b]/30 bg-[#1c2b22] px-6 py-5">
@@ -534,5 +537,6 @@ export default function TellerDepositsPage() {
         }
       `}</style>
     </div>
+    </>
   );
 }

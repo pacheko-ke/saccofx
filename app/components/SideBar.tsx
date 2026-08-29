@@ -66,7 +66,7 @@ const links: NavItem[] = [
     icon: Coins,
     children: [
       { href: "/portal/admin/payments/teller-deposits", label: "Teller Deposits", icon: Users },
-      { href: "/portal/admin/payments/mobile-money", label: "Mobile Money", icon: Shield },
+      // { href: "/portal/admin/payments/mobile-money", label: "Mobile Money", icon: Shield },
       { href: "/portal/admin/payments/repayments", label: "Loan Repayments", icon: Shield },
       { href: "/portal/admin/payments/cashbook", label: "Cashbook", icon: Shield },
     ],

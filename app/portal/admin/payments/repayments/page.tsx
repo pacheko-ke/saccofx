@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -87,7 +88,9 @@ export default function LoanRepaymentsPage() {
     new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(val);
 
   return (
-    <div className="min-h-screen bg-[#eee7d6]">
+    <>
+    <Sidebar></Sidebar>
+    <div className="min-h-screen bg-[#eee7d6] md:ml-16">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -236,5 +239,6 @@ export default function LoanRepaymentsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

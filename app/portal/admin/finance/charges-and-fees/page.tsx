@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import { useEffect, useMemo, useState } from "react";
 
 
@@ -164,6 +165,9 @@ export default function ChargesAndFeesPage() {
   }, [charges, feeTypes]);
 
   return (
+
+    <>
+    <Sidebar></Sidebar>
     <div className="min-h-screen bg-[#faf6ec] font-sans text-[#1c2b22] md:pl-12 pt-10">
       <div className="mx-auto max-w-6xl px-6 py-10">
         {/* Header */}
@@ -260,6 +264,7 @@ export default function ChargesAndFeesPage() {
 
       {showNewFeeForm && <NewFeeTypeModal onClose={() => setShowNewFeeForm(false)} />}
     </div>
+    </>
   );
 }
 
@@ -523,6 +528,7 @@ function NewFeeTypeModal({ onClose }: { onClose: () => void }) {
         }
       `}</style>
     </div>
+    
   );
 }
 

@@ -224,7 +224,7 @@ export default function LoanProductsPage() {
 
     <>
     <Sidebar></Sidebar>
-    <div className="min-h-screen bg-[#eee7d6] pt-4 md:px-10">
+    <div className="min-h-screen bg-[#eee7d6] pt-4">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

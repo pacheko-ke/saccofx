@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/app/components/SideBar";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -81,7 +82,9 @@ export default function MembersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen bg-[#eee7d6]">
+    <>
+    <Sidebar></Sidebar>
+    <div className="min-h-screen bg-[#eee7d6] md:px-10">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-8">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -90,7 +93,7 @@ export default function MembersPage() {
             <p className="mt-1 text-sm text-[#4a5c50]">Register of all SACCO members.</p>
           </div>
           <Link
-            href="/dashboard/add-members"
+            href="/portal/admin/members/add"
             className="inline-flex items-center justify-center rounded-md bg-[#1c2b22] px-4 py-2 text-sm font-medium text-[#faf6ec] hover:bg-[#233a2c]"
           >
             + Add member
@@ -169,7 +172,7 @@ export default function MembersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/dashboard/members/${m.member_id}`}
+                        href={`/portal/admin/members/${m.member_id}`}
                         className="font-medium text-[#1c2b22] underline decoration-[#c9a24b] decoration-2 underline-offset-2 hover:text-[#233a2c]"
                       >
                         View
@@ -206,5 +209,6 @@ export default function MembersPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
