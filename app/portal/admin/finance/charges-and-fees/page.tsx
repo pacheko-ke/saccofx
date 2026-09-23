@@ -399,7 +399,7 @@ function ChargesTable({ rows }: { rows: FeeCharge[] }) {
         </thead>
         <tbody>
           {rows.map((c) => (
-            <tr key={c.id} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
+            <tr key={c.memberId} className="border-b border-[#c9a24b]/15 last:border-0 hover:bg-[#faf6ec]">
               <td className="px-4 py-3">
                 <div className="text-[#1c2b22]">{c.memberName}</div>
                 <div className="font-mono text-[12px] text-[#1c2b22]/50">{c.memberNumber}</div>
