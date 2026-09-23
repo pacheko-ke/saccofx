@@ -37,12 +37,11 @@ export async function GET() {
   const client = await pool.connect()
   try {
     const feeCharges = await client.query(`
-    SELECT m.member_id,ft.fee_name as "feeTypeName",m.first_name,f.amount as "amount",m.member_number as "memberNumber",m.last_name 
+    SELECT m.member_id as "memberId",ft.fee_name as "feeTypeName",m.first_name || ' ' || m.last_name as "memberName",f.amount as "amount",m.member_number as "memberNumber",m.last_name as "memberLastName"
     FROM fee_charges f INNER JOIN
      members m ON m.member_id=f.member_id
      INNER JOIN fee_types ft ON ft.fee_type_id=f.fee_type_id  WHERE f.tenant_id=$1
   `, [tenantID])
-    console.log(feeCharges.rows)
     return NextResponse.json(feeCharges.rows);
   } catch (error) {
     return NextResponse.json(error)

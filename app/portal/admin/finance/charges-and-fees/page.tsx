@@ -387,7 +387,7 @@ function ChargesTable({ rows }: { rows: FeeCharge[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#c9a24b]/30 bg-[#eee7d6]/60">
-            {["Member", "Fee", "Amount", "Status", "Due", "Paid", ""].map((h) => (
+            {["Member Name", "Fee", "Amount", "Status", "Due", "Paid", ""].map((h) => (
               <th
                 key={h}
                 className="px-4 py-3 text-left font-serif text-[13px] font-normal tracking-wide text-[#1c2b22]/70"
